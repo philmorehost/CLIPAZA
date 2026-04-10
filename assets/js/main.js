@@ -216,3 +216,46 @@ document.addEventListener('DOMContentLoaded', () => {
   initAccountUnlock();
   initMobileSidebar();
 });
+
+/* ===================== PLATFORM CORE JS ===================== */
+
+// Countdown timers
+function initCountdowns() {
+  document.querySelectorAll('[data-end-date]').forEach(el => {
+    function tick() {
+      const end  = new Date(el.dataset.endDate).getTime();
+      const now  = Date.now();
+      const diff = end - now;
+      if (diff <= 0) { el.textContent = 'Expired'; el.classList.add('countdown-urgent'); return; }
+      const d = Math.floor(diff / 86400000);
+      const h = Math.floor((diff % 86400000) / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      el.textContent = d > 0 ? `${d}d ${h}h ${m}m` : h > 0 ? `${h}h ${m}m` : `${m}m`;
+      if (diff < 86400000) el.classList.add('countdown-urgent');
+    }
+    tick();
+    setInterval(tick, 60000);
+  });
+}
+
+// Flash messages auto-dismiss
+function initFlashMessages() {
+  document.querySelectorAll('.flash-message').forEach(el => {
+    setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 500); }, 4000);
+  });
+}
+
+// Confirm dialogs for dangerous actions
+function initPlatformConfirms() {
+  document.querySelectorAll('[data-confirm]').forEach(el => {
+    el.addEventListener('click', function(e) {
+      if (!confirm(this.dataset.confirm)) e.preventDefault();
+    });
+  });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  initCountdowns();
+  initFlashMessages();
+  initPlatformConfirms();
+});

@@ -81,6 +81,24 @@ if (file_exists($configFile)) {
 
 $pageTitle = $seoTitle !== '' ? $seoTitle : (htmlspecialchars($siteName) . ' — Earn Money Clipping Videos');
 
+// Load active contests for trending section
+$trendingContests = [];
+if (file_exists($configFile)) {
+    try {
+        $db   = db();
+        $stmt = $db->prepare(
+            "SELECT c.*, GROUP_CONCAT(DISTINCT cp.platform ORDER BY cp.platform SEPARATOR ',') AS platforms
+             FROM contests c
+             LEFT JOIN contest_platforms cp ON cp.contest_id = c.id
+             WHERE c.status = 'active' AND (c.end_date IS NULL OR c.end_date > NOW())
+             GROUP BY c.id
+             ORDER BY c.created_at DESC LIMIT 4"
+        );
+        $stmt->execute();
+        $trendingContests = $stmt->fetchAll();
+    } catch (Throwable) {}
+}
+
 $waitlistSuccess = false;
 $waitlistError   = '';
 
@@ -151,13 +169,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['waitlist_email'])) {
                 <?php endif; ?>
             </a>
             <div class="navbar-links d-none d-md-flex align-items-center gap-4">
+                <a href="/contests" class="nav-text-link">Browse Contests</a>
                 <a href="#features" class="nav-text-link">Features</a>
                 <a href="#how-it-works" class="nav-text-link">How It Works</a>
-                <a href="#creators" class="nav-text-link">For Creators</a>
-                <a href="#clippers" class="nav-text-link">For Clippers</a>
             </div>
             <div class="d-flex gap-2 align-items-center">
-                <a href="#waitlist" class="btn btn-accent" style="padding:10px 22px;font-size:0.875rem;">Get Started</a>
+                <?php if (file_exists($configFile) && !empty($_SESSION['user_id'])): ?>
+                    <a href="/dashboard" class="btn btn-sm btn-outline-accent" style="padding:8px 16px;font-size:0.85rem">Dashboard</a>
+                <?php else: ?>
+                    <a href="/auth/login" class="btn btn-sm" style="padding:8px 16px;font-size:0.85rem;background:transparent;color:#aaa;border:1px solid #333">Login</a>
+                    <a href="/auth/register" class="btn btn-accent" style="padding:10px 22px;font-size:0.875rem;">Sign Up Free</a>
+                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -213,6 +235,78 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['waitlist_email'])) {
                     <div class="lp-stat-label">Clips</div>
                 </div>
             </div>
+        </div>
+    </div>
+</section>
+
+<!-- Trending Contests Section -->
+<section class="lp-section lp-section--alt" id="trending-contests">
+    <div class="container">
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <div>
+                <div class="lp-section-eyebrow">Live Now</div>
+                <h2 class="lp-section-title" style="font-size:clamp(1.5rem,3vw,2rem);margin-bottom:0">Trending <span class="text-accent">Contests</span></h2>
+            </div>
+            <a href="/contests" class="btn btn-outline-accent" style="white-space:nowrap">View All →</a>
+        </div>
+        <div class="row g-4">
+        <?php if (!empty($trendingContests)): ?>
+            <?php foreach ($trendingContests as $tc):
+                $tcPlatforms = array_filter(explode(',', $tc['platforms'] ?? ''));
+                $platformIcons = implode('', array_map(fn($p) => match(trim($p)) {
+                    'tiktok'=>'<span title="TikTok">🎵</span>',
+                    'instagram'=>'<span title="Instagram">📸</span>',
+                    'facebook'=>'<span title="Facebook">📘</span>',
+                    default=>''
+                }, $tcPlatforms));
+                $timeLeft = '';
+                if (!empty($tc['end_date'])) {
+                    $secs = strtotime($tc['end_date']) - time();
+                    if ($secs > 0) {
+                        $d = floor($secs/86400); $h = floor(($secs%86400)/3600);
+                        $timeLeft = $d > 0 ? "{$d}d {$h}h" : "{$h}h left";
+                    } else { $timeLeft = 'Expiring'; }
+                }
+            ?>
+            <div class="col-6 col-md-3">
+                <a href="/contest?id=<?= (int)$tc['id'] ?>" class="text-decoration-none">
+                    <div class="trend-card">
+                        <?php if (!empty($tc['youtube_thumbnail'])): ?>
+                            <img src="<?= htmlspecialchars($tc['youtube_thumbnail']) ?>" alt="" style="width:100%;height:110px;object-fit:cover">
+                        <?php else: ?>
+                            <div style="width:100%;height:110px;background:#0d0d0d;display:flex;align-items:center;justify-content:center;font-size:2rem">🎬</div>
+                        <?php endif; ?>
+                        <div class="p-3">
+                            <div class="fw-700 mb-1" style="font-size:0.82rem;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><?= htmlspecialchars($tc['title']) ?></div>
+                            <div class="d-flex align-items-center justify-content-between">
+                                <span style="color:var(--accent);font-weight:900;font-size:0.88rem">₦<?= number_format((float)$tc['prize_pool'], 0) ?></span>
+                                <span style="font-size:0.85rem"><?= $platformIcons ?></span>
+                            </div>
+                            <?php if ($timeLeft): ?>
+                                <div class="countdown-timer mt-1"><?= htmlspecialchars($timeLeft) ?></div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <?php endforeach; ?>
+        <?php else: ?>
+            <!-- Placeholder cards when no contests -->
+            <?php for ($i = 0; $i < 4; $i++): ?>
+            <div class="col-6 col-md-3">
+                <div class="trend-card" style="opacity:0.5">
+                    <div style="width:100%;height:110px;background:#0d0d0d;display:flex;align-items:center;justify-content:center;font-size:2rem">🎬</div>
+                    <div class="p-3">
+                        <div class="fw-700 mb-1" style="font-size:0.82rem;color:#888">Coming Soon</div>
+                        <div style="color:var(--accent);font-weight:900;font-size:0.88rem">₦0</div>
+                    </div>
+                </div>
+            </div>
+            <?php endfor; ?>
+            <div class="col-12 text-center mt-2">
+                <p class="text-muted" style="font-size:0.85rem">No active contests yet. <a href="/auth/register" class="text-accent text-decoration-none">Be the first creator →</a></p>
+            </div>
+        <?php endif; ?>
         </div>
     </div>
 </section>
