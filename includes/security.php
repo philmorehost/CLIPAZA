@@ -190,7 +190,8 @@ class BruteForceProtection {
                  ORDER BY b.blocked_at DESC
                  LIMIT ?'
             );
-            $stmt->execute([$limit]);
+            $stmt->bindValue(1, $limit, PDO::PARAM_INT);
+            $stmt->execute();
             return $stmt->fetchAll();
         } catch (Throwable) {
             return [];

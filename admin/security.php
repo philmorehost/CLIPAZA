@@ -60,7 +60,14 @@ try {
     $histStmt = $db->prepare(
         "SELECT * FROM login_history WHERE {$histWhere} ORDER BY created_at DESC LIMIT ? OFFSET ?"
     );
-    $histStmt->execute([...$histParams, $histPerPage, $histPager['offset']]);
+    // Bind string params first, then integers with explicit PARAM_INT for LIMIT/OFFSET
+    foreach ($histParams as $i => $val) {
+        $histStmt->bindValue($i + 1, $val);
+    }
+    $nextIdx = count($histParams) + 1;
+    $histStmt->bindValue($nextIdx,     $histPerPage,         PDO::PARAM_INT);
+    $histStmt->bindValue($nextIdx + 1, $histPager['offset'], PDO::PARAM_INT);
+    $histStmt->execute();
     $loginHistory = $histStmt->fetchAll();
 } catch (Throwable $e) {
     $settings = $blockedIps = $lockedAccounts = $countries = $loginHistory = [];
