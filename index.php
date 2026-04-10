@@ -51,15 +51,35 @@ if (!file_exists($lockFile) && !file_exists($configFile)) {
     exit;
 }
 
-$siteName = 'Clipaza';
+$siteName    = 'Clipaza';
 $siteTagline = 'Earn Money Clipping Videos';
+
+// SEO / branding settings
+$seoTitle       = '';
+$seoDescription = 'Turn viral moments into real income. Clipaza rewards creators and clippers for finding and sharing the best video clips.';
+$seoKeywords    = '';
+$ogImageUrl     = '';
+$customHeader   = '';
+$adsenseCode    = '';
+$siteFavicon    = '';
+$siteLogo       = '';
 
 if (file_exists($configFile)) {
     require_once $configFile;
     require_once $root . '/includes/db.php';
     require_once $root . '/includes/functions.php';
-    $siteName = getSetting('site_name', 'Clipaza');
+    $siteName       = getSetting('site_name', 'Clipaza');
+    $seoTitle       = getSetting('seo_title', '');
+    $seoDescription = getSetting('seo_description', $seoDescription);
+    $seoKeywords    = getSetting('seo_keywords', '');
+    $ogImageUrl     = getSetting('og_image_url', '');
+    $customHeader   = getSetting('custom_header_code', '');
+    $adsenseCode    = getSetting('adsense_code', '');
+    $siteFavicon    = getSetting('site_favicon', '');
+    $siteLogo       = getSetting('site_logo', '');
 }
+
+$pageTitle = $seoTitle !== '' ? $seoTitle : (htmlspecialchars($siteName) . ' — Earn Money Clipping Videos');
 
 $waitlistSuccess = false;
 $waitlistError   = '';
@@ -90,83 +110,178 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['waitlist_email'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($siteName) ?> — Earn Money Clipping Videos</title>
-    <meta name="description" content="Turn viral moments into real income. Clipaza rewards you for finding and sharing the best video clips.">
+    <title><?= htmlspecialchars($pageTitle) ?></title>
+    <meta name="description" content="<?= htmlspecialchars($seoDescription) ?>">
+    <?php if ($seoKeywords !== ''): ?>
+    <meta name="keywords" content="<?= htmlspecialchars($seoKeywords) ?>">
+    <?php endif; ?>
+    <?php if ($ogImageUrl !== ''): ?>
+    <meta property="og:image" content="<?= htmlspecialchars($ogImageUrl) ?>">
+    <meta property="og:title" content="<?= htmlspecialchars($pageTitle) ?>">
+    <meta property="og:description" content="<?= htmlspecialchars($seoDescription) ?>">
+    <meta property="og:type" content="website">
+    <?php endif; ?>
+    <meta name="twitter:card" content="summary_large_image">
+    <?php if ($siteFavicon !== ''): ?>
+    <link rel="icon" href="<?= htmlspecialchars($siteFavicon) ?>">
+    <?php endif; ?>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="assets/css/style.css" rel="stylesheet">
+    <?php if ($customHeader !== ''): ?>
+    <?= $customHeader ?>
+    <?php endif; ?>
 </head>
 <body>
+<?php if ($adsenseCode !== ''): ?>
+<?= $adsenseCode ?>
+<?php endif; ?>
 
 <!-- Navbar -->
 <nav class="navbar-clipaza">
     <div class="container">
         <div class="d-flex align-items-center justify-content-between">
-            <a href="/" class="navbar-brand-clipaza">Clipa<span>za</span></a>
-            <div class="d-flex gap-3 align-items-center">
-                <a href="/admin/login.php" class="btn-outline-accent btn" style="padding:8px 18px;font-size:0.875rem;">Admin</a>
+            <a href="/" class="navbar-brand-clipaza">
+                <?php if ($siteLogo !== ''): ?>
+                <img src="<?= htmlspecialchars($siteLogo) ?>" alt="<?= htmlspecialchars($siteName) ?>" style="height:36px;vertical-align:middle;">
+                <?php else: ?>
+                Clipa<span>za</span>
+                <?php endif; ?>
+            </a>
+            <div class="navbar-links d-none d-md-flex align-items-center gap-4">
+                <a href="#features" class="nav-text-link">Features</a>
+                <a href="#how-it-works" class="nav-text-link">How It Works</a>
+                <a href="#creators" class="nav-text-link">For Creators</a>
+                <a href="#clippers" class="nav-text-link">For Clippers</a>
+            </div>
+            <div class="d-flex gap-2 align-items-center">
+                <a href="#waitlist" class="btn btn-accent" style="padding:10px 22px;font-size:0.875rem;">Get Started</a>
             </div>
         </div>
     </div>
 </nav>
 
-<!-- Hero -->
-<section class="hero-section text-center">
+<!-- Hero Section -->
+<section class="lp-hero" id="waitlist">
+    <div class="lp-hero-glow"></div>
     <div class="container">
-        <div class="animate-in">
-            <div class="coming-soon-badge">Coming Soon</div>
-            <h1 class="hero-title">Earn Money<br><span class="highlight">Clipping Videos</span></h1>
-            <p class="hero-subtitle">Turn viral moments into real income. Find, clip, and share the best video moments — and get paid for every view.</p>
+        <div class="text-center animate-in">
+            <div class="coming-soon-badge mb-4">🚀 Coming Soon — Join the Waitlist</div>
+            <h1 class="lp-hero-title">
+                The Smartest Way to<br>
+                Grow on YouTube<br>
+                <span class="lp-hero-accent">While Getting Paid</span>
+            </h1>
+            <p class="lp-hero-sub">
+                Creators fund contests. Clippers find viral moments.<br>
+                Winners earn real money — paid directly to your bank.
+            </p>
 
             <?php if ($waitlistSuccess): ?>
-            <div class="alert-dark-success d-inline-block px-4 py-3 mb-3" style="border-radius:8px;">
+            <div class="alert-dark-success d-inline-block px-4 py-3 mb-4" style="border-radius:8px;">
                 🎉 You're on the waitlist! We'll notify you at launch.
             </div>
             <?php elseif ($waitlistError): ?>
-            <div class="alert-dark-warning d-inline-block px-4 py-3 mb-3" style="border-radius:8px;">
+            <div class="alert-dark-warning d-inline-block px-4 py-3 mb-4" style="border-radius:8px;">
                 <?= htmlspecialchars($waitlistError) ?>
             </div>
             <?php endif; ?>
 
-            <form method="POST" class="email-form">
+            <form method="POST" class="lp-email-form">
                 <input type="email" name="waitlist_email" placeholder="Enter your email address" required
                        value="<?= isset($_POST['waitlist_email']) && !$waitlistSuccess ? htmlspecialchars($_POST['waitlist_email']) : '' ?>">
                 <button type="submit" class="btn btn-accent pulse-accent">Join Waitlist</button>
             </form>
-            <p style="font-size:0.8rem;color:#555;margin-top:12px;">No spam. Unsubscribe anytime. 🔒</p>
+            <p class="lp-form-note">No spam. Unsubscribe anytime. 🔒</p>
+
+            <!-- Stats Row -->
+            <div class="lp-stats-row">
+                <div class="lp-stat">
+                    <div class="lp-stat-val">₦50M+</div>
+                    <div class="lp-stat-label">in Prizes</div>
+                </div>
+                <div class="lp-stat-divider"></div>
+                <div class="lp-stat">
+                    <div class="lp-stat-val">10K+</div>
+                    <div class="lp-stat-label">Creators</div>
+                </div>
+                <div class="lp-stat-divider"></div>
+                <div class="lp-stat">
+                    <div class="lp-stat-val">500K+</div>
+                    <div class="lp-stat-label">Clips</div>
+                </div>
+            </div>
         </div>
     </div>
 </section>
 
-<!-- Features -->
-<section style="padding:80px 0;" id="features">
+<!-- How It Works -->
+<section class="lp-section" id="how-it-works">
     <div class="container">
         <div class="text-center mb-5">
-            <h2 style="font-size:2rem;font-weight:800;letter-spacing:-1px;">Why <span style="color:#CCFF00;">Clipaza</span>?</h2>
-            <p style="color:#888;margin-top:8px;">Everything you need to start earning from video content</p>
+            <div class="lp-section-eyebrow">Simple Process</div>
+            <h2 class="lp-section-title">How <span class="text-accent">Clipaza</span> Works</h2>
+            <p class="lp-section-sub">Three steps from signing up to getting paid</p>
+        </div>
+        <div class="row g-4 justify-content-center">
+            <div class="col-md-4">
+                <div class="lp-step-card">
+                    <div class="lp-step-num">01</div>
+                    <div class="lp-step-icon">🏆</div>
+                    <h3 class="lp-step-title">Creators Fund Contests</h3>
+                    <p class="lp-step-desc">YouTube creators launch clipping contests with prize pools, defining what clips they want and how much they're willing to pay.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="lp-step-card lp-step-card--accent">
+                    <div class="lp-step-num">02</div>
+                    <div class="lp-step-icon">✂️</div>
+                    <h3 class="lp-step-title">Clippers Create &amp; Share</h3>
+                    <p class="lp-step-desc">Clippers find the best moments, edit them into viral short clips, and share them on social media to earn votes and views.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="lp-step-card">
+                    <div class="lp-step-num">03</div>
+                    <div class="lp-step-icon">💸</div>
+                    <h3 class="lp-step-title">Winners Get Paid</h3>
+                    <p class="lp-step-desc">Top clippers win their share of the prize pool — paid directly to their bank account via secure bank transfer.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="lp-section lp-section--alt" id="features">
+    <div class="container">
+        <div class="text-center mb-5">
+            <div class="lp-section-eyebrow">Platform Features</div>
+            <h2 class="lp-section-title">Why <span class="text-accent">Clipaza</span>?</h2>
+            <p class="lp-section-sub">Everything you need to monetise your clipping skills</p>
         </div>
         <div class="row g-4">
             <div class="col-md-4">
                 <div class="feature-card">
                     <div class="feature-icon">🎬</div>
-                    <div class="feature-title">Clip & Earn</div>
-                    <div class="feature-desc">Find the best moments in long-form videos and turn them into viral short clips. Every clip you create earns you revenue.</div>
+                    <div class="feature-title">Clip &amp; Earn</div>
+                    <div class="feature-desc">Turn long-form videos into viral short clips. Every clip you create earns you real revenue from contest prize pools.</div>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="feature-card">
                     <div class="feature-icon">🏆</div>
                     <div class="feature-title">Weekly Contests</div>
-                    <div class="feature-desc">Compete in weekly clipping contests with prize pools. The best clips win cash rewards distributed directly to your wallet.</div>
+                    <div class="feature-desc">Compete in weekly clipping contests with cash prize pools. The best clips win — judged by views, votes, and engagement.</div>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="feature-card">
                     <div class="feature-icon">💸</div>
                     <div class="feature-title">Instant Payouts</div>
-                    <div class="feature-desc">Withdraw your earnings at any time. We support multiple payout methods including PayPal, Stripe, and crypto.</div>
+                    <div class="feature-desc">Withdraw your earnings anytime directly to your local bank account. No delays, no middlemen.</div>
                 </div>
             </div>
             <div class="col-md-4">
@@ -180,42 +295,144 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['waitlist_email'])) {
                 <div class="feature-card">
                     <div class="feature-icon">🤝</div>
                     <div class="feature-title">Referral Program</div>
-                    <div class="feature-desc">Invite friends and earn a percentage of their earnings forever. Build a passive income stream by growing the community.</div>
+                    <div class="feature-desc">Invite friends and earn a percentage of their contest winnings forever. Build a passive income stream.</div>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="feature-card">
                     <div class="feature-icon">🌍</div>
                     <div class="feature-title">Global Community</div>
-                    <div class="feature-desc">Join creators from 100+ countries. Our platform supports multiple languages and local payment methods.</div>
+                    <div class="feature-desc">Join creators and clippers from 100+ countries. Our platform supports local payment methods worldwide.</div>
                 </div>
             </div>
         </div>
     </div>
 </section>
 
-<!-- CTA -->
-<section style="padding:80px 0;border-top:1px solid #222;">
-    <div class="container text-center">
-        <h2 style="font-size:2rem;font-weight:800;letter-spacing:-1px;margin-bottom:16px;">Ready to Start Earning?</h2>
-        <p style="color:#888;margin-bottom:32px;font-size:1.05rem;">Join thousands of creators already on the waitlist.</p>
-        <form method="POST" class="email-form">
+<!-- For Creators / For Clippers Split -->
+<section class="lp-section" id="creators">
+    <div class="container">
+        <div class="text-center mb-5">
+            <div class="lp-section-eyebrow">Two Sides, One Platform</div>
+            <h2 class="lp-section-title">Built for <span class="text-accent">Everyone</span></h2>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-6" id="clippers">
+                <div class="lp-split-card">
+                    <div class="lp-split-badge">For Creators</div>
+                    <h3 class="lp-split-title">Grow Your Channel<br><span class="text-accent">On Autopilot</span></h3>
+                    <ul class="lp-split-list">
+                        <li>🎯 Fund contests starting at any budget</li>
+                        <li>📊 Get dozens of unique clips per video</li>
+                        <li>🚀 Viral short-form content without editing</li>
+                        <li>💡 Pay only for results you love</li>
+                        <li>🔒 Full control over clip approval</li>
+                    </ul>
+                    <a href="#waitlist" class="btn btn-accent mt-3">Start a Contest →</a>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="lp-split-card lp-split-card--accent">
+                    <div class="lp-split-badge lp-split-badge--dark">For Clippers</div>
+                    <h3 class="lp-split-title">Turn Your Skills<br><span style="color:#000;">Into Cash</span></h3>
+                    <ul class="lp-split-list lp-split-list--dark">
+                        <li>✂️ Clip from top YouTube channels</li>
+                        <li>💰 Enter contests with real prize money</li>
+                        <li>🏅 Leaderboard rankings &amp; recognition</li>
+                        <li>⚡ Fast payouts to your local bank</li>
+                        <li>📱 Work from anywhere, any device</li>
+                    </ul>
+                    <a href="#waitlist" class="btn" style="background:#000;color:#CCFF00;border:1.5px solid #000;border-radius:8px;padding:10px 24px;font-weight:700;margin-top:12px;display:inline-block;">Join as Clipper →</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Leaderboard Preview -->
+<section class="lp-section lp-section--alt">
+    <div class="container">
+        <div class="text-center mb-5">
+            <div class="lp-section-eyebrow">Live Rankings</div>
+            <h2 class="lp-section-title">Top Clippers <span class="text-accent">This Week</span></h2>
+            <p class="lp-section-sub">Join the competition and see your name on the leaderboard</p>
+        </div>
+        <div class="lp-leaderboard">
+            <div class="lp-lb-header">
+                <span>Rank</span>
+                <span>Clipper</span>
+                <span>Clips</span>
+                <span>Views</span>
+                <span>Prize</span>
+            </div>
+            <?php
+            $lbData = [
+                ['rank'=>1,  'emoji'=>'👑', 'name'=>'ClipKing_NG',    'clips'=>24, 'views'=>'2.1M', 'prize'=>'₦85,000',  'color'=>'#CCFF00'],
+                ['rank'=>2,  'emoji'=>'🥈', 'name'=>'ViralVault',     'clips'=>19, 'views'=>'1.7M', 'prize'=>'₦45,000',  'color'=>'#aaaaaa'],
+                ['rank'=>3,  'emoji'=>'🥉', 'name'=>'QuickCutPro',    'clips'=>15, 'views'=>'980K',  'prize'=>'₦25,000',  'color'=>'#cd7f32'],
+                ['rank'=>4,  'emoji'=>'',   'name'=>'NaijaClipper',   'clips'=>12, 'views'=>'610K',  'prize'=>'₦10,000',  'color'=>'#555'],
+                ['rank'=>5,  'emoji'=>'',   'name'=>'ShortFormStar',  'clips'=>11, 'views'=>'540K',  'prize'=>'₦8,000',   'color'=>'#555'],
+            ];
+            foreach ($lbData as $row):
+            ?>
+            <div class="lp-lb-row">
+                <span class="lp-lb-rank" style="color:<?= $row['color'] ?>;"><?= $row['emoji'] !== '' ? $row['emoji'] : '#' . $row['rank'] ?></span>
+                <span class="lp-lb-name"><?= htmlspecialchars($row['name']) ?></span>
+                <span class="lp-lb-meta"><?= $row['clips'] ?> clips</span>
+                <span class="lp-lb-meta"><?= $row['views'] ?> views</span>
+                <span class="lp-lb-prize" style="color:var(--accent);"><?= $row['prize'] ?></span>
+            </div>
+            <?php endforeach; ?>
+            <div class="lp-lb-footer">
+                <em style="color:#555;font-size:0.8rem;">* Sample data for illustration purposes</em>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="lp-cta-section">
+    <div class="lp-cta-glow"></div>
+    <div class="container text-center" style="position:relative;z-index:1;">
+        <h2 class="lp-cta-title">Join the <span class="text-accent">Movement</span></h2>
+        <p class="lp-cta-sub">Thousands of creators and clippers are already on the waitlist.<br>Don't miss your spot at launch.</p>
+
+        <?php if ($waitlistSuccess): ?>
+        <div class="alert-dark-success d-inline-block px-4 py-3 mb-4" style="border-radius:8px;">
+            🎉 You're on the waitlist!
+        </div>
+        <?php endif; ?>
+
+        <form method="POST" class="lp-email-form justify-content-center">
             <input type="email" name="waitlist_email" placeholder="Your email address" required>
             <button type="submit" class="btn btn-accent">Get Early Access</button>
         </form>
+        <p class="lp-form-note">Free forever for clippers. No credit card required.</p>
     </div>
 </section>
 
 <!-- Footer -->
-<footer style="border-top:1px solid #222;padding:32px 0;">
+<footer class="lp-footer">
     <div class="container">
         <div class="d-flex flex-column flex-md-row align-items-center justify-content-between gap-3">
-            <div style="font-weight:900;font-size:1.2rem;letter-spacing:-0.5px;">Clipa<span style="color:#CCFF00;">za</span></div>
-            <p style="font-size:0.8rem;color:#555;margin:0;">© <?= date('Y') ?> Clipaza. All rights reserved.</p>
-            <div class="d-flex gap-3">
-                <a href="#" style="color:#555;font-size:0.8rem;">Privacy</a>
-                <a href="#" style="color:#555;font-size:0.8rem;">Terms</a>
-                <a href="#" style="color:#555;font-size:0.8rem;">Contact</a>
+            <div class="lp-footer-logo">
+                <?php if ($siteLogo !== ''): ?>
+                <img src="<?= htmlspecialchars($siteLogo) ?>" alt="<?= htmlspecialchars($siteName) ?>" style="height:28px;">
+                <?php else: ?>
+                Clipa<span>za</span>
+                <?php endif; ?>
+            </div>
+            <p style="font-size:0.8rem;color:#555;margin:0;">© <?= date('Y') ?> <?= htmlspecialchars($siteName) ?>. All rights reserved.</p>
+            <div class="d-flex gap-4 align-items-center flex-wrap justify-content-center">
+                <a href="#" class="lp-footer-link">Privacy</a>
+                <a href="#" class="lp-footer-link">Terms</a>
+                <a href="#" class="lp-footer-link">Contact</a>
+                <a href="#" class="lp-footer-link">About</a>
+                <span class="lp-footer-socials">
+                    <a href="#" title="Twitter/X" aria-label="Twitter">𝕏</a>
+                    <a href="#" title="Instagram" aria-label="Instagram">📸</a>
+                    <a href="#" title="TikTok" aria-label="TikTok">🎵</a>
+                </span>
             </div>
         </div>
     </div>

@@ -71,7 +71,7 @@ try {
                 </a>
             </li>
             <li class="nav-item">
-                <a href="#" class="nav-link">
+                <a href="settings.php" class="nav-link">
                     <span class="nav-icon">⚙</span> Settings
                 </a>
             </li>

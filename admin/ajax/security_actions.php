@@ -52,14 +52,24 @@ function handleSaveSecuritySettings(): never {
         'username_protection_enabled', 'username_period_minutes', 'username_max_failures',
         'block_duration_minutes', 'notify_on_block', 'notify_on_lock', 'log_retention_days',
         'two_factor_enabled', 'captcha_enabled', 'captcha_threshold',
+        'protect_local_only', 'allow_lock_admin', 'ip_block_duration_option',
+        'notify_admin_login_unknown_ip', 'notify_brute_force_with_username',
     ];
 
-    $checkboxes = ['ip_protection_enabled', 'username_protection_enabled', 'notify_on_block', 'notify_on_lock', 'two_factor_enabled', 'captcha_enabled'];
+    $checkboxes = [
+        'ip_protection_enabled', 'username_protection_enabled', 'notify_on_block', 'notify_on_lock',
+        'two_factor_enabled', 'captcha_enabled',
+        'protect_local_only', 'allow_lock_admin', 'notify_admin_login_unknown_ip', 'notify_brute_force_with_username',
+    ];
 
     $saved = 0;
+    $validIpBlockOptions = ['1day', '1week', '1month', '1year'];
     foreach ($allowed as $key) {
         if (in_array($key, $checkboxes)) {
             $value = isset($_POST[$key]) && $_POST[$key] === '1' ? '1' : '0';
+        } elseif ($key === 'ip_block_duration_option') {
+            $raw   = trim($_POST[$key] ?? '1day');
+            $value = in_array($raw, $validIpBlockOptions, true) ? $raw : '1day';
         } else {
             $value = trim($_POST[$key] ?? '');
         }

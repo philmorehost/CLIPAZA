@@ -29,6 +29,11 @@ try {
     // Blocked IPs
     $blockedIps = BruteForceProtection::getBlockedIps(200);
 
+    // Whitelisted IPs (for king icon)
+    $whitelistStmt = $db->query('SELECT ip_address FROM ip_whitelist');
+    $whitelistedIps = array_column($whitelistStmt->fetchAll(), 'ip_address');
+    $whitelistedIps = array_flip($whitelistedIps);
+
     // Locked Accounts
     $lockedAccounts = BruteForceProtection::getLockedAccounts();
 
@@ -75,6 +80,7 @@ try {
     $loginHistory = $histStmt->fetchAll();
 } catch (Throwable $e) {
     $settings = $blockedIps = $lockedAccounts = $countries = $loginHistory = [];
+    $whitelistedIps = [];
     $histPager = ['pages' => 1, 'current' => 1, 'hasPrev' => false, 'hasNext' => false];
 }
 
@@ -106,7 +112,7 @@ function checked(array $settings, string $key, string $trueVal = '1'): string {
             <li class="nav-item"><a href="security.php" class="nav-link active"><span class="nav-icon">🛡</span> Security</a></li>
             <li class="nav-item"><a href="#" class="nav-link"><span class="nav-icon">👥</span> Users</a></li>
             <li class="nav-item"><a href="#" class="nav-link"><span class="nav-icon">🏆</span> Contests</a></li>
-            <li class="nav-item"><a href="#" class="nav-link"><span class="nav-icon">⚙</span> Settings</a></li>
+            <li class="nav-item"><a href="settings.php" class="nav-link"><span class="nav-icon">⚙</span> Settings</a></li>
         </ul>
         <hr class="divider-dark mx-3">
         <ul class="nav flex-column">
@@ -207,6 +213,27 @@ function checked(array $settings, string $key, string $trueVal = '1'): string {
                             <input type="number" name="username_max_failures" class="form-control form-control-dark"
                                    value="<?= s($settings, 'username_max_failures', '5') ?>" min="1" max="100">
                         </div>
+                        <hr style="border-color:var(--border);">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <div>
+                                <div style="font-weight:600;font-size:0.875rem;">Apply protection to local addresses only</div>
+                                <div style="font-size:0.8rem;color:#555;">Only enforce username protection for local/private IPs</div>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="protect_local_only"
+                                       value="1" <?= checked($settings, 'protect_local_only') ?>>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <div style="font-weight:600;font-size:0.875rem;">Allow username protection to lock the <code style="font-size:0.8rem;color:#aaa;">admin</code> / <code style="font-size:0.8rem;color:#aaa;">administrator</code> user</div>
+                                <div style="font-size:0.8rem;color:#555;">Enable locking of privileged accounts on brute force</div>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="allow_lock_admin"
+                                       value="1" <?= checked($settings, 'allow_lock_admin') ?>>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -236,10 +263,38 @@ function checked(array $settings, string $key, string $trueVal = '1'): string {
                 </div>
             </div>
 
+            <!-- IP Address-based Protection -->
+            <div class="col-md-6">
+                <div class="card-dark">
+                    <div class="card-header">IP Address-based Protection</div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label-dark">What should happen when an IP triggers Brute Force Protection?</label>
+                            <select name="ip_block_duration_option" class="form-select form-select-dark">
+                                <?php
+                                $ipBlockOptions = [
+                                    '1day'   => 'One-day Blocks',
+                                    '1week'  => 'One-week Blocks',
+                                    '1month' => 'One-month Blocks',
+                                    '1year'  => 'One-year Blocks',
+                                ];
+                                $currentOpt = $settings['ip_block_duration_option'] ?? '1day';
+                                foreach ($ipBlockOptions as $val => $label):
+                                ?>
+                                <option value="<?= $val ?>" <?= $currentOpt === $val ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($label) ?>
+                                </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Notifications & Logs -->
             <div class="col-md-6">
                 <div class="card-dark">
-                    <div class="card-header">Notifications & Logs</div>
+                    <div class="card-header">Notifications &amp; Logs</div>
                     <div class="card-body">
                         <div class="d-flex align-items-center justify-content-between mb-3">
                             <div>
@@ -259,6 +314,26 @@ function checked(array $settings, string $key, string $trueVal = '1'): string {
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" name="notify_on_lock"
                                        value="1" <?= checked($settings, 'notify_on_lock') ?>>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <div>
+                                <div style="font-weight:600;font-size:0.875rem;">Notify on admin login from unknown IP</div>
+                                <div style="font-size:0.8rem;color:#555;">Send notification when admin logs in from a non-whitelisted IP</div>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="notify_admin_login_unknown_ip"
+                                       value="1" <?= checked($settings, 'notify_admin_login_unknown_ip') ?>>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <div>
+                                <div style="font-weight:600;font-size:0.875rem;">Include username in brute force notifications</div>
+                                <div style="font-size:0.8rem;color:#555;">Include the targeted username in brute force alert emails</div>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="notify_brute_force_with_username"
+                                       value="1" <?= checked($settings, 'notify_brute_force_with_username') ?>>
                             </div>
                         </div>
                         <div class="mb-3">
@@ -302,7 +377,7 @@ function checked(array $settings, string $key, string $trueVal = '1'): string {
                                 <?php else: ?>
                                 <?php foreach ($blockedIps as $block): ?>
                                 <tr>
-                                    <td><code style="color:#CCFF00;"><?= htmlspecialchars($block['ip_address']) ?></code></td>
+                                    <td><code style="color:#CCFF00;"><?= htmlspecialchars($block['ip_address']) ?></code><?php if (isset($whitelistedIps[$block['ip_address']])): ?> <span title="Whitelisted IP" style="color:#00cc66;">👑</span><?php endif; ?></td>
                                     <td>
                                         <span class="<?= $block['block_type'] === 'permanent' ? 'badge-danger' : 'badge-warning' ?>">
                                             <?= htmlspecialchars($block['block_type']) ?>

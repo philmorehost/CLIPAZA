@@ -214,7 +214,12 @@ INSERT INTO `security_settings` (`setting_key`, `setting_value`) VALUES
 ('log_retention_days', '90'),
 ('two_factor_enabled', '0'),
 ('captcha_enabled', '0'),
-('captcha_threshold', '3')
+('captcha_threshold', '3'),
+('protect_local_only', '0'),
+('allow_lock_admin', '0'),
+('ip_block_duration_option', '1day'),
+('notify_admin_login_unknown_ip', '0'),
+('notify_brute_force_with_username', '0')
 ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value);
 
 -- Default site settings
@@ -224,7 +229,16 @@ INSERT INTO `site_settings` (`setting_key`, `setting_value`) VALUES
 ('admin_email', 'admin@example.com'),
 ('maintenance_mode', '0'),
 ('registration_enabled', '1'),
-('timezone', 'UTC')
+('timezone', 'UTC'),
+('site_logo', ''),
+('site_favicon', ''),
+('seo_title', ''),
+('seo_description', ''),
+('seo_keywords', ''),
+('og_image_url', ''),
+('custom_header_code', ''),
+('adsense_code', ''),
+('ads_txt_content', '')
 ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value);
 
 -- Country rules for all ~250 countries
