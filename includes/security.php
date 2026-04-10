@@ -182,14 +182,15 @@ class BruteForceProtection {
     public static function getBlockedIps(int $limit = 100): array {
         try {
             $db = db();
-            $stmt = $db->query(
+            $stmt = $db->prepare(
                 'SELECT b.*, u.username as blocked_by_user
                  FROM ip_blocks b
                  LEFT JOIN users u ON u.id = b.created_by
                  WHERE b.blocked_until IS NULL OR b.blocked_until > NOW()
                  ORDER BY b.blocked_at DESC
-                 LIMIT ' . (int)$limit
+                 LIMIT ?'
             );
+            $stmt->execute([$limit]);
             return $stmt->fetchAll();
         } catch (Throwable) {
             return [];

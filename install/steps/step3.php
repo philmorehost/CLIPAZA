@@ -31,10 +31,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['site_next'])) {
 
         // Run schema
         try {
+            // Re-validate DB name from session (alphanumeric + underscores only) before using in DDL
+            $safeDbName = $dbConfig['name'];
+            if (!preg_match('/^[a-zA-Z0-9_]+$/', $safeDbName)) {
+                throw new RuntimeException('Invalid database name stored in session.');
+            }
             $dsn = "mysql:host={$dbConfig['host']};port={$dbConfig['port']};charset=utf8mb4";
             $pdo = new PDO($dsn, $dbConfig['user'], $dbConfig['pass'], [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
-            $pdo->exec("CREATE DATABASE IF NOT EXISTS `{$dbConfig['name']}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
-            $pdo->exec("USE `{$dbConfig['name']}`");
+            $pdo->exec("CREATE DATABASE IF NOT EXISTS `{$safeDbName}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+            $pdo->exec("USE `{$safeDbName}`");
 
             if (file_exists($schemaFile)) {
                 $sql = file_get_contents($schemaFile);
@@ -58,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['site_next'])) {
             }
 
             // Save site settings
-            $pdo->exec("USE `{$dbConfig['name']}`");
+            $pdo->exec("USE `{$safeDbName}`");
             $settings = [
                 'site_name'  => $siteName,
                 'site_url'   => $siteUrl,

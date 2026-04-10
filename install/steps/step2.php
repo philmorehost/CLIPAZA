@@ -6,13 +6,16 @@ $formData = $_SESSION['db_config'] ?? [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['db_next'])) {
     $host = trim($_POST['db_host'] ?? 'localhost');
-    $port = trim($_POST['db_port'] ?? '3306');
+    $port = (int)($_POST['db_port'] ?? 3306);
     $name = trim($_POST['db_name'] ?? '');
     $user = trim($_POST['db_user'] ?? '');
     $pass = $_POST['db_pass'] ?? '';
 
     if (empty($name)) $errors[] = 'Database name is required.';
     if (empty($user)) $errors[] = 'Database user is required.';
+    if (!preg_match('/^[a-zA-Z0-9.\-_\[\]:]+$/', $host)) $errors[] = 'Invalid database host.';
+    if ($port < 1 || $port > 65535) $errors[] = 'Invalid database port.';
+    if (!preg_match('/^[a-zA-Z0-9_]+$/', $name)) $errors[] = 'Database name must contain only letters, numbers, and underscores.';
 
     if (empty($errors)) {
         try {
@@ -23,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['db_next'])) {
             header('Location: ?step=3');
             exit;
         } catch (PDOException $e) {
-            $errors[] = 'Connection failed: ' . $e->getMessage();
+            $errors[] = 'Connection failed. Please check your credentials.';
         }
     }
 

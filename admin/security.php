@@ -45,12 +45,13 @@ try {
     $histIp      = $_GET['hip'] ?? '';
     $histUser    = $_GET['huser'] ?? '';
 
-    $histWhere = '1=1';
+    $histWhere  = '1=1';
     $histParams = [];
-    if ($histFilter) { $histWhere .= ' AND action = ?'; $histParams[] = $histFilter; }
-    if ($histIp)     { $histWhere .= ' AND ip_address LIKE ?'; $histParams[] = '%' . $histIp . '%'; }
-    if ($histUser)   { $histWhere .= ' AND username LIKE ?'; $histParams[] = '%' . $histUser . '%'; }
+    if ($histFilter !== '') { $histWhere .= ' AND action = ?';          $histParams[] = $histFilter; }
+    if ($histIp !== '')     { $histWhere .= ' AND ip_address LIKE ?';   $histParams[] = '%' . $histIp . '%'; }
+    if ($histUser !== '')   { $histWhere .= ' AND username LIKE ?';     $histParams[] = '%' . $histUser . '%'; }
 
+    // $histWhere is built entirely from literal strings above; user input only appears in bound params.
     $histCountStmt = $db->prepare("SELECT COUNT(*) FROM login_history WHERE {$histWhere}");
     $histCountStmt->execute($histParams);
     $histTotal = (int)$histCountStmt->fetchColumn();
