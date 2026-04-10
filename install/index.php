@@ -279,7 +279,7 @@ if ($step === 1) {
 <body>
 <div class="container">
     <h1>CLIPAZA Installer</h1>
-    <p class="subtitle">Step <?= $step ?> of 3 &mdash; <?= h($title) ?></p>
+    <p class="subtitle">Step <?= $step ?> of 3 - <?= h($title) ?></p>
 
     <div class="step-bar">
         <span class="<?= $step > 1 ? 'done' : ($step === 1 ? 'active' : '') ?>"></span>
