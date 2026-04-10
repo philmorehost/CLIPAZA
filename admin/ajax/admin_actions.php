@@ -35,6 +35,9 @@ switch ($action) {
     case 'update_payout_status':
         handleUpdatePayoutStatus();
         break;
+    case 'review_kyc':
+        handleReviewKyc();
+        break;
     default:
         jsonResponse(['success' => false, 'message' => 'Unknown action.'], 400);
 }
@@ -154,13 +157,81 @@ function handleDisqualifyEntry(): never {
 function handleUpdatePayoutStatus(): never {
     $payoutId = (int)($_POST['payout_id'] ?? 0);
     $status   = sanitizeInput($_POST['status'] ?? '');
-    if (!in_array($status, ['pending', 'claimed', 'processing', 'completed', 'failed'], true)) {
+    $reason   = sanitizeInput($_POST['reason'] ?? '');
+
+    if (!in_array($status, ['pending', 'claimed', 'processing', 'completed', 'failed', 'rejected', 'cancelled'], true)) {
         jsonResponse(['success' => false, 'message' => 'Invalid status.']);
     }
+
     try {
-        db()->prepare('UPDATE payouts SET status = ? WHERE id = ?')->execute([$status, $payoutId]);
-        jsonResponse(['success' => true, 'message' => 'Payout status updated.']);
-    } catch (Throwable) {
+        $db = db();
+        $stmt = $db->prepare('SELECT * FROM payouts WHERE id = ? LIMIT 1');
+        $stmt->execute([$payoutId]);
+        $payout = $stmt->fetch();
+
+        if (!$payout) jsonResponse(['success' => false, 'message' => 'Payout not found.']);
+
+        $db->beginTransaction();
+
+        // Handle Rejection (Reverse funds to wallet)
+        if ($status === 'rejected' && $payout['status'] !== 'rejected') {
+            $db->prepare('UPDATE user_profiles SET wallet_balance = wallet_balance + ? WHERE user_id = ?')
+               ->execute([$payout['amount'], $payout['user_id']]);
+        }
+
+        $db->prepare('UPDATE payouts SET status = ?, rejection_reason = ? WHERE id = ?')
+           ->execute([$status, $reason ?: null, $payoutId]);
+
+        // Reset appeal if moving to pending
+        if ($status === 'pending') {
+            $db->prepare('UPDATE payouts SET appeal_message = NULL WHERE id = ?')->execute([$payoutId]);
+        }
+
+        $db->commit();
+
+        // Send Notification
+        try {
+            $stmt = $db->prepare('SELECT email, username FROM users WHERE id = ?');
+            $stmt->execute([$payout['user_id']]);
+            $u = $stmt->fetch();
+            if ($u) {
+                (new Mailer())->sendPayoutUpdate($u['email'], $u['username'], $status, (string)$payout['amount'], $reason);
+            }
+        } catch (Throwable $e) {}
+
+        jsonResponse(['success' => true, 'message' => 'Payout status updated to ' . $status]);
+    } catch (Throwable $e) {
+        if (isset($db) && $db->inTransaction()) $db->rollBack();
+        jsonResponse(['success' => false, 'message' => 'Update failed: ' . $e->getMessage()]);
+    }
+}
+
+function handleReviewKyc(): never {
+    $targetUserId = (int)($_POST['user_id'] ?? 0);
+    $status = sanitizeInput($_POST['status'] ?? '');
+    $reason = sanitizeInput($_POST['reason'] ?? '');
+
+    if (!in_array($status, ['approved', 'rejected'], true)) {
+        jsonResponse(['success' => false, 'message' => 'Invalid status.']);
+    }
+
+    try {
+        $db = db();
+        $db->prepare("UPDATE user_profiles SET kyc_status = ?, kyc_rejection_reason = ? WHERE user_id = ?")
+           ->execute([$status, $reason ?: null, $targetUserId]);
+
+        // Send Notification
+        try {
+            $stmt = $db->prepare('SELECT email, username FROM users WHERE id = ?');
+            $stmt->execute([$targetUserId]);
+            $u = $stmt->fetch();
+            if ($u) {
+                (new Mailer())->sendKycUpdate($u['email'], $u['username'], $status, $reason);
+            }
+        } catch (Throwable $e) {}
+
+        jsonResponse(['success' => true, 'message' => 'KYC status updated.']);
+    } catch (Throwable $e) {
         jsonResponse(['success' => false, 'message' => 'Update failed.']);
     }
 }

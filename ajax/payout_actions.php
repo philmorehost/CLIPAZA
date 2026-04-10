@@ -20,6 +20,12 @@ switch ($action) {
     case 'claim_prize':
         handleClaimPrize();
         break;
+    case 'request_wallet_payout':
+        handleWalletPayoutRequest();
+        break;
+    case 'submit_payout_appeal':
+        handlePayoutAppeal();
+        break;
     default:
         jsonResponse(['success' => false, 'message' => 'Unknown action.'], 400);
 }
@@ -116,6 +122,69 @@ function handleVerifyAccount(): never {
         'success'      => true,
         'account_name' => $result['data']['account_name'] ?? '',
     ]);
+}
+
+function handleWalletPayoutRequest(): never {
+    if (empty($_SESSION['user_id'])) jsonResponse(['success' => false, 'message' => 'Unauthorized'], 401);
+    if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) jsonResponse(['success' => false, 'message' => 'Invalid CSRF'], 403);
+
+    $userId = (int)$_SESSION['user_id'];
+    $amount = (float)($_POST['amount'] ?? 0);
+
+    if ($amount < 1000) jsonResponse(['success' => false, 'message' => 'Minimum withdrawal is ₦1,000.']);
+
+    try {
+        $db = db();
+        $stmt = $db->prepare('SELECT wallet_balance, bank_name, bank_code, account_number, account_name, kyc_status FROM user_profiles WHERE user_id = ? LIMIT 1');
+        $stmt->execute([$userId]);
+        $profile = $stmt->fetch();
+
+        if (!$profile || $profile['kyc_status'] !== 'approved') {
+            jsonResponse(['success' => false, 'message' => 'KYC verification required.']);
+        }
+
+        if ($profile['wallet_balance'] < $amount) {
+            jsonResponse(['success' => false, 'message' => 'Insufficient balance.']);
+        }
+
+        $db->beginTransaction();
+        // Deduct from wallet
+        $db->prepare('UPDATE user_profiles SET wallet_balance = wallet_balance - ? WHERE user_id = ?')->execute([$amount, $userId]);
+
+        // Create payout record
+        $db->prepare("
+            INSERT INTO payouts (user_id, amount, status, bank_name, bank_code, account_number, account_name, nuban_verified, created_at)
+            VALUES (?, ?, 'claimed', ?, ?, ?, ?, 1, NOW())
+        ")->execute([
+            $userId, $amount, $profile['bank_name'], $profile['bank_code'], $profile['account_number'], $profile['account_name']
+        ]);
+
+        $db->commit();
+        jsonResponse(['success' => true, 'message' => 'Withdrawal request submitted!']);
+    } catch (Throwable $e) {
+        if (isset($db) && $db->inTransaction()) $db->rollBack();
+        jsonResponse(['success' => false, 'message' => 'Failed to submit request: ' . $e->getMessage()]);
+    }
+}
+
+function handlePayoutAppeal(): never {
+    if (empty($_SESSION['user_id'])) jsonResponse(['success' => false, 'message' => 'Unauthorized'], 401);
+    if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) jsonResponse(['success' => false, 'message' => 'Invalid CSRF'], 403);
+
+    $userId = (int)$_SESSION['user_id'];
+    $payoutId = (int)($_POST['payout_id'] ?? 0);
+    $message = sanitizeInput($_POST['message'] ?? '');
+
+    if (empty($message)) jsonResponse(['success' => false, 'message' => 'Appeal message is required.']);
+
+    try {
+        $db = db();
+        $db->prepare("UPDATE payouts SET appeal_message = ? WHERE id = ? AND user_id = ? AND status IN ('rejected', 'cancelled')")
+           ->execute([$message, $payoutId, $userId]);
+        jsonResponse(['success' => true, 'message' => 'Appeal submitted.']);
+    } catch (Throwable $e) {
+        jsonResponse(['success' => false, 'message' => 'Failed to submit appeal.']);
+    }
 }
 
 function handleClaimPrize(): never {

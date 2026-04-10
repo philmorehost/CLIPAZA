@@ -6,8 +6,12 @@ require_once $root . '/includes/db.php';
 require_once $root . '/includes/functions.php';
 require_once $root . '/includes/contest_manager.php';
 
-// This could be protected by a key
-// if (($_GET['key'] ?? '') !== getSetting('cron_key')) die('Unauthorized');
+// Protected by a key
+$cronKey = getSetting('cron_key', 'default_cron_key');
+if (($_GET['key'] ?? '') !== $cronKey) {
+    http_response_code(403);
+    die('Unauthorized');
+}
 
 processExpiredContests();
 

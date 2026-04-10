@@ -145,15 +145,26 @@ try {
                         <td style="font-size:0.8rem;color:#888"><?= e(formatDate($p['created_at'], 'M j, Y')) ?></td>
                         <td>
                             <div class="d-flex gap-1 flex-wrap">
-                                <?php if ($p['status'] === 'claimed'): ?>
+                                <?php if ($p['status'] === 'claimed' || ($p['status'] === 'pending' && $p['account_number'])): ?>
                                     <button class="btn btn-xs ppb" style="background:rgba(204,255,0,0.1);color:var(--accent);border:1px solid rgba(204,255,0,0.2)"
-                                            data-id="<?= $p['id'] ?>" data-csrf="<?= e($csrf) ?>">Process</button>
+                                            data-id="<?= $p['id'] ?>" data-csrf="<?= e($csrf) ?>">Approve & Pay</button>
+                                <?php endif; ?>
+                                <?php if (in_array($p['status'], ['claimed', 'pending'])): ?>
+                                    <button class="btn btn-xs usb" data-id="<?= $p['id'] ?>" data-st="rejected" data-csrf="<?= e($csrf) ?>">Reject</button>
+                                    <button class="btn btn-xs usb" data-id="<?= $p['id'] ?>" data-st="cancelled" data-csrf="<?= e($csrf) ?>">Cancel</button>
+                                <?php endif; ?>
+                                <?php if (in_array($p['status'], ['rejected', 'cancelled', 'failed']) || ($p['appeal_message'] && $p['status']!=='processing')): ?>
+                                    <button class="btn btn-xs usb badge-info" data-id="<?= $p['id'] ?>" data-st="pending" data-csrf="<?= e($csrf) ?>">Set Pending</button>
                                 <?php endif; ?>
                                 <?php if ($p['status'] === 'processing'): ?>
-                                    <button class="btn btn-xs usb" data-id="<?= $p['id'] ?>" data-st="completed" data-csrf="<?= e($csrf) ?>">Complete</button>
-                                    <button class="btn btn-xs usb badge-danger" data-id="<?= $p['id'] ?>" data-st="failed" data-csrf="<?= e($csrf) ?>">Fail</button>
+                                    <button class="btn btn-xs usb" data-id="<?= $p['id'] ?>" data-st="completed" data-csrf="<?= e($csrf) ?>">Mark Success</button>
                                 <?php endif; ?>
                             </div>
+                            <?php if ($p['appeal_message']): ?>
+                                <div class="mt-2 p-2 bg-black small rounded border border-info">
+                                    <strong>Appeal:</strong> <?= e($p['appeal_message']) ?>
+                                </div>
+                            <?php endif; ?>
                         </td>
                     </tr>
                     <?php endforeach; ?>
@@ -190,10 +201,17 @@ document.querySelectorAll('.ppb').forEach(btn => {
 document.querySelectorAll('.usb').forEach(btn => {
     btn.addEventListener('click', async function() {
         const st = this.dataset.st;
-        if (!confirm('Update payout status to ' + st + '?')) return;
+        let reason = '';
+        if (st === 'rejected' || st === 'cancelled') {
+            reason = prompt('Reason for ' + st + ':');
+            if (reason === null) return;
+        } else {
+            if (!confirm('Update payout status to ' + st + '?')) return;
+        }
+
         this.disabled = true;
         const r = await fetch('/admin/ajax/admin_actions.php', {
-            method:'POST', body: new URLSearchParams({action:'update_payout_status', payout_id:this.dataset.id, status:st, csrf_token:this.dataset.csrf})
+            method:'POST', body: new URLSearchParams({action:'update_payout_status', payout_id:this.dataset.id, status:st, reason:reason, csrf_token:this.dataset.csrf})
         });
         const d = await r.json();
         if (d.success) location.reload();

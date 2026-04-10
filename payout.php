@@ -21,7 +21,7 @@ try {
     $stmt = $db->prepare(
         "SELECT p.*, c.title AS contest_title, c.end_date
          FROM payouts p
-         INNER JOIN contests c ON c.id = p.contest_id
+         LEFT JOIN contests c ON c.id = p.contest_id
          WHERE p.user_id = ?
          ORDER BY p.created_at DESC"
     );
@@ -116,6 +116,36 @@ renderNav(true, ['username' => $username], $userMode);
               </form>
             </div>
           <?php endforeach; ?>
+        <?php endif; ?>
+
+        <!-- Withdraw from Wallet Balance -->
+        <div class="card-dark p-4 mb-4">
+            <h5 class="fw-700 mb-3">Withdraw from Wallet</h5>
+            <?php
+                $walletBalance = (float)($db->query("SELECT wallet_balance FROM user_profiles WHERE user_id = $userId")->fetchColumn() ?: 0);
+                $kycApproved = ($db->query("SELECT kyc_status FROM user_profiles WHERE user_id = $userId")->fetchColumn() === 'approved');
+            ?>
+            <div class="mb-3 text-accent fw-700">Balance: ₦<?= number_format($walletBalance, 2) ?></div>
+
+            <?php if (!$kycApproved): ?>
+                <div class="alert alert-dark-warning small">
+                    Please complete <a href="/kyc" class="text-accent">KYC verification</a> to enable withdrawals.
+                </div>
+            <?php else: ?>
+                <form id="walletWithdrawForm">
+                    <input type="hidden" name="action" value="request_wallet_payout">
+                    <input type="hidden" name="csrf_token" value="<?= e($csrf) ?>">
+                    <div class="mb-3">
+                        <label class="form-label-dark">Amount (₦)</label>
+                        <input type="number" name="amount" class="form-control-dark" min="1000" max="<?= $walletBalance ?>" placeholder="Min ₦1,000" required>
+                    </div>
+                    <div id="withdrawFeedback" class="mb-2"></div>
+                    <button type="submit" class="btn btn-accent" <?= $walletBalance < 1000 ? 'disabled' : '' ?>>Request Payout</button>
+                </form>
+            <?php endif; ?>
+        </div>
+
+        <?php if (empty($pendingWins) && empty($payouts)): ?>
         <?php elseif (empty($payouts)): ?>
           <div class="card-dark p-5 text-center">
             <div style="font-size:3rem;margin-bottom:16px">🏆</div>
@@ -139,15 +169,33 @@ renderNav(true, ['username' => $username], $userMode);
                       default     => 'var(--text-muted)',
                   };
                 ?>
-                <div class="leaderboard-row" style="justify-content:space-between">
-                  <div>
-                    <div class="fw-600" style="font-size:0.88rem"><?= e($py['contest_title']) ?></div>
-                    <div class="text-muted" style="font-size:0.78rem"><?= e(ucfirst($py['platform'])) ?> · <?= formatDate($py['created_at']) ?></div>
+                <div class="leaderboard-row flex-column align-items-stretch gap-2 py-3">
+                  <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="fw-600" style="font-size:0.88rem"><?= e($py['contest_title'] ?: 'Wallet Payout') ?></div>
+                        <div class="text-muted" style="font-size:0.78rem"><?= e(ucfirst($py['platform'] ?: 'Wallet')) ?> · <?= formatDate($py['created_at']) ?></div>
+                    </div>
+                    <div class="text-end">
+                        <div class="fw-700">₦<?= number_format((float)$py['amount'], 0) ?></div>
+                        <div style="font-size:0.75rem;color:<?= $stColor ?>"><?= e(ucfirst($py['status'])) ?></div>
+                    </div>
                   </div>
-                  <div class="text-end">
-                    <div class="fw-700">₦<?= number_format((float)$py['amount'], 0) ?></div>
-                    <div style="font-size:0.75rem;color:<?= $stColor ?>"><?= e(ucfirst($py['status'])) ?></div>
-                  </div>
+                  <?php if (in_array($py['status'], ['rejected', 'cancelled'])): ?>
+                    <div class="p-2 rounded bg-black small border border-secondary">
+                        <div class="text-danger fw-600">Reason: <?= e($py['rejection_reason'] ?: 'None provided') ?></div>
+                        <?php if (!$py['appeal_message']): ?>
+                            <form class="mt-2 appeal-form">
+                                <input type="hidden" name="action" value="submit_payout_appeal">
+                                <input type="hidden" name="csrf_token" value="<?= e($csrf) ?>">
+                                <input type="hidden" name="payout_id" value="<?= $py['id'] ?>">
+                                <textarea name="message" class="form-control-dark py-1 px-2 mb-1" style="font-size:0.75rem" placeholder="Provide reason for appeal..."></textarea>
+                                <button type="submit" class="btn btn-xs btn-outline-accent">Appeal</button>
+                            </form>
+                        <?php else: ?>
+                            <div class="text-info mt-1 italic">Appeal submitted: <?= e($py['appeal_message']) ?></div>
+                        <?php endif; ?>
+                    </div>
+                  <?php endif; ?>
                 </div>
               <?php endforeach; ?>
             </div>
@@ -259,6 +307,33 @@ document.querySelectorAll('.claim-form').forEach(form => {
       btn.textContent = 'Claim Prize';
     }
   });
+});
+
+document.getElementById('walletWithdrawForm')?.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const btn = this.querySelector('button');
+    const fb = document.getElementById('withdrawFeedback');
+    btn.disabled = true; fb.innerHTML = '';
+    try {
+        const r = await fetch('/ajax/payout_actions.php', { method:'POST', body: new URLSearchParams(new FormData(this)) });
+        const d = await r.json();
+        if (d.success) { fb.innerHTML = '<div class="alert-dark-success small">'+d.message+'</div>'; setTimeout(()=>location.reload(), 1500); }
+        else { fb.innerHTML = '<div class="alert-dark-danger small">'+d.message+'</div>'; btn.disabled = false; }
+    } catch(e) { fb.innerHTML = '<div class="alert-dark-danger small">Error</div>'; btn.disabled = false; }
+});
+
+document.querySelectorAll('.appeal-form').forEach(form => {
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const btn = this.querySelector('button');
+        btn.disabled = true;
+        try {
+            const r = await fetch('/ajax/payout_actions.php', { method:'POST', body: new URLSearchParams(new FormData(this)) });
+            const d = await r.json();
+            if (d.success) location.reload();
+            else { alert(d.message); btn.disabled = false; }
+        } catch(e) { alert('Error'); btn.disabled = false; }
+    });
 });
 </script>
 
