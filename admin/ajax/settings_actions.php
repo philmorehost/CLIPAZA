@@ -37,8 +37,9 @@ try {
         'save_general' => handleSaveGeneral(),
         'save_seo'     => handleSaveSeo(),
         'save_code'    => handleSaveCode(),
-        'save_ads'     => handleSaveAds(),
-        default        => jsonResponse(['success' => false, 'message' => 'Unknown action.']),
+        'save_ads'          => handleSaveAds(),
+        'save_integrations' => handleSaveIntegrations(),
+        default             => jsonResponse(['success' => false, 'message' => 'Unknown action.']),
     };
 } catch (\UnhandledMatchError $e) {
     jsonResponse(['success' => false, 'message' => 'Unknown action.']);
@@ -232,4 +233,24 @@ function handleSaveAds(): never {
     }
 
     jsonResponse(['success' => true, 'message' => 'Ads settings saved.']);
+}
+
+function handleSaveIntegrations(): never {
+    $fields = [
+        'paystack_public_key'   => 200,
+        'paystack_secret_key'   => 200,
+        'platform_fee_percent'  => 10,
+        'youtube_api_key'       => 200,
+        'google_client_id'      => 200,
+        'google_client_secret'  => 200,
+        'min_contest_prize'     => 20,
+        'max_contest_days'      => 10,
+    ];
+
+    foreach ($fields as $key => $maxLen) {
+        $value = substr(trim($_POST[$key] ?? ''), 0, (int)$maxLen);
+        saveSiteSetting($key, $value);
+    }
+
+    jsonResponse(['success' => true, 'message' => 'Integration settings saved.']);
 }

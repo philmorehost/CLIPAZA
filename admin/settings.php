@@ -45,31 +45,13 @@ function ss(array $settings, string $key, string $default = ''): string {
     <div class="sidebar-brand">Clipa<span>za</span></div>
     <div class="sidebar-nav">
         <ul class="nav flex-column">
-            <li class="nav-item">
-                <a href="index.php" class="nav-link">
-                    <span class="nav-icon">⊞</span> Dashboard
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="security.php" class="nav-link">
-                    <span class="nav-icon">🛡</span> Security
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="#" class="nav-link">
-                    <span class="nav-icon">👥</span> Users
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="#" class="nav-link">
-                    <span class="nav-icon">🏆</span> Contests
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="settings.php" class="nav-link active">
-                    <span class="nav-icon">⚙</span> Settings
-                </a>
-            </li>
+            <li class="nav-item"><a href="index.php" class="nav-link"><span class="nav-icon">⊞</span> Dashboard</a></li>
+            <li class="nav-item"><a href="users.php" class="nav-link"><span class="nav-icon">👥</span> Users</a></li>
+            <li class="nav-item"><a href="contests.php" class="nav-link"><span class="nav-icon">🏆</span> Contests</a></li>
+            <li class="nav-item"><a href="entries.php" class="nav-link"><span class="nav-icon">✂️</span> Entries</a></li>
+            <li class="nav-item"><a href="payouts.php" class="nav-link"><span class="nav-icon">💸</span> Payouts</a></li>
+            <li class="nav-item"><a href="security.php" class="nav-link"><span class="nav-icon">🛡</span> Security</a></li>
+            <li class="nav-item"><a href="settings.php" class="nav-link active"><span class="nav-icon">⚙</span> Settings</a></li>
         </ul>
         <hr class="divider-dark mx-3">
         <ul class="nav flex-column">
@@ -96,10 +78,11 @@ function ss(array $settings, string $key, string $default = ''): string {
     <ul class="nav nav-tabs-dark mb-4">
         <?php
         $tabs = [
-            'general' => '🌐 General',
-            'seo'     => '🔍 SEO',
-            'code'    => '💻 Code Injection',
-            'ads'     => '📢 Ads',
+            'general'      => '🌐 General',
+            'seo'          => '🔍 SEO',
+            'integrations' => '🔌 Integrations',
+            'code'         => '💻 Code Injection',
+            'ads'          => '📢 Ads',
         ];
         foreach ($tabs as $key => $label):
         ?>
@@ -170,6 +153,83 @@ function ss(array $settings, string $key, string $default = ''): string {
 
         <div class="mt-4">
             <button type="submit" class="btn btn-accent">Save General Settings</button>
+        </div>
+    </form>
+
+    <!-- TAB: INTEGRATIONS -->
+    <?php elseif ($activeTab === 'integrations'): ?>
+    <form id="settingsForm">
+        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrf) ?>">
+        <input type="hidden" name="action" value="save_integrations">
+
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="card-dark h-100">
+                    <div class="card-header">Paystack Settings</div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label-dark">Paystack Public Key</label>
+                            <input type="text" name="paystack_public_key" class="form-control form-control-dark"
+                                   value="<?= ss($siteSettings, 'paystack_public_key') ?>">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label-dark">Paystack Secret Key</label>
+                            <input type="password" name="paystack_secret_key" class="form-control form-control-dark"
+                                   value="<?= ss($siteSettings, 'paystack_secret_key') ?>">
+                        </div>
+                        <div class="mb-0">
+                            <label class="form-label-dark">Platform Fee (%)</label>
+                            <input type="number" name="platform_fee_percent" class="form-control form-control-dark"
+                                   value="<?= ss($siteSettings, 'platform_fee_percent', '10') ?>" min="0" max="100">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card-dark h-100">
+                    <div class="card-header">Google & YouTube Settings</div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label-dark">YouTube API Key</label>
+                            <input type="password" name="youtube_api_key" class="form-control form-control-dark"
+                                   value="<?= ss($siteSettings, 'youtube_api_key') ?>">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label-dark">Google Client ID (OAuth)</label>
+                            <input type="text" name="google_client_id" class="form-control form-control-dark"
+                                   value="<?= ss($siteSettings, 'google_client_id') ?>">
+                        </div>
+                        <div class="mb-0">
+                            <label class="form-label-dark">Google Client Secret (OAuth)</label>
+                            <input type="password" name="google_client_secret" class="form-control form-control-dark"
+                                   value="<?= ss($siteSettings, 'google_client_secret') ?>">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card-dark h-100">
+                    <div class="card-header">Contest Constraints</div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label-dark">Minimum Contest Prize (₦)</label>
+                            <input type="number" name="min_contest_prize" class="form-control form-control-dark"
+                                   value="<?= ss($siteSettings, 'min_contest_prize', '5000') ?>" min="0">
+                        </div>
+                        <div class="mb-0">
+                            <label class="form-label-dark">Max Contest Duration (Days)</label>
+                            <input type="number" name="max_contest_days" class="form-control form-control-dark"
+                                   value="<?= ss($siteSettings, 'max_contest_days', '30') ?>" min="1">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <button type="submit" class="btn btn-accent">Save Integration Settings</button>
         </div>
     </form>
 

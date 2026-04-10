@@ -16,7 +16,7 @@ $page    = max(1, (int)($_GET['page'] ?? 1));
 $perPage = 20;
 $filter  = sanitizeInput($_GET['status'] ?? '');
 
-$contests = [];
+$payouts = [];
 $total    = 0;
 $pag      = paginate(0, $perPage, 1);
 
@@ -24,31 +24,34 @@ try {
     $db     = db();
     $where  = '1=1';
     $params = [];
-    if ($filter && in_array($filter, ['draft','active','expired','cancelled'], true)) {
-        $where .= ' AND c.status = ?'; $params[] = $filter;
+    if ($filter && in_array($filter, ['pending','claimed','processing','completed','failed'], true)) {
+        $where .= ' AND p.status = ?'; $params[] = $filter;
     }
-    $cnt = $db->prepare("SELECT COUNT(*) FROM contests c WHERE {$where}");
+
+    $cnt = $db->prepare("SELECT COUNT(*) FROM payouts p WHERE {$where}");
     $cnt->execute($params);
     $total = (int)$cnt->fetchColumn();
     $pag   = paginate($total, $perPage, $page);
+
     $listParams = array_merge($params, [$perPage, $pag['offset']]);
     $stmt = $db->prepare(
-        "SELECT c.*, u.username AS creator_name,
-                (SELECT COUNT(*) FROM contest_entries WHERE contest_id = c.id) AS entry_count
-         FROM contests c LEFT JOIN users u ON u.id = c.creator_id
+        "SELECT p.*, u.username, c.title AS contest_title
+         FROM payouts p
+         LEFT JOIN users u ON u.id = p.user_id
+         LEFT JOIN contests c ON c.id = p.contest_id
          WHERE {$where}
-         ORDER BY c.created_at DESC LIMIT ? OFFSET ?"
+         ORDER BY p.created_at DESC LIMIT ? OFFSET ?"
     );
     $stmt->execute($listParams);
-    $contests = $stmt->fetchAll();
-} catch (Throwable) {}
+    $payouts = $stmt->fetchAll();
+} catch (Throwable $e) {}
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contests — Clipaza Admin</title>
+    <title>Payouts — Clipaza Admin</title>
     <meta name="csrf" content="<?= e($csrf) ?>">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="../assets/css/style.css" rel="stylesheet">
@@ -60,9 +63,9 @@ try {
         <ul class="nav flex-column">
             <li class="nav-item"><a href="index.php" class="nav-link"><span class="nav-icon">⊞</span> Dashboard</a></li>
             <li class="nav-item"><a href="users.php" class="nav-link"><span class="nav-icon">👥</span> Users</a></li>
-            <li class="nav-item"><a href="contests.php" class="nav-link active"><span class="nav-icon">🏆</span> Contests</a></li>
+            <li class="nav-item"><a href="contests.php" class="nav-link"><span class="nav-icon">🏆</span> Contests</a></li>
             <li class="nav-item"><a href="entries.php" class="nav-link"><span class="nav-icon">✂️</span> Entries</a></li>
-            <li class="nav-item"><a href="payouts.php" class="nav-link"><span class="nav-icon">💸</span> Payouts</a></li>
+            <li class="nav-item"><a href="payouts.php" class="nav-link active"><span class="nav-icon">💸</span> Payouts</a></li>
             <li class="nav-item"><a href="security.php" class="nav-link"><span class="nav-icon">🛡</span> Security</a></li>
             <li class="nav-item"><a href="settings.php" class="nav-link"><span class="nav-icon">⚙</span> Settings</a></li>
         </ul>
@@ -81,13 +84,13 @@ try {
     </div>
     <div class="p-4">
         <div class="d-flex align-items-center justify-content-between mb-4">
-            <h4 class="fw-700 mb-0">Contests</h4>
+            <h4 class="fw-700 mb-0">Payout Management</h4>
             <span class="text-muted" style="font-size:0.85rem"><?= $total ?> total</span>
         </div>
 
         <!-- Filter tabs -->
         <div class="d-flex gap-2 mb-4 flex-wrap">
-            <?php foreach (['' => 'All', 'active' => 'Active', 'draft' => 'Draft', 'expired' => 'Expired', 'cancelled' => 'Cancelled'] as $val => $label): ?>
+            <?php foreach (['' => 'All', 'claimed' => 'Claimed', 'processing' => 'Processing', 'completed' => 'Completed', 'failed' => 'Failed', 'pending' => 'Pending'] as $val => $label): ?>
                 <a href="?status=<?= $val ?>" class="btn btn-sm <?= $filter===$val ? 'btn-accent' : 'btn-outline-accent' ?>"><?= $label ?></a>
             <?php endforeach; ?>
         </div>
@@ -96,45 +99,59 @@ try {
             <table class="table-dark-custom w-100">
                 <thead>
                     <tr>
+                        <th>User</th>
                         <th>Contest</th>
-                        <th>Creator</th>
-                        <th>Prize Pool</th>
+                        <th>Amount</th>
+                        <th>Bank Details</th>
                         <th>Status</th>
-                        <th>Entries</th>
-                        <th>End Date</th>
+                        <th>Date</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                <?php if (empty($contests)): ?>
-                    <tr><td colspan="7" class="text-center text-muted py-4">No contests found.</td></tr>
+                <?php if (empty($payouts)): ?>
+                    <tr><td colspan="7" class="text-center text-muted py-4">No payouts found.</td></tr>
                 <?php else: ?>
-                    <?php foreach ($contests as $c): ?>
+                    <?php foreach ($payouts as $p): ?>
                     <tr>
                         <td>
-                            <div class="fw-600" style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><?= e($c['title']) ?></div>
-                            <?php if ($c['escrow_status'] !== 'unfunded'): ?>
-                                <span class="badge" style="background:rgba(34,197,94,0.1);color:#4ade80;font-size:0.68rem"><?= e(ucfirst($c['escrow_status'])) ?></span>
+                            <div class="fw-600">@<?= e($p['username'] ?? 'unknown') ?></div>
+                        </td>
+                        <td>
+                            <div style="font-size:0.85rem;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><?= e($p['contest_title']) ?></div>
+                            <div class="text-muted" style="font-size:0.75rem"><?= e(ucfirst($p['platform'])) ?> Rank #<?= $p['rank_position'] ?></div>
+                        </td>
+                        <td style="font-size:0.88rem;font-weight:600">₦<?= number_format((float)$p['amount'], 0) ?></td>
+                        <td>
+                            <?php if ($p['account_number']): ?>
+                                <div style="font-size:0.82rem"><?= e($p['account_name']) ?></div>
+                                <div class="text-muted" style="font-size:0.75rem"><?= e($p['bank_name']) ?> (<?= e($p['account_number']) ?>)</div>
+                            <?php else: ?>
+                                <span class="text-muted">—</span>
                             <?php endif; ?>
                         </td>
-                        <td style="font-size:0.85rem;color:#aaa"><?= e($c['creator_name'] ?? '—') ?></td>
-                        <td style="font-size:0.88rem;font-weight:600">₦<?= number_format((float)$c['prize_pool'], 0) ?></td>
                         <td>
-                            <?php $sc = $c['status']==='active' ? 'badge-success' : ($c['status']==='cancelled' ? 'badge-danger' : 'badge-muted'); ?>
-                            <span class="<?= $sc ?>" style="font-size:0.72rem"><?= e(ucfirst($c['status'])) ?></span>
+                            <?php
+                                $sc = match($p['status']) {
+                                    'completed' => 'badge-success',
+                                    'failed' => 'badge-danger',
+                                    'processing' => 'badge-warning',
+                                    'claimed' => 'badge-accent',
+                                    default => 'badge-muted'
+                                };
+                            ?>
+                            <span class="<?= $sc ?>" style="font-size:0.72rem"><?= e(ucfirst($p['status'])) ?></span>
                         </td>
-                        <td style="font-size:0.85rem;text-align:center"><?= (int)$c['entry_count'] ?></td>
-                        <td style="font-size:0.8rem;color:#888"><?= !empty($c['end_date']) ? e(formatDate($c['end_date'],'M j, Y')) : '—' ?></td>
+                        <td style="font-size:0.8rem;color:#888"><?= e(formatDate($p['created_at'], 'M j, Y')) ?></td>
                         <td>
                             <div class="d-flex gap-1 flex-wrap">
-                                <a href="/contest?id=<?= $c['id'] ?>" target="_blank" class="btn btn-xs btn-outline-accent">View</a>
-                                <?php if ($c['status']==='draft'): ?>
-                                    <button class="btn btn-xs cab" style="background:rgba(34,197,94,0.1);color:#4ade80;font-size:0.72rem;border:1px solid rgba(34,197,94,0.2)"
-                                            data-id="<?= $c['id'] ?>" data-st="active" data-csrf="<?= e($csrf) ?>">Activate</button>
+                                <?php if ($p['status'] === 'claimed'): ?>
+                                    <button class="btn btn-xs ppb" style="background:rgba(204,255,0,0.1);color:var(--accent);border:1px solid rgba(204,255,0,0.2)"
+                                            data-id="<?= $p['id'] ?>" data-csrf="<?= e($csrf) ?>">Process</button>
                                 <?php endif; ?>
-                                <?php if (!in_array($c['status'], ['cancelled','expired'], true)): ?>
-                                    <button class="btn btn-xs cab" style="background:rgba(220,38,38,0.1);color:#f87171;font-size:0.72rem;border:1px solid rgba(220,38,38,0.2)"
-                                            data-id="<?= $c['id'] ?>" data-st="cancelled" data-csrf="<?= e($csrf) ?>">Cancel</button>
+                                <?php if ($p['status'] === 'processing'): ?>
+                                    <button class="btn btn-xs usb" data-id="<?= $p['id'] ?>" data-st="completed" data-csrf="<?= e($csrf) ?>">Complete</button>
+                                    <button class="btn btn-xs usb badge-danger" data-id="<?= $p['id'] ?>" data-st="failed" data-csrf="<?= e($csrf) ?>">Fail</button>
                                 <?php endif; ?>
                             </div>
                         </td>
@@ -157,13 +174,26 @@ try {
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="../assets/js/main.js"></script>
 <script>
-document.querySelectorAll('.cab').forEach(btn => {
+document.querySelectorAll('.ppb').forEach(btn => {
     btn.addEventListener('click', async function() {
-        const label = this.dataset.st === 'cancelled' ? 'cancel' : 'activate';
-        if (!confirm('Are you sure you want to ' + label + ' this contest?')) return;
+        if (!confirm('Initiate payout via Paystack?')) return;
         this.disabled = true;
         const r = await fetch('/admin/ajax/admin_actions.php', {
-            method:'POST', body: new URLSearchParams({action:'update_contest_status', contest_id:this.dataset.id, status:this.dataset.st, csrf_token:this.dataset.csrf})
+            method:'POST', body: new URLSearchParams({action:'process_payout', payout_id:this.dataset.id, csrf_token:this.dataset.csrf})
+        });
+        const d = await r.json();
+        if (d.success) { alert(d.message); location.reload(); }
+        else { alert(d.message||'Error'); this.disabled=false; }
+    });
+});
+
+document.querySelectorAll('.usb').forEach(btn => {
+    btn.addEventListener('click', async function() {
+        const st = this.dataset.st;
+        if (!confirm('Update payout status to ' + st + '?')) return;
+        this.disabled = true;
+        const r = await fetch('/admin/ajax/admin_actions.php', {
+            method:'POST', body: new URLSearchParams({action:'update_payout_status', payout_id:this.dataset.id, status:st, csrf_token:this.dataset.csrf})
         });
         const d = await r.json();
         if (d.success) location.reload();
