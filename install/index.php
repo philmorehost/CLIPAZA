@@ -5,7 +5,7 @@ session_start();
 $root = dirname(__DIR__);
 
 // Guard against re-installation
-if (file_exists(__DIR__ . '/installed.lock')) {
+if (file_exists(dirname(__DIR__) . '/installer.lock')) {
     http_response_code(403);
     die('<!DOCTYPE html><html><head><title>Already Installed</title><style>body{background:#000;color:#fff;font-family:sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;}</style></head><body><div style="text-align:center"><h1 style="color:#CCFF00">Clipaza</h1><p>This application has already been installed.</p><a href="../admin/login.php" style="color:#CCFF00">Go to Admin Panel</a></div></body></html>');
 }

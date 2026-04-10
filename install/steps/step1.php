@@ -5,8 +5,8 @@ $checks = [];
 $allPass = true;
 
 // PHP Version
-$phpOk = version_compare(PHP_VERSION, '8.1.0', '>=');
-$checks[] = ['label' => 'PHP Version (>= 8.1)', 'pass' => $phpOk, 'value' => PHP_VERSION, 'required' => true];
+$phpOk = version_compare(PHP_VERSION, '8.0.0', '>=');
+$checks[] = ['label' => 'PHP Version (>= 8.0)', 'pass' => $phpOk, 'value' => PHP_VERSION, 'required' => true];
 if (!$phpOk) $allPass = false;
 
 // PDO
