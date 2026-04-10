@@ -177,30 +177,108 @@ function handleClaimPrize(): never {
             jsonResponse(['success' => false, 'message' => 'Your rank does not qualify for a prize.']);
         }
 
-        // Check not already claimed
-        $stmt = $db->prepare('SELECT id FROM payouts WHERE entry_id = ? AND user_id = ? LIMIT 1');
+        // Check for existing pending payout record
+        $stmt = $db->prepare('SELECT * FROM payouts WHERE entry_id = ? AND user_id = ? AND status = \'pending\' LIMIT 1');
         $stmt->execute([$entryId, $userId]);
-        if ($stmt->fetch()) {
-            jsonResponse(['success' => false, 'message' => 'Prize already claimed.']);
+        $existingPayout = $stmt->fetch();
+
+        if (!$existingPayout) {
+            // Check if it was already claimed/processed
+            $stmt = $db->prepare('SELECT id FROM payouts WHERE entry_id = ? AND user_id = ? AND status IN (\'claimed\', \'processing\', \'completed\') LIMIT 1');
+            $stmt->execute([$entryId, $userId]);
+            if ($stmt->fetch()) {
+                jsonResponse(['success' => false, 'message' => 'Prize already claimed or being processed.']);
+            }
+            jsonResponse(['success' => false, 'message' => 'No eligible payout record found.']);
         }
 
-        $prizeAmount = round((float)$cp['prize_amount'] / (int)$cp['winner_count'], 2);
+        $prizeAmount = (float)$existingPayout['amount'];
+
+        // Paystack Payout Implementation
+        $secretKey = getSetting('paystack_secret_key', '');
+        if (defined('PAYSTACK_SECRET_KEY') && PAYSTACK_SECRET_KEY) {
+            $secretKey = PAYSTACK_SECRET_KEY;
+        }
+
+        if (empty($secretKey)) {
+            jsonResponse(['success' => false, 'message' => 'Payout system is temporarily unavailable (not configured).']);
+        }
+
+        // 1. Create Transfer Recipient
+        $recipientResponse = paystackPost('/transferrecipient', [
+            'type' => 'nuban',
+            'name' => $acctName,
+            'account_number' => $acctNum,
+            'bank_code' => $bankCode,
+            'currency' => 'NGN'
+        ]);
+
+        if (empty($recipientResponse['status']) || !$recipientResponse['status']) {
+            jsonResponse(['success' => false, 'message' => 'Failed to create transfer recipient: ' . ($recipientResponse['message'] ?? 'Unknown error')]);
+        }
+
+        $recipientCode = $recipientResponse['data']['recipient_code'];
+
+        // 2. Initiate Transfer
+        $transferResponse = paystackPost('/transfer', [
+            'source' => 'balance',
+            'amount' => (int)round($prizeAmount * 100), // in kobo
+            'recipient' => $recipientCode,
+            'reason' => "Clipaza Contest Prize: " . $entry['platform']
+        ]);
+
+        if (empty($transferResponse['status']) || !$transferResponse['status']) {
+            // If transfer fails, update status to failed
+            $db->prepare(
+                "UPDATE payouts SET status = 'failed', bank_name = ?, bank_code = ?, account_number = ?, account_name = ?, nuban_verified = 1, claimed_at = NOW() WHERE id = ?"
+            )->execute([$bankName, $bankCode, $acctNum, $acctName, $existingPayout['id']]);
+
+            jsonResponse(['success' => false, 'message' => 'Transfer initiation failed: ' . ($transferResponse['message'] ?? 'Unknown error')]);
+        }
+
+        $transferCode = $transferResponse['data']['transfer_code'];
+        $reference = $transferResponse['data']['reference'];
 
         $db->prepare(
-            "INSERT INTO payouts (contest_id, user_id, entry_id, amount, platform, rank_position,
-              status, bank_name, bank_code, account_number, account_name, nuban_verified, claimed_at)
-             VALUES (?,?,?,?,?,?,'claimed',?,?,?,?,1,NOW())"
+            "UPDATE payouts SET status = 'processing', bank_name = ?, bank_code = ?, account_number = ?, account_name = ?, nuban_verified = 1, paystack_transfer_code = ?, paystack_reference = ?, claimed_at = NOW() WHERE id = ?"
         )->execute([
-            $entry['contest_id'], $userId, $entryId, $prizeAmount,
-            $entry['platform'], $rank, $bankName, $bankCode, $acctNum, $acctName,
+            $bankName, $bankCode, $acctNum, $acctName,
+            $transferCode, $reference,
+            $existingPayout['id']
         ]);
 
         // Update user total_earned
         $db->prepare('UPDATE user_profiles SET total_earned = total_earned + ? WHERE user_id = ?')
            ->execute([$prizeAmount, $userId]);
 
-        jsonResponse(['success' => true, 'message' => 'Prize claimed! Transfer will be processed within 24 hours.']);
-    } catch (Throwable) {
-        jsonResponse(['success' => false, 'message' => 'Failed to process claim.']);
+        jsonResponse(['success' => true, 'message' => 'Prize claimed! Your transfer is being processed. Reference: ' . $reference]);
+    } catch (Throwable $e) {
+        jsonResponse(['success' => false, 'message' => 'Failed to process claim: ' . $e->getMessage()]);
     }
+}
+
+function paystackPost(string $endpoint, array $data): array {
+    $secretKey = getSetting('paystack_secret_key', '');
+    if (defined('PAYSTACK_SECRET_KEY') && PAYSTACK_SECRET_KEY) {
+        $secretKey = PAYSTACK_SECRET_KEY;
+    }
+    if (empty($secretKey)) return ['error' => 'Paystack not configured.'];
+
+    $ch = curl_init('https://api.paystack.co' . $endpoint);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST           => true,
+        CURLOPT_POSTFIELDS     => json_encode($data),
+        CURLOPT_TIMEOUT        => 30,
+        CURLOPT_HTTPHEADER     => [
+            'Authorization: Bearer ' . $secretKey,
+            'Content-Type: application/json'
+        ],
+        CURLOPT_SSL_VERIFYPEER => true,
+    ]);
+    $response = curl_exec($ch);
+    $err = curl_error($ch);
+    curl_close($ch);
+    if ($err) return ['error' => $err];
+    return json_decode($response, true) ?: ['error' => 'Invalid response.'];
 }

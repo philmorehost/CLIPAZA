@@ -23,6 +23,9 @@ switch ($action) {
     case 'get_leaderboard':
         handleGetLeaderboard();
         break;
+    case 'verify_engagement':
+        handleVerifyEngagement();
+        break;
     default:
         jsonResponse(['success' => false, 'message' => 'Unknown action.'], 400);
 }
@@ -190,6 +193,67 @@ function handleUpdateViews(): never {
         jsonResponse(['success' => true]);
     } catch (Throwable) {
         jsonResponse(['success' => false, 'message' => 'Update failed.']);
+    }
+}
+
+function handleVerifyEngagement(): never {
+    if (empty($_SESSION['user_id'])) {
+        jsonResponse(['success' => false, 'message' => 'Authentication required.'], 401);
+    }
+
+    $contestId = (int)($_POST['contest_id'] ?? 0);
+    $accessToken = $_SESSION['google_access_token'] ?? ''; // We need to store this in session during login
+
+    if (empty($accessToken)) {
+        jsonResponse(['success' => false, 'message' => 'YouTube access token not found. Please log in with Google again.']);
+    }
+
+    require_once dirname(__DIR__) . '/includes/youtube.php';
+
+    try {
+        $db = db();
+        $stmt = $db->prepare('SELECT * FROM contests WHERE id = ? LIMIT 1');
+        $stmt->execute([$contestId]);
+        $contest = $stmt->fetch();
+
+        if (!$contest) {
+            jsonResponse(['success' => false, 'message' => 'Contest not found.']);
+        }
+
+        $requirements = [
+            'subscribe' => (bool)$contest['must_subscribe'],
+            'like' => (bool)$contest['must_like'],
+            'comment' => (bool)$contest['must_comment']
+        ];
+
+        // We need the creator's channel ID if subscription is required.
+        // It's probably stored in user_profiles of the creator.
+        $creatorChannelId = '';
+        if ($requirements['subscribe']) {
+            $stmt = $db->prepare('SELECT youtube_channel_id FROM user_profiles WHERE user_id = ? LIMIT 1');
+            $stmt->execute([$contest['creator_id']]);
+            $creatorChannelId = $stmt->fetchColumn() ?: '';
+        }
+
+        $result = verifyYoutubeEngagement($accessToken, $contest['youtube_video_id'], $creatorChannelId, $requirements);
+
+        // Update entry verification status if it exists
+        $stmt = $db->prepare('UPDATE contest_entries SET verified_subscribe = ?, verified_like = ?, verified_comment = ? WHERE contest_id = ? AND user_id = ?');
+        $stmt->execute([
+            (int)$result['verified']['subscribe'],
+            (int)$result['verified']['like'],
+            (int)$result['verified']['comment'],
+            $contestId,
+            $_SESSION['user_id']
+        ]);
+
+        if ($result['success']) {
+            jsonResponse(['success' => true, 'message' => 'Engagement verified successfully!']);
+        } else {
+            jsonResponse(['success' => false, 'message' => 'Verification failed: ' . implode(' ', $result['errors']), 'details' => $result['verified']]);
+        }
+    } catch (Throwable $e) {
+        jsonResponse(['success' => false, 'message' => 'An error occurred during verification.']);
     }
 }
 

@@ -248,6 +248,17 @@ renderNav(true, ['username' => $username], $mode);
                   <span><?= number_format((int)$entry['view_count']) ?> views</span>
                   <span><?= number_format((int)$entry['like_count']) ?> likes</span>
                 </div>
+                <div class="mb-2">
+                  <?php
+                    $isVerified = $entry['verified_subscribe'] && $entry['verified_like'] && $entry['verified_comment'];
+                  ?>
+                  <?php if ($isVerified): ?>
+                    <span class="badge badge-success" style="font-size:0.65rem">✓ Engagement Verified</span>
+                  <?php else: ?>
+                    <span class="badge badge-warning" style="font-size:0.65rem">⚠ Engagement Pending</span>
+                    <button class="btn btn-xs btn-outline-accent ms-1 verify-btn" data-id="<?= (int)$entry['contest_id'] ?>">Verify Now</button>
+                  <?php endif; ?>
+                </div>
                 <?php if ($entry['disqualified']): ?>
                   <span class="badge" style="background:rgba(220,38,38,0.1);color:#f87171;font-size:0.72rem">Disqualified</span>
                 <?php elseif ($entry['contest_status'] === 'active'): ?>
@@ -288,6 +299,40 @@ renderNav(true, ['username' => $username], $mode);
 </div>
 
 <script>
+document.querySelectorAll('.verify-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const contestId = this.dataset.id;
+    this.disabled = true;
+    this.textContent = 'Verifying…';
+
+    fetch('/ajax/contest_actions.php', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: new URLSearchParams({
+        action: 'verify_engagement',
+        contest_id: contestId,
+        csrf_token: <?= json_encode(generateCsrfToken()) ?>
+      })
+    })
+    .then(r => r.json())
+    .then(d => {
+      if (d.success) {
+        alert(d.message);
+        location.reload();
+      } else {
+        alert(d.message || 'Verification failed.');
+        this.disabled = false;
+        this.textContent = 'Verify Now';
+      }
+    })
+    .catch(() => {
+      alert('Network error.');
+      this.disabled = false;
+      this.textContent = 'Verify Now';
+    });
+  });
+});
+
 document.getElementById('modeSwitchBtn')?.addEventListener('click', function() {
   const btn = this;
   btn.disabled = true;

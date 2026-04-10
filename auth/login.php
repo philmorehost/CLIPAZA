@@ -83,6 +83,18 @@ renderHead('Sign In');
         </div>
         <button type="submit" class="btn btn-accent w-100">Sign In</button>
       </form>
+
+      <div class="mt-4">
+        <div class="d-flex align-items-center mb-3">
+          <hr class="flex-grow-1 border-secondary">
+          <span class="px-2 text-muted" style="font-size:0.8rem">OR</span>
+          <hr class="flex-grow-1 border-secondary">
+        </div>
+        <a href="/auth/google-auth.php" class="btn btn-outline-light w-100 d-flex align-items-center justify-content-center gap-2" style="background:#fff;color:#000;border:none">
+          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" height="18" alt="Google">
+          Continue with Google
+        </a>
+      </div>
     </div>
 
     <p class="text-center text-muted mt-3" style="font-size:0.85rem">

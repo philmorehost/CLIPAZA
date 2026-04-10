@@ -74,6 +74,7 @@ function renderFooter(): void {
       <div class="d-flex gap-4">
         <a href="/contests" class="lp-footer-link text-decoration-none">Browse</a>
         <a href="/#how-it-works" class="lp-footer-link text-decoration-none">How It Works</a>
+        <a href="/terms" class="lp-footer-link text-decoration-none">Rules</a>
         <a href="/auth/register" class="lp-footer-link text-decoration-none">Sign Up</a>
       </div>
       <div style="font-size:0.8rem;color:#555">&copy; {$year} {$siteName}. All rights reserved.</div>
