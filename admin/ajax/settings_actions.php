@@ -99,15 +99,34 @@ function processUpload(string $inputName, string $destDir, array $allowedExts, i
     }
 
     $filename = bin2hex(random_bytes(12)) . '.' . $ext;
-    $fullDest = rtrim($destDir, '/') . '/' . $filename;
+    $destDir  = rtrim($destDir, '/\\');
+    $fullDest = $destDir . DIRECTORY_SEPARATOR . $filename;
 
     if (!move_uploaded_file($file['tmp_name'], $fullDest)) {
         throw new \RuntimeException('Failed to move uploaded file.');
     }
 
-    // Return web path relative to document root
-    $webRoot = dirname(__DIR__, 2);
-    return str_replace($webRoot, '', $fullDest);
+    // Return web path relative to document root, using forward slashes for URLs
+    $webRoot = str_replace('\\', '/', rtrim(dirname(__DIR__, 2), '/\\'));
+    $webPath = str_replace('\\', '/', $fullDest);
+    if (str_starts_with($webPath, $webRoot)) {
+        return substr($webPath, strlen($webRoot));
+    }
+    // Fallback: derive path from destDir name relative to uploads/
+    $uploadsPos = strrpos($webPath, '/uploads/');
+    return $uploadsPos !== false ? substr($webPath, $uploadsPos) : '/' . $filename;
+}
+
+/**
+ * Remove a previously stored file from disk (silent fail).
+ */
+function deleteOldFile(string $webPath, string $webRoot): void {
+    if ($webPath === '') return;
+    $normalized = str_replace('\\', '/', $webRoot);
+    $fullPath   = rtrim($normalized, '/') . '/' . ltrim($webPath, '/');
+    if (file_exists($fullPath) && is_file($fullPath)) {
+        @unlink($fullPath);
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -128,6 +147,8 @@ function handleSaveGeneral(): never {
     try {
         $logoPath = processUpload('site_logo', $root . '/uploads/logo', ['png', 'jpg', 'jpeg']);
         if ($logoPath !== '') {
+            // Clean up old logo file
+            deleteOldFile(getSetting('site_logo', ''), $root);
             saveSiteSetting('site_logo', $logoPath);
         }
     } catch (\RuntimeException $e) {
@@ -138,6 +159,8 @@ function handleSaveGeneral(): never {
     try {
         $faviconPath = processUpload('site_favicon', $root . '/uploads/favicon', ['png', 'jpg', 'jpeg', 'ico']);
         if ($faviconPath !== '') {
+            // Clean up old favicon file
+            deleteOldFile(getSetting('site_favicon', ''), $root);
             saveSiteSetting('site_favicon', $faviconPath);
         }
     } catch (\RuntimeException $e) {

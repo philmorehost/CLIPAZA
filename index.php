@@ -368,6 +368,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['waitlist_email'])) {
             <?php
             // Sample leaderboard data for illustration — replace with real DB query when live
             $lbData = [
+                ['rank'=>1,  'emoji'=>'🥇', 'name'=>'ClipKing_NG',    'clips'=>24, 'views'=>'2.3M', 'prize'=>'₦80,000',  'color'=>'#CCFF00'],
                 ['rank'=>2,  'emoji'=>'🥈', 'name'=>'ViralVault',     'clips'=>19, 'views'=>'1.7M', 'prize'=>'₦45,000',  'color'=>'#aaaaaa'],
                 ['rank'=>3,  'emoji'=>'🥉', 'name'=>'QuickCutPro',    'clips'=>15, 'views'=>'980K',  'prize'=>'₦25,000',  'color'=>'#cd7f32'],
                 ['rank'=>4,  'emoji'=>'',   'name'=>'NaijaClipper',   'clips'=>12, 'views'=>'610K',  'prize'=>'₦10,000',  'color'=>'#555'],

@@ -24,6 +24,6 @@ if ($content === '') {
 }
 
 header('Content-Type: text/plain; charset=utf-8');
-// Prevent caching of frequently updated content
-header('Cache-Control: public, max-age=3600');
+// Short cache to allow ad networks to pick up changes promptly
+header('Cache-Control: public, max-age=300');
 echo $content;
