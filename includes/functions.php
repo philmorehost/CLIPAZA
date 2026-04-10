@@ -141,3 +141,14 @@ function paginate(int $total, int $perPage, int $current): array {
         'hasNext'  => $current < $pages,
     ];
 }
+
+function getProfile(int $userId): array {
+    try {
+        $db = db();
+        $stmt = $db->prepare('SELECT * FROM user_profiles WHERE user_id = ? LIMIT 1');
+        $stmt->execute([$userId]);
+        return $stmt->fetch() ?: [];
+    } catch (Throwable) {
+        return [];
+    }
+}

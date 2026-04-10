@@ -122,6 +122,16 @@ try {
                         <td style="font-size:0.8rem;color:#888"><?= e(formatDate($u['created_at'],'M j, Y')) ?></td>
                         <td>
                             <div class="d-flex gap-1 flex-wrap">
+                                <button class="btn btn-xs btn-outline-accent edit-user-btn"
+                                        data-user='<?= json_encode([
+                                            "id" => $u["id"],
+                                            "username" => $u["username"],
+                                            "email" => $u["email"],
+                                            "role" => $u["role"],
+                                            "status" => $u["status"],
+                                            "wallet_balance" => getProfile($u["id"])["wallet_balance"] ?? 0
+                                        ]) ?>'>Edit</button>
+                                <button class="btn btn-xs btn-outline-info impersonate-btn" data-id="<?= $u['id'] ?>" data-csrf="<?= e($csrf) ?>">Login as</button>
                             <?php if ($u['status']!=='active'): ?><button class="btn btn-xs btn-outline-accent uab" data-id="<?= $u['id'] ?>" data-st="active" data-csrf="<?= e($csrf) ?>">Activate</button><?php endif; ?>
                             <?php if ($u['status']!=='inactive'): ?><button class="btn btn-xs uab" style="background:#1a1a1a;color:#aaa;font-size:0.72rem;border:1px solid #2a2a2a" data-id="<?= $u['id'] ?>" data-st="inactive" data-csrf="<?= e($csrf) ?>">Suspend</button><?php endif; ?>
                             <?php if ($u['status']!=='banned'): ?><button class="btn btn-xs uab" style="background:rgba(220,38,38,0.1);color:#f87171;font-size:0.72rem;border:1px solid rgba(220,38,38,0.2)" data-id="<?= $u['id'] ?>" data-st="banned" data-csrf="<?= e($csrf) ?>">Ban</button><?php endif; ?>
@@ -142,6 +152,62 @@ try {
         <?php endif; ?>
     </div>
 </main>
+
+<!-- Edit User Modal -->
+<div class="modal fade" id="editUserModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content card-dark border-0">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-700">Edit User</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="editUserForm">
+                <div class="modal-body py-4">
+                    <input type="hidden" name="action" value="edit_user">
+                    <input type="hidden" name="csrf_token" value="<?= e($csrf) ?>">
+                    <input type="hidden" name="user_id" id="edit_user_id">
+
+                    <div class="mb-3">
+                        <label class="form-label-dark">Username</label>
+                        <input type="text" name="username" id="edit_username" class="form-control form-control-dark" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label-dark">Email Address</label>
+                        <input type="email" name="email" id="edit_email" class="form-control form-control-dark" required>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label-dark">Role</label>
+                            <select name="role" id="edit_role" class="form-control-dark">
+                                <option value="user">User</option>
+                                <option value="moderator">Moderator</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label-dark">Status</label>
+                            <select name="status" id="edit_status" class="form-control-dark">
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                                <option value="banned">Banned</option>
+                                <option value="pending">Pending</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label-dark">Wallet Balance (₦)</label>
+                        <input type="number" step="0.01" name="wallet_balance" id="edit_wallet" class="form-control form-control-dark">
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-sm text-white" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-sm btn-accent">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="../assets/js/main.js"></script>
 <script>
@@ -149,13 +215,52 @@ document.querySelectorAll('.uab').forEach(btn => {
     btn.addEventListener('click', async function() {
         if (!confirm('Change user status?')) return;
         this.disabled = true;
-        const r = await fetch('/admin/ajax/admin_actions.php', {
+        const r = await fetch('ajax/admin_actions.php', {
             method:'POST', body: new URLSearchParams({action:'update_user_status', user_id:this.dataset.id, status:this.dataset.st, csrf_token:this.dataset.csrf})
         });
         const d = await r.json();
         if (d.success) location.reload();
         else { alert(d.message||'Error'); this.disabled=false; }
     });
+});
+
+document.querySelectorAll('.impersonate-btn').forEach(btn => {
+    btn.addEventListener('click', async function() {
+        if (!confirm('Login as this user? You will be redirected to their dashboard.')) return;
+        this.disabled = true;
+        const r = await fetch('ajax/admin_actions.php', {
+            method:'POST', body: new URLSearchParams({action:'login_as_user', user_id:this.dataset.id, csrf_token:this.dataset.csrf})
+        });
+        const d = await r.json();
+        if (d.success) window.location.href = '../dashboard.php';
+        else { alert(d.message||'Error'); this.disabled=false; }
+    });
+});
+
+const editModal = new bootstrap.Modal(document.getElementById('editUserModal'));
+document.querySelectorAll('.edit-user-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const u = JSON.parse(this.dataset.user);
+        document.getElementById('edit_user_id').value = u.id;
+        document.getElementById('edit_username').value = u.username;
+        document.getElementById('edit_email').value = u.email;
+        document.getElementById('edit_role').value = u.role;
+        document.getElementById('edit_status').value = u.status;
+        document.getElementById('edit_wallet').value = u.wallet_balance;
+        editModal.show();
+    });
+});
+
+document.getElementById('editUserForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const btn = this.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    const r = await fetch('ajax/admin_actions.php', {
+        method:'POST', body: new FormData(this)
+    });
+    const d = await r.json();
+    if (d.success) location.reload();
+    else { alert(d.message||'Error'); btn.disabled=false; }
 });
 </script>
 </body></html>

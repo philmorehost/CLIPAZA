@@ -43,8 +43,8 @@ function renderNav(bool $isLoggedIn, array $user = [], string $activeMode = ''):
     echo '</ul>';
     echo '<div class="d-flex align-items-center gap-2">';
     if ($isLoggedIn) {
-        $username = e($user['username'] ?? 'User');
-        $mode     = e($activeMode ?: ($user['mode'] ?? 'clipper'));
+        $username = e($user['username'] ?? $_SESSION['username'] ?? 'User');
+        $mode     = e($activeMode ?: ($_SESSION['user_mode'] ?? 'clipper'));
         $modeLabel = ucfirst($mode);
         echo '<span class="badge" style="background:var(--accent-dim);color:var(--accent);font-size:0.72rem;border:1px solid rgba(204,255,0,0.3)">' . $modeLabel . ' Mode</span>';
         echo '<a href="/dashboard" class="btn btn-sm btn-outline-accent">Dashboard</a>';

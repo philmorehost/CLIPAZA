@@ -104,6 +104,13 @@ renderNav(true, ['username' => $username], $mode);
       <div class="alert-dark-success mb-3">🎉 Contest funded successfully! It is now live.</div>
     <?php endif; ?>
 
+    <?php if (!empty($_SESSION['impersonating'])): ?>
+      <div class="alert-dark-info mb-4 d-flex align-items-center justify-content-between">
+        <span>🕵️ You are currently logged in as <strong><?= e($username) ?></strong> (Impersonation Mode)</span>
+        <a href="/admin/ajax/admin_actions.php?action=return_to_admin" class="btn btn-sm btn-accent">Return to Admin</a>
+      </div>
+    <?php endif; ?>
+
     <!-- Top bar -->
     <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3 mb-4">
       <div class="d-flex align-items-center gap-3">

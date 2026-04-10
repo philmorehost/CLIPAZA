@@ -10,13 +10,17 @@ require_once $root . '/includes/security.php';
 require_once $root . '/includes/auth.php';
 
 requireAdmin();
-if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) {
+
+$action = sanitizeInput($_POST['action'] ?? $_GET['action'] ?? '');
+
+if ($action !== 'return_to_admin' && !verifyCsrfToken($_POST['csrf_token'] ?? '')) {
     jsonResponse(['success' => false, 'message' => 'Invalid CSRF token.'], 403);
 }
 
-$action = sanitizeInput($_POST['action'] ?? '');
-
 switch ($action) {
+    case 'return_to_admin':
+        handleReturnToAdmin();
+        break;
     case 'update_user_status':
         handleUpdateUserStatus();
         break;
@@ -38,8 +42,70 @@ switch ($action) {
     case 'review_kyc':
         handleReviewKyc();
         break;
+    case 'login_as_user':
+        handleLoginAsUser();
+        break;
+    case 'edit_user':
+        handleEditUser();
+        break;
     default:
         jsonResponse(['success' => false, 'message' => 'Unknown action.'], 400);
+}
+
+function handleLoginAsUser(): never {
+    $userId = (int)($_POST['user_id'] ?? 0);
+    try {
+        $db = db();
+        $stmt = $db->prepare("SELECT id, username, email, role FROM users WHERE id = ?");
+        $stmt->execute([$userId]);
+        $user = $stmt->fetch();
+
+        if (!$user) jsonResponse(['success' => false, 'message' => 'User not found.']);
+
+        // Save admin session to allow return
+        $_SESSION['admin_user_id'] = $_SESSION['user_id'];
+
+        // Impersonate user
+        $_SESSION['user_id'] = $user['id'];
+        $_SESSION['username'] = $user['username'];
+        $_SESSION['user_email'] = $user['email'];
+        $_SESSION['user_role'] = $user['role'];
+        $_SESSION['impersonating'] = true;
+
+        jsonResponse(['success' => true, 'message' => 'Logged in as ' . $user['username']]);
+    } catch (Throwable $e) {
+        jsonResponse(['success' => false, 'message' => 'Login failed: ' . $e->getMessage()]);
+    }
+}
+
+function handleEditUser(): never {
+    $userId = (int)($_POST['user_id'] ?? 0);
+    $username = sanitizeInput($_POST['username'] ?? '');
+    $email = sanitizeInput($_POST['email'] ?? '');
+    $role = sanitizeInput($_POST['role'] ?? 'user');
+    $status = sanitizeInput($_POST['status'] ?? 'active');
+    $wallet = (float)($_POST['wallet_balance'] ?? 0);
+
+    if (empty($username) || empty($email)) {
+        jsonResponse(['success' => false, 'message' => 'Username and email are required.']);
+    }
+
+    try {
+        $db = db();
+        $db->beginTransaction();
+
+        $stmt = $db->prepare("UPDATE users SET username = ?, email = ?, role = ?, status = ? WHERE id = ?");
+        $stmt->execute([$username, $email, $role, $status, $userId]);
+
+        $stmt = $db->prepare("UPDATE user_profiles SET wallet_balance = ? WHERE user_id = ?");
+        $stmt->execute([$wallet, $userId]);
+
+        $db->commit();
+        jsonResponse(['success' => true, 'message' => 'User updated successfully.']);
+    } catch (Throwable $e) {
+        if (isset($db) && $db->inTransaction()) $db->rollBack();
+        jsonResponse(['success' => false, 'message' => 'Update failed: ' . $e->getMessage()]);
+    }
 }
 
 function handleUpdateUserStatus(): never {
@@ -244,6 +310,36 @@ function handleReviewKyc(): never {
         jsonResponse(['success' => true, 'message' => 'KYC status updated.']);
     } catch (Throwable $e) {
         jsonResponse(['success' => false, 'message' => 'Update failed.']);
+    }
+}
+
+function handleReturnToAdmin(): never {
+    if (empty($_SESSION['impersonating']) || empty($_SESSION['admin_user_id'])) {
+        redirect('../../dashboard.php');
+    }
+
+    try {
+        $db = db();
+        $stmt = $db->prepare("SELECT id, username, email, role FROM users WHERE id = ?");
+        $stmt->execute([$_SESSION['admin_user_id']]);
+        $admin = $stmt->fetch();
+
+        if (!$admin || $admin['role'] !== 'admin') {
+             // Fallback logout if admin not found
+             session_destroy();
+             redirect('../../admin/login.php');
+        }
+
+        $_SESSION['user_id'] = $admin['id'];
+        $_SESSION['username'] = $admin['username'];
+        $_SESSION['user_email'] = $admin['email'];
+        $_SESSION['user_role'] = $admin['role'];
+        unset($_SESSION['impersonating']);
+        unset($_SESSION['admin_user_id']);
+
+        redirect('../../admin/index.php');
+    } catch (Throwable $e) {
+        redirect('../../dashboard.php?error=return_failed');
     }
 }
 
