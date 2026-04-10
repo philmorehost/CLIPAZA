@@ -214,7 +214,12 @@ INSERT INTO `security_settings` (`setting_key`, `setting_value`) VALUES
 ('log_retention_days', '90'),
 ('two_factor_enabled', '0'),
 ('captcha_enabled', '0'),
-('captcha_threshold', '3')
+('captcha_threshold', '3'),
+('protect_local_only', '0'),
+('allow_lock_admin', '0'),
+('ip_block_duration_option', '1day'),
+('notify_admin_login_unknown_ip', '0'),
+('notify_brute_force_with_username', '0')
 ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value);
 
 -- Default site settings
@@ -224,7 +229,26 @@ INSERT INTO `site_settings` (`setting_key`, `setting_value`) VALUES
 ('admin_email', 'admin@example.com'),
 ('maintenance_mode', '0'),
 ('registration_enabled', '1'),
-('timezone', 'UTC')
+('timezone', 'UTC'),
+('site_logo', ''),
+('site_favicon', ''),
+('seo_title', ''),
+('seo_description', ''),
+('seo_keywords', ''),
+('og_image_url', ''),
+('custom_header_code', ''),
+('adsense_code', ''),
+('ads_txt_content', '')
+ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value);
+
+-- Additional site settings for payment/contest features
+INSERT INTO `site_settings` (`setting_key`, `setting_value`) VALUES
+('paystack_public_key', ''),
+('paystack_secret_key', ''),
+('platform_fee_percent', '10'),
+('youtube_api_key', ''),
+('min_contest_prize', '5000'),
+('max_contest_days', '30')
 ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value);
 
 -- Country rules for all ~250 countries
@@ -481,3 +505,127 @@ INSERT INTO `country_rules` (`country_code`, `country_name`, `status`) VALUES
 ON DUPLICATE KEY UPDATE country_name = VALUES(country_name);
 
 SET foreign_key_checks = 1;
+
+-- ===================== CLIPAZA PLATFORM EXTENSIONS =====================
+
+-- User profiles (extends users table)
+CREATE TABLE IF NOT EXISTS `user_profiles` (
+  `id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id` int UNSIGNED NOT NULL,
+  `display_name` varchar(100) DEFAULT NULL,
+  `bio` text DEFAULT NULL,
+  `youtube_handle` varchar(100) DEFAULT NULL,
+  `youtube_channel_id` varchar(100) DEFAULT NULL,
+  `tiktok_handle` varchar(100) DEFAULT NULL,
+  `instagram_handle` varchar(100) DEFAULT NULL,
+  `facebook_handle` varchar(100) DEFAULT NULL,
+  `active_mode` enum('creator','clipper') NOT NULL DEFAULT 'clipper',
+  `wallet_balance` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `total_earned` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `total_spent` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `avatar` varchar(500) DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_user_profiles_user` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Enhanced contests table
+ALTER TABLE `contests`
+  ADD COLUMN IF NOT EXISTS `creator_id` int UNSIGNED DEFAULT NULL AFTER `id`,
+  ADD COLUMN IF NOT EXISTS `youtube_url` varchar(2000) DEFAULT NULL AFTER `creator_id`,
+  ADD COLUMN IF NOT EXISTS `youtube_video_id` varchar(50) DEFAULT NULL AFTER `youtube_url`,
+  ADD COLUMN IF NOT EXISTS `youtube_title` varchar(500) DEFAULT NULL AFTER `youtube_video_id`,
+  ADD COLUMN IF NOT EXISTS `youtube_thumbnail` varchar(2000) DEFAULT NULL AFTER `youtube_title`,
+  ADD COLUMN IF NOT EXISTS `must_subscribe` tinyint(1) NOT NULL DEFAULT 0 AFTER `youtube_thumbnail`,
+  ADD COLUMN IF NOT EXISTS `must_like` tinyint(1) NOT NULL DEFAULT 0 AFTER `must_subscribe`,
+  ADD COLUMN IF NOT EXISTS `must_comment` tinyint(1) NOT NULL DEFAULT 0 AFTER `must_like`,
+  ADD COLUMN IF NOT EXISTS `clip_start_time` varchar(20) DEFAULT NULL AFTER `must_comment`,
+  ADD COLUMN IF NOT EXISTS `clip_end_time` varchar(20) DEFAULT NULL AFTER `clip_start_time`,
+  ADD COLUMN IF NOT EXISTS `clip_instructions` text DEFAULT NULL AFTER `clip_end_time`,
+  ADD COLUMN IF NOT EXISTS `platform_fee` decimal(10,2) NOT NULL DEFAULT 0.00 AFTER `prize_pool`,
+  ADD COLUMN IF NOT EXISTS `total_amount` decimal(10,2) NOT NULL DEFAULT 0.00 AFTER `platform_fee`,
+  ADD COLUMN IF NOT EXISTS `escrow_status` enum('unfunded','funded','released','refunded') NOT NULL DEFAULT 'unfunded' AFTER `total_amount`,
+  ADD COLUMN IF NOT EXISTS `paystack_reference` varchar(255) DEFAULT NULL AFTER `escrow_status`,
+  ADD COLUMN IF NOT EXISTS `funded_at` datetime DEFAULT NULL AFTER `paystack_reference`;
+
+ALTER TABLE `contests`
+  ADD KEY IF NOT EXISTS `idx_contests_creator` (`creator_id`);
+
+-- Contest platform prize splits
+CREATE TABLE IF NOT EXISTS `contest_platforms` (
+  `id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `contest_id` int UNSIGNED NOT NULL,
+  `platform` enum('tiktok','instagram','facebook') NOT NULL,
+  `prize_amount` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `winner_count` int UNSIGNED NOT NULL DEFAULT 3,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_contest_platform` (`contest_id`,`platform`),
+  KEY `idx_cp_contest` (`contest_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Enhanced contest entries
+ALTER TABLE `contest_entries`
+  ADD COLUMN IF NOT EXISTS `platform` enum('tiktok','instagram','facebook') DEFAULT NULL AFTER `clip_url`,
+  ADD COLUMN IF NOT EXISTS `view_count` bigint UNSIGNED NOT NULL DEFAULT 0 AFTER `platform`,
+  ADD COLUMN IF NOT EXISTS `like_count` int UNSIGNED NOT NULL DEFAULT 0 AFTER `view_count`,
+  ADD COLUMN IF NOT EXISTS `comment_count` int UNSIGNED NOT NULL DEFAULT 0 AFTER `like_count`,
+  ADD COLUMN IF NOT EXISTS `disqualified` tinyint(1) NOT NULL DEFAULT 0 AFTER `comment_count`,
+  ADD COLUMN IF NOT EXISTS `disqualify_reason` varchar(255) DEFAULT NULL AFTER `disqualified`,
+  ADD COLUMN IF NOT EXISTS `verified_subscribe` tinyint(1) NOT NULL DEFAULT 0 AFTER `disqualify_reason`,
+  ADD COLUMN IF NOT EXISTS `verified_like` tinyint(1) NOT NULL DEFAULT 0 AFTER `verified_subscribe`,
+  ADD COLUMN IF NOT EXISTS `verified_comment` tinyint(1) NOT NULL DEFAULT 0 AFTER `verified_like`,
+  ADD COLUMN IF NOT EXISTS `rank_position` int UNSIGNED DEFAULT NULL AFTER `verified_comment`,
+  ADD COLUMN IF NOT EXISTS `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER `submitted_at`;
+
+-- Payouts (winner prize claims)
+CREATE TABLE IF NOT EXISTS `payouts` (
+  `id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `contest_id` int UNSIGNED NOT NULL,
+  `user_id` int UNSIGNED NOT NULL,
+  `entry_id` int UNSIGNED NOT NULL,
+  `amount` decimal(10,2) NOT NULL,
+  `platform` enum('tiktok','instagram','facebook') NOT NULL,
+  `rank_position` int UNSIGNED NOT NULL DEFAULT 1,
+  `status` enum('pending','claimed','processing','completed','failed') NOT NULL DEFAULT 'pending',
+  `bank_name` varchar(200) DEFAULT NULL,
+  `bank_code` varchar(20) DEFAULT NULL,
+  `account_number` varchar(20) DEFAULT NULL,
+  `account_name` varchar(200) DEFAULT NULL,
+  `nuban_verified` tinyint(1) NOT NULL DEFAULT 0,
+  `paystack_reference` varchar(255) DEFAULT NULL,
+  `paystack_transfer_code` varchar(255) DEFAULT NULL,
+  `claimed_at` datetime DEFAULT NULL,
+  `paid_at` datetime DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_payouts_contest` (`contest_id`),
+  KEY `idx_payouts_user` (`user_id`),
+  KEY `idx_payouts_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Email verifications
+CREATE TABLE IF NOT EXISTS `email_verifications` (
+  `id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id` int UNSIGNED NOT NULL,
+  `token` varchar(100) NOT NULL,
+  `expires_at` datetime NOT NULL,
+  `used` tinyint(1) NOT NULL DEFAULT 0,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_ev_token` (`token`),
+  KEY `idx_ev_user` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Password reset tokens
+CREATE TABLE IF NOT EXISTS `password_resets` (
+  `id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `email` varchar(255) NOT NULL,
+  `token` varchar(100) NOT NULL,
+  `expires_at` datetime NOT NULL,
+  `used` tinyint(1) NOT NULL DEFAULT 0,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_pr_token` (`token`),
+  KEY `idx_pr_email` (`email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

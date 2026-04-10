@@ -64,6 +64,16 @@ function login(string $username, string $password): array {
         $_SESSION['user_email'] = $user['email'];
         $_SESSION['logged_in']  = true;
 
+        // Load user mode from profile
+        try {
+            $ps = $db->prepare('SELECT active_mode FROM user_profiles WHERE user_id = ? LIMIT 1');
+            $ps->execute([$user['id']]);
+            $profile = $ps->fetch();
+            $_SESSION['user_mode'] = $profile ? $profile['active_mode'] : 'clipper';
+        } catch (Throwable) {
+            $_SESSION['user_mode'] = 'clipper';
+        }
+
         logLoginEvent($user['id'], $username, $ip, 'login_success', 'Successful login');
 
         updateIpWhitelist((int)$user['id'], $ip);
@@ -133,4 +143,22 @@ function getCurrentUser(): ?array {
 
 function hashPassword(string $password): string {
     return password_hash($password, PASSWORD_BCRYPT, ['cost' => 12]);
+}
+
+function requireUser(): void {
+    if (session_status() === PHP_SESSION_NONE) session_start();
+    if (empty($_SESSION['user_id'])) {
+        redirect('/auth/login');
+    }
+}
+
+function requireCreatorMode(): void {
+    requireUser();
+    if (($_SESSION['user_mode'] ?? 'clipper') !== 'creator') {
+        redirect('/dashboard?error=creator_required');
+    }
+}
+
+function getUserMode(): string {
+    return $_SESSION['user_mode'] ?? 'clipper';
 }

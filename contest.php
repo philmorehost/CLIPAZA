@@ -1,0 +1,350 @@
+<?php
+declare(strict_types=1);
+
+$root = __DIR__;
+require_once $root . '/includes/db.php';
+require_once $root . '/includes/functions.php';
+require_once $root . '/includes/auth.php';
+require_once $root . '/includes/layout.php';
+
+if (session_status() === PHP_SESSION_NONE) session_start();
+
+$isLoggedIn = !empty($_SESSION['user_id']);
+$userId     = $isLoggedIn ? (int)$_SESSION['user_id'] : 0;
+$username   = $_SESSION['username'] ?? '';
+$userMode   = getUserMode();
+
+$contestId = (int)($_GET['id'] ?? 0);
+if ($contestId <= 0) redirect('/contests');
+
+$contest   = null;
+$platforms = [];
+$myEntries = []; // keyed by platform
+
+try {
+    $db   = db();
+    $stmt = $db->prepare('SELECT c.*, u.username AS creator_username FROM contests c LEFT JOIN users u ON u.id = c.creator_id WHERE c.id = ? LIMIT 1');
+    $stmt->execute([$contestId]);
+    $contest = $stmt->fetch();
+    if (!$contest) redirect('/contests');
+
+    $stmt = $db->prepare('SELECT * FROM contest_platforms WHERE contest_id = ?');
+    $stmt->execute([$contestId]);
+    $platforms = $stmt->fetchAll();
+
+    if ($isLoggedIn) {
+        $stmt = $db->prepare('SELECT * FROM contest_entries WHERE contest_id = ? AND user_id = ?');
+        $stmt->execute([$contestId, $userId]);
+        foreach ($stmt->fetchAll() as $e) {
+            $myEntries[$e['platform'] ?? 'all'] = $e;
+        }
+    }
+} catch (Throwable) {
+    redirect('/contests');
+}
+
+$isActive  = $contest['status'] === 'active'
+    && (empty($contest['end_date']) || strtotime($contest['end_date']) > time());
+$timeLeft  = '';
+if (!empty($contest['end_date'])) {
+    $secs = strtotime($contest['end_date']) - time();
+    if ($secs > 0) {
+        $d = floor($secs / 86400);
+        $h = floor(($secs % 86400) / 3600);
+        $m = floor(($secs % 3600) / 60);
+        $timeLeft = "{$d}d {$h}h {$m}m remaining";
+    } else {
+        $timeLeft = 'Expired';
+    }
+}
+
+// Build leaderboard per platform
+function getLeaderboard(PDO $db, int $contestId, string $platform, int $limit = 10): array {
+    try {
+        $stmt = $db->prepare(
+            "SELECT ce.*, u.username FROM contest_entries ce
+             INNER JOIN users u ON u.id = ce.user_id
+             WHERE ce.contest_id = ? AND ce.platform = ? AND ce.disqualified = 0
+             ORDER BY ce.view_count DESC, ce.like_count DESC
+             LIMIT ?"
+        );
+        $stmt->execute([$contestId, $platform, $limit]);
+        return $stmt->fetchAll();
+    } catch (Throwable) { return []; }
+}
+
+$csrf = generateCsrfToken();
+$pageTitle = $contest['title'];
+renderHead($pageTitle);
+renderNav($isLoggedIn, ['username' => $username], $userMode);
+?>
+
+<div class="public-page">
+  <div class="container py-5">
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row align-items-start gap-3 mb-4">
+      <div class="flex-grow-1">
+        <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+          <?php if ($isActive): ?>
+            <span class="badge badge-active">🟢 Active</span>
+          <?php else: ?>
+            <span class="badge badge-inactive">⚫ <?= e(ucfirst($contest['status'])) ?></span>
+          <?php endif; ?>
+          <?php if ($timeLeft): ?>
+            <span class="countdown-timer <?= strpos($timeLeft, 'Expired') !== false ? 'countdown-urgent' : '' ?>"><?= e($timeLeft) ?></span>
+          <?php endif; ?>
+        </div>
+        <h1 class="fw-900 mb-1" style="font-size:clamp(1.4rem,3vw,2rem);letter-spacing:-0.5px"><?= e($contest['title']) ?></h1>
+        <?php if (!empty($contest['creator_username'])): ?>
+          <p class="text-muted mb-0" style="font-size:0.85rem">by @<?= e($contest['creator_username']) ?></p>
+        <?php endif; ?>
+      </div>
+      <?php if (!empty($contest['prize_pool'])): ?>
+        <div class="text-center" style="background:var(--accent-dim);border:1px solid rgba(204,255,0,0.3);border-radius:var(--radius);padding:16px 24px">
+          <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--accent)">Prize Pool</div>
+          <div style="font-size:1.6rem;font-weight:900;color:var(--accent)">₦<?= number_format((float)$contest['prize_pool'], 0) ?></div>
+        </div>
+      <?php endif; ?>
+    </div>
+
+    <div class="row g-4">
+      <!-- Left column: video + requirements -->
+      <div class="col-lg-8">
+        <?php if (!empty($contest['youtube_video_id'])): ?>
+          <div class="ratio ratio-16x9 mb-4 rounded overflow-hidden">
+            <iframe src="https://www.youtube.com/embed/<?= e($contest['youtube_video_id']) ?>"
+                    title="<?= e($contest['title']) ?>"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen></iframe>
+          </div>
+        <?php endif; ?>
+
+        <!-- Clip Instructions -->
+        <?php if (!empty($contest['clip_start_time']) || !empty($contest['clip_instructions'])): ?>
+          <div class="card-dark p-3 mb-4">
+            <h6 class="fw-700 mb-3">📋 Clip Instructions</h6>
+            <?php if (!empty($contest['clip_start_time']) || !empty($contest['clip_end_time'])): ?>
+              <div class="d-flex gap-3 mb-2">
+                <?php if (!empty($contest['clip_start_time'])): ?>
+                  <span class="requirement-badge">▶ Start: <?= e($contest['clip_start_time']) ?></span>
+                <?php endif; ?>
+                <?php if (!empty($contest['clip_end_time'])): ?>
+                  <span class="requirement-badge">⏹ End: <?= e($contest['clip_end_time']) ?></span>
+                <?php endif; ?>
+              </div>
+            <?php endif; ?>
+            <?php if (!empty($contest['clip_instructions'])): ?>
+              <p class="text-muted mb-0" style="font-size:0.9rem"><?= nl2br(e($contest['clip_instructions'])) ?></p>
+            <?php endif; ?>
+          </div>
+        <?php endif; ?>
+
+        <!-- Requirements -->
+        <?php if ($contest['must_subscribe'] || $contest['must_like'] || $contest['must_comment']): ?>
+          <div class="card-dark p-3 mb-4">
+            <h6 class="fw-700 mb-3">✅ Requirements</h6>
+            <div class="d-flex flex-wrap gap-2">
+              <?php if ($contest['must_subscribe']): ?>
+                <span class="requirement-badge requirement-badge--required">Must Subscribe</span>
+              <?php endif; ?>
+              <?php if ($contest['must_like']): ?>
+                <span class="requirement-badge requirement-badge--required">Must Like</span>
+              <?php endif; ?>
+              <?php if ($contest['must_comment']): ?>
+                <span class="requirement-badge requirement-badge--required">Must Comment</span>
+              <?php endif; ?>
+            </div>
+          </div>
+        <?php endif; ?>
+
+        <!-- Prize Breakdown -->
+        <?php if (!empty($platforms)): ?>
+          <div class="card-dark p-3 mb-4">
+            <h6 class="fw-700 mb-3">🏆 Prize Breakdown</h6>
+            <div class="row g-2">
+              <?php foreach ($platforms as $p): ?>
+                <?php
+                  $pIcon = match($p['platform']) {
+                    'tiktok'    => '🎵',
+                    'instagram' => '📸',
+                    'facebook'  => '📘',
+                    default     => '🎬',
+                  };
+                  $perWinner = $p['winner_count'] > 0
+                      ? number_format((float)$p['prize_amount'] / (int)$p['winner_count'], 0)
+                      : '0';
+                ?>
+                <div class="col-md-4">
+                  <div style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:8px;padding:12px;text-align:center">
+                    <div style="font-size:1.5rem"><?= $pIcon ?></div>
+                    <div class="fw-700" style="font-size:0.85rem"><?= ucfirst(e($p['platform'])) ?></div>
+                    <div style="color:var(--accent);font-weight:700">₦<?= number_format((float)$p['prize_amount'], 0) ?></div>
+                    <div class="text-muted" style="font-size:0.75rem">~₦<?= $perWinner ?>/winner · <?= (int)$p['winner_count'] ?> winners</div>
+                  </div>
+                </div>
+              <?php endforeach; ?>
+            </div>
+          </div>
+        <?php endif; ?>
+
+        <!-- Leaderboard Tabs -->
+        <?php if (!empty($platforms)): ?>
+          <div class="card-dark p-3">
+            <h6 class="fw-700 mb-3">📊 Leaderboard</h6>
+            <ul class="nav nav-tabs mb-3" id="lbTabs" style="border-bottom:1px solid #222">
+              <?php foreach ($platforms as $idx => $p): ?>
+                <?php
+                  $pIcon = match($p['platform']) { 'tiktok'=>'🎵','instagram'=>'📸','facebook'=>'📘',default=>'' };
+                ?>
+                <li class="nav-item">
+                  <button class="nav-link <?= $idx===0?'active':'' ?> text-white"
+                          data-bs-toggle="tab"
+                          data-bs-target="#lb-<?= e($p['platform']) ?>"
+                          style="background:none;border:none;border-bottom:2px solid transparent;font-size:0.85rem;padding:8px 16px">
+                    <?= $pIcon ?> <?= ucfirst(e($p['platform'])) ?>
+                  </button>
+                </li>
+              <?php endforeach; ?>
+            </ul>
+            <div class="tab-content">
+              <?php foreach ($platforms as $idx => $p): ?>
+                <?php
+                  $lb  = getLeaderboard(db(), $contestId, $p['platform']);
+                  $perW = (int)$p['winner_count'] > 0 ? (float)$p['prize_amount'] / (int)$p['winner_count'] : 0;
+                ?>
+                <div class="tab-pane fade <?= $idx===0?'show active':'' ?>" id="lb-<?= e($p['platform']) ?>">
+                  <?php if (empty($lb)): ?>
+                    <p class="text-muted text-center py-3" style="font-size:0.85rem">No entries yet. Be the first!</p>
+                  <?php else: ?>
+                    <div class="leaderboard-table">
+                      <?php foreach ($lb as $rank => $row): ?>
+                        <?php
+                          $isMe     = $isLoggedIn && (int)$row['user_id'] === $userId;
+                          $rankNum  = $rank + 1;
+                          $rankIcon = match($rankNum) { 1=>'🥇', 2=>'🥈', 3=>'🥉', default=>"#{$rankNum}" };
+                          $prizeAmt = $rankNum <= (int)$p['winner_count'] ? '₦' . number_format($perW, 0) : '—';
+                        ?>
+                        <div class="leaderboard-row <?= $isMe ? 'leaderboard-row--me' : '' ?>">
+                          <span class="lb-rank"><?= $rankIcon ?></span>
+                          <span class="lb-name">
+                            <?= e($row['username']) ?>
+                            <?php if ($isMe): ?><span class="badge ms-1" style="background:var(--accent);color:#000;font-size:0.65rem">You</span><?php endif; ?>
+                          </span>
+                          <span class="lb-stat text-muted"><?= number_format((int)$row['view_count']) ?> views</span>
+                          <span class="lb-stat text-muted"><?= number_format((int)$row['like_count']) ?> likes</span>
+                          <span class="lb-prize" style="color:var(--accent)"><?= $prizeAmt ?></span>
+                        </div>
+                      <?php endforeach; ?>
+                    </div>
+                  <?php endif; ?>
+                </div>
+              <?php endforeach; ?>
+            </div>
+          </div>
+        <?php endif; ?>
+      </div>
+
+      <!-- Right column: join panel -->
+      <div class="col-lg-4">
+        <div class="card-dark p-4 sticky-top" style="top:80px">
+          <?php if (!$isActive): ?>
+            <div class="text-center py-3">
+              <div style="font-size:2rem">⚫</div>
+              <h6 class="fw-700 mt-2">Contest <?= e(ucfirst($contest['status'])) ?></h6>
+              <p class="text-muted" style="font-size:0.85rem">This contest is no longer accepting entries.</p>
+            </div>
+          <?php elseif (!$isLoggedIn): ?>
+            <div class="text-center">
+              <div style="font-size:2rem;margin-bottom:12px">✂️</div>
+              <h6 class="fw-700 mb-2">Ready to clip?</h6>
+              <p class="text-muted mb-3" style="font-size:0.85rem">Create a free account to submit your clip and win.</p>
+              <a href="/auth/register" class="btn btn-accent w-100 mb-2">Sign Up Free</a>
+              <a href="/auth/login" class="btn btn-outline-accent w-100">Sign In</a>
+            </div>
+          <?php else: ?>
+            <h6 class="fw-700 mb-3">Submit Your Clip</h6>
+            <?php if (!empty($myEntries)): ?>
+              <div class="alert-dark-success mb-3" style="font-size:0.82rem">
+                ✅ You've already submitted <?= count($myEntries) ?> clip<?= count($myEntries)!==1?'s':'' ?>.
+              </div>
+            <?php endif; ?>
+            <form id="clipForm">
+              <input type="hidden" name="csrf_token" value="<?= e($csrf) ?>">
+              <input type="hidden" name="contest_id" value="<?= $contestId ?>">
+              <div class="mb-3">
+                <label class="form-label-dark">Platform</label>
+                <select name="platform" class="form-control-dark" id="platformSelect">
+                  <option value="">Select platform</option>
+                  <?php foreach ($platforms as $p): ?>
+                    <?php
+                      $pIcon = match($p['platform']) { 'tiktok'=>'🎵','instagram'=>'📸','facebook'=>'📘',default=>'' };
+                      $alreadySubmitted = isset($myEntries[$p['platform']]);
+                    ?>
+                    <option value="<?= e($p['platform']) ?>" <?= $alreadySubmitted ? 'disabled' : '' ?>>
+                      <?= $pIcon ?> <?= ucfirst(e($p['platform'])) ?> <?= $alreadySubmitted ? '(submitted)' : '' ?>
+                    </option>
+                  <?php endforeach; ?>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label-dark">Clip URL</label>
+                <input type="url" name="clip_url" class="form-control-dark" placeholder="https://www.tiktok.com/..." id="clipUrl">
+                <small class="text-muted" style="font-size:0.75rem">Must be a direct link to your clip on the selected platform</small>
+              </div>
+              <div class="mb-4">
+                <label class="form-label-dark">Your YouTube Handle <span class="text-muted">(for verification)</span></label>
+                <input type="text" name="youtube_handle" class="form-control-dark" placeholder="@yourhandle">
+              </div>
+              <div id="submitFeedback" class="mb-2"></div>
+              <button type="submit" class="btn btn-accent w-100" id="submitClipBtn">Submit Clip</button>
+            </form>
+          <?php endif; ?>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.getElementById('clipForm')?.addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const btn = document.getElementById('submitClipBtn');
+  const fb  = document.getElementById('submitFeedback');
+  btn.disabled = true;
+  btn.textContent = 'Submitting…';
+  fb.innerHTML = '';
+
+  const data = new FormData(this);
+  data.set('action', 'submit_clip');
+
+  try {
+    const r = await fetch('/ajax/contest_actions.php', { method: 'POST', body: new URLSearchParams(data) });
+    const d = await r.json();
+    if (d.success) {
+      fb.innerHTML = '<div class="alert-dark-success" style="font-size:0.82rem">✅ ' + d.message + '</div>';
+      btn.textContent = 'Submitted!';
+      setTimeout(() => location.reload(), 1500);
+    } else {
+      fb.innerHTML = '<div class="alert-dark-danger" style="font-size:0.82rem">' + d.message + '</div>';
+      btn.disabled = false;
+      btn.textContent = 'Submit Clip';
+    }
+  } catch {
+    fb.innerHTML = '<div class="alert-dark-danger" style="font-size:0.82rem">Network error. Please try again.</div>';
+    btn.disabled = false;
+    btn.textContent = 'Submit Clip';
+  }
+});
+
+// Validate clip URL matches platform
+document.getElementById('platformSelect')?.addEventListener('change', function() {
+  const url = document.getElementById('clipUrl');
+  url.placeholder = {
+    tiktok: 'https://www.tiktok.com/...',
+    instagram: 'https://www.instagram.com/...',
+    facebook: 'https://www.facebook.com/...',
+  }[this.value] || 'https://...';
+});
+</script>
+
+<?php renderFooter(); ?>
