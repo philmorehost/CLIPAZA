@@ -217,6 +217,14 @@ function ss(array $settings, string $key, string $default = ''): string {
 
     <!-- TAB: CODE INJECTION -->
     <?php elseif ($activeTab === 'code'): ?>
+    <div class="alert-dark-warning mb-4" style="display:flex;gap:12px;align-items:flex-start;">
+        <span style="font-size:1.2rem;">⚠️</span>
+        <div>
+            <strong>Security Warning:</strong> Code entered here is output as raw HTML on every public page load.
+            Only enter code from sources you fully trust (e.g., your own Google Analytics tag). A compromised admin
+            account could use these fields to inject malicious scripts.
+        </div>
+    </div>
     <form id="settingsForm" enctype="multipart/form-data">
         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrf) ?>">
         <input type="hidden" name="action" value="save_code">

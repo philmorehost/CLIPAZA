@@ -87,14 +87,14 @@ function processUpload(string $inputName, string $destDir, array $allowedExts, i
         throw new \RuntimeException('Invalid file type. Allowed: ' . implode(', ', $allowedExts));
     }
 
-    // Validate MIME via finfo for images
+    // Validate MIME via finfo for images (not for .ico which lacks a reliable MIME)
     if (in_array($ext, ['png', 'jpg', 'jpeg'], true)) {
         $finfo    = finfo_open(FILEINFO_MIME_TYPE);
         $mime     = finfo_file($finfo, $file['tmp_name']);
         finfo_close($finfo);
-        $okMimes  = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
+        $okMimes  = ['image/png', 'image/jpeg'];
         if (!in_array($mime, $okMimes, true)) {
-            throw new \RuntimeException('File content does not match a valid image type.');
+            throw new \RuntimeException('File content does not match a valid image type (PNG or JPEG required).');
         }
     }
 
@@ -170,8 +170,9 @@ function handleSaveSeo(): never {
 }
 
 function handleSaveCode(): never {
-    // These are intentionally stored raw (no stripping) for code injection purposes.
-    // They are the admin's responsibility to enter safely.
+    // WARNING: These values are intentionally stored and output as raw HTML/JS.
+    // They are injected into every public page. Only trusted admins should edit these.
+    // If an admin account is compromised, these fields are a potential XSS vector.
     $headerCode  = $_POST['custom_header_code'] ?? '';
     $adsenseCode = $_POST['adsense_code'] ?? '';
 
