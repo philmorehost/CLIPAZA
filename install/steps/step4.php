@@ -39,8 +39,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admin_next'])) {
                 );
                 $stmt->execute([$username, $email, $hash, 'admin', 'active']);
 
-                // Create installer.lock to prevent re-running the installer
-                file_put_contents(dirname(__DIR__) . '/installer.lock', date('Y-m-d H:i:s'));
+                // Create installer.lock in the root directory to prevent re-running the installer
+                file_put_contents(dirname(__DIR__, 2) . '/installer.lock', date('Y-m-d H:i:s'));
 
                 $success = true;
                 $_SESSION = [];

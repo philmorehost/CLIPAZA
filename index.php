@@ -3,6 +3,14 @@ declare(strict_types=1);
 
 $root = __DIR__;
 $configFile = $root . '/config/config.php';
+$lockFile   = $root . '/installer.lock';
+
+// If not yet installed, redirect to the installer
+if (!file_exists($lockFile) && !file_exists($configFile)) {
+    header('Location: install/');
+    exit;
+}
+
 $siteName = 'Clipaza';
 $siteTagline = 'Earn Money Clipping Videos';
 
