@@ -1,5 +1,46 @@
 <?php
-declare(strict_types=1);
+/**
+ * PHP version gate.
+ * This block uses only PHP 5.4-compatible syntax so it can be parsed and
+ * executed on any PHP version, displaying a friendly error instead of a
+ * cryptic internal server error when the server runs PHP < 8.0.
+ * NOTE: declare(strict_types=1) is intentionally omitted from this entry-
+ * point file because it must be the first statement, which would prevent
+ * placing the version check first. Strict type checking is enforced in
+ * all included library files (includes/*.php).
+ */
+if (version_compare(PHP_VERSION, '8.0.0', '<')) {
+    header('Content-Type: text/html; charset=utf-8');
+    header('HTTP/1.1 503 Service Unavailable');
+    $required = htmlspecialchars('8.0.0', ENT_QUOTES, 'UTF-8');
+    $current  = htmlspecialchars(PHP_VERSION, ENT_QUOTES, 'UTF-8');
+    echo '<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>PHP Version Requirement Not Met</title>
+    <style>
+        body{font-family:Arial,sans-serif;background:#f4f4f4;display:flex;
+             align-items:center;justify-content:center;min-height:100vh;margin:0}
+        .box{background:#fff;border-left:4px solid #e74c3c;border-radius:4px;
+             padding:2rem 2.5rem;max-width:480px;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+        h2{margin-top:0;color:#e74c3c}
+        p{line-height:1.6;color:#555}
+        code{background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:.9em}
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h2>&#9888; PHP Version Requirement Not Met</h2>
+        <p>CLIPAZA requires <strong>PHP ' . $required . '</strong> or higher.</p>
+        <p>Your server is running <strong>PHP <code>' . $current . '</code></strong>.</p>
+        <p>Please upgrade PHP or contact your hosting provider for assistance.</p>
+    </div>
+</body>
+</html>';
+    exit;
+}
+
 session_start();
 
 $root = dirname(__DIR__);
