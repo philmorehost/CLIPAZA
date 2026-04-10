@@ -46,18 +46,16 @@ function verifyYoutubeEngagement(string $accessToken, string $videoId, string $c
 
     // 3. Verify Comment
     if ($requirements['comment']) {
-        // This is tricky. We check if the user has a comment on the video.
-        // We can use commentThreads.list with moderationStatus=published and search by the user.
-        // But the best way is to list user's comments if possible, or just search the video's comments for this user's channel ID.
-
         // First, get the user's own channel ID
         $userChannelId = getMyYoutubeChannelId($accessToken);
         if ($userChannelId) {
-            $url = "https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=" . urlencode($videoId) . "&searchTerms=" . urlencode($userChannelId);
+            // We search for the user's comments on the video.
+            // Note: searchTerms searches the text. We should ideally list all comments and filter,
+            // but for performance with many comments, we search for a common piece of metadata if possible,
+            // or we just fetch the most recent comment threads and look for the author.
+            $url = "https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=" . urlencode($videoId) . "&maxResults=100";
             $response = youtubeApiRequest($url, $accessToken);
 
-            // SearchTerms might not be perfect for channel ID in the snippet,
-            // so we should ideally check the authorChannelId in the response.
             $found = false;
             if (!empty($response['items'])) {
                 foreach ($response['items'] as $item) {

@@ -31,6 +31,21 @@ $expiry = sanitizeInput($_POST['kyc_id_expiry'] ?? '');
 
 $idFile = $_FILES['kyc_id_file'];
 $idExt = strtolower(pathinfo($idFile['name'], PATHINFO_EXTENSION));
+$allowedExts = ['jpg', 'jpeg', 'png', 'pdf'];
+$allowedMimes = ['image/jpeg', 'image/png', 'application/pdf'];
+
+if (!in_array($idExt, $allowedExts)) {
+    jsonResponse(['success' => false, 'message' => 'Invalid file extension. Allowed: jpg, png, pdf.']);
+}
+
+$finfo = finfo_open(FILEINFO_MIME_TYPE);
+$mime = finfo_file($finfo, $idFile['tmp_name']);
+finfo_close($finfo);
+
+if (!in_array($mime, $allowedMimes)) {
+    jsonResponse(['success' => false, 'message' => 'Invalid file type.']);
+}
+
 $idName = 'id_' . $userId . '_' . time() . '.' . $idExt;
 $idPath = 'uploads/kyc/' . $idName;
 

@@ -174,8 +174,19 @@ function handleUpdatePayoutStatus(): never {
         $db->beginTransaction();
 
         // Handle Rejection (Reverse funds to wallet)
-        if ($status === 'rejected' && $payout['status'] !== 'rejected') {
+        // Ensure we only reverse once (from non-rejected to rejected)
+        if ($status === 'rejected' && $payout['status'] !== 'rejected' && $payout['status'] !== 'cancelled') {
             $db->prepare('UPDATE user_profiles SET wallet_balance = wallet_balance + ? WHERE user_id = ?')
+               ->execute([$payout['amount'], $payout['user_id']]);
+        }
+        // Handle Cancellation (Reverse funds to wallet if not already reversed)
+        if ($status === 'cancelled' && $payout['status'] !== 'rejected' && $payout['status'] !== 'cancelled') {
+             $db->prepare('UPDATE user_profiles SET wallet_balance = wallet_balance + ? WHERE user_id = ?')
+               ->execute([$payout['amount'], $payout['user_id']]);
+        }
+        // If moving back to a pending/processing state from a reversed state, deduct the funds again
+        if (in_array($status, ['pending', 'claimed', 'processing', 'completed']) && in_array($payout['status'], ['rejected', 'cancelled'])) {
+            $db->prepare('UPDATE user_profiles SET wallet_balance = wallet_balance - ? WHERE user_id = ?')
                ->execute([$payout['amount'], $payout['user_id']]);
         }
 
