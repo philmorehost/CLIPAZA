@@ -119,9 +119,9 @@ function handleSubmitClip(): never {
     }
 
     $urlPatterns = [
-        'tiktok'    => '/tiktok\.com/i',
-        'instagram' => '/instagram\.com/i',
-        'facebook'  => '/facebook\.com/i',
+        'tiktok'    => '/^https?:\/\/(www\.|vm\.)?tiktok\.com\//i',
+        'instagram' => '/^https?:\/\/(www\.)?instagram\.com\//i',
+        'facebook'  => '/^https?:\/\/(www\.)?facebook\.com\//i',
     ];
     if (!preg_match($urlPatterns[$platform], $clipUrl)) {
         jsonResponse(['success' => false, 'message' => "Clip URL must be from {$platform}.com."]);

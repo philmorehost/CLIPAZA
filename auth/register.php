@@ -24,8 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $password        = $_POST['password'] ?? '';
         $confirmPassword = $_POST['confirm_password'] ?? '';
 
-        $formData = compact('display_name', 'email', 'username');
-        $formData['display_name'] = $displayName;
+        $formData = ['display_name' => $displayName, 'email' => $email, 'username' => $username];
 
         if (empty($displayName))                    $errors[] = 'Full name is required.';
         if (!isValidEmail($email))                  $errors[] = 'A valid email address is required.';

@@ -589,6 +589,7 @@ CREATE TABLE IF NOT EXISTS `payouts` (
   `rank_position` int UNSIGNED NOT NULL DEFAULT 1,
   `status` enum('pending','claimed','processing','completed','failed') NOT NULL DEFAULT 'pending',
   `bank_name` varchar(200) DEFAULT NULL,
+  `bank_code` varchar(20) DEFAULT NULL,
   `account_number` varchar(20) DEFAULT NULL,
   `account_name` varchar(200) DEFAULT NULL,
   `nuban_verified` tinyint(1) NOT NULL DEFAULT 0,

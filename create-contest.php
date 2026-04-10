@@ -50,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Validations
         if (empty($title))                         $errors[] = 'Contest title is required.';
         if (empty($youtubeUrl))                    $errors[] = 'YouTube URL is required.';
-        if (!preg_match('/youtube\.com|youtu\.be/', $youtubeUrl)) $errors[] = 'Please enter a valid YouTube URL.';
+        if (!preg_match('/^https?:\/\/(www\.)?(youtube\.com|youtu\.be)\//i', $youtubeUrl)) $errors[] = 'Please enter a valid YouTube URL.';
         if (empty($platformData))                  $errors[] = 'Enable at least one platform with a prize amount.';
         if (empty($endDate))                       $errors[] = 'End date is required.';
 

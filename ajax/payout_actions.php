@@ -188,11 +188,11 @@ function handleClaimPrize(): never {
 
         $db->prepare(
             "INSERT INTO payouts (contest_id, user_id, entry_id, amount, platform, rank_position,
-              status, bank_name, account_number, account_name, nuban_verified, claimed_at)
-             VALUES (?,?,?,?,?,?,'claimed',?,?,?,1,NOW())"
+              status, bank_name, bank_code, account_number, account_name, nuban_verified, claimed_at)
+             VALUES (?,?,?,?,?,?,'claimed',?,?,?,?,1,NOW())"
         )->execute([
             $entry['contest_id'], $userId, $entryId, $prizeAmount,
-            $entry['platform'], $rank, $bankName, $acctNum, $acctName,
+            $entry['platform'], $rank, $bankName, $bankCode, $acctNum, $acctName,
         ]);
 
         // Update user total_earned
