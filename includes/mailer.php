@@ -71,15 +71,15 @@ class Mailer {
     }
 
     public function sendLoginNotification(string $to, string $username, string $ip): bool {
-        $site = defined('SITE_NAME') ? SITE_NAME : 'Clipaza';
+        $site    = htmlspecialchars(defined('SITE_NAME') ? SITE_NAME : 'Clipaza', ENT_QUOTES);
         $subject = "[{$site}] New login to your account";
         $html = "
         <div style='font-family:sans-serif;max-width:600px;margin:0 auto;background:#111;color:#fff;padding:32px;border-radius:12px;'>
             <h2 style='color:#CCFF00;margin-bottom:16px;'>{$site}</h2>
-            <p>Hello <strong>" . htmlspecialchars($username) . "</strong>,</p>
+            <p>Hello <strong>" . htmlspecialchars($username, ENT_QUOTES) . "</strong>,</p>
             <p>A new login was detected on your account.</p>
-            <p><strong>IP Address:</strong> " . htmlspecialchars($ip) . "</p>
-            <p><strong>Time:</strong> " . date('Y-m-d H:i:s T') . "</p>
+            <p><strong>IP Address:</strong> " . htmlspecialchars($ip, ENT_QUOTES) . "</p>
+            <p><strong>Time:</strong> " . htmlspecialchars(date('Y-m-d H:i:s T'), ENT_QUOTES) . "</p>
             <p>If this was not you, please contact support immediately.</p>
             <hr style='border-color:#333;margin:24px 0;'>
             <p style='color:#888;font-size:0.85em;'>This is an automated message from {$site}.</p>

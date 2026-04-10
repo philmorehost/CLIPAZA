@@ -33,14 +33,18 @@ if (!verifyCsrfToken($token)) {
 
 $action = $_POST['action'] ?? '';
 
-match ($action) {
-    'save_security_settings' => handleSaveSecuritySettings(),
-    'save_country_rule'      => handleSaveCountryRule(),
-    'block_ip'               => handleBlockIp(),
-    'unblock_ip'             => handleUnblockIp(),
-    'unlock_account'         => handleUnlockAccount(),
-    default                  => jsonResponse(['success' => false, 'message' => 'Unknown action.']),
-};
+try {
+    match ($action) {
+        'save_security_settings' => handleSaveSecuritySettings(),
+        'save_country_rule'      => handleSaveCountryRule(),
+        'block_ip'               => handleBlockIp(),
+        'unblock_ip'             => handleUnblockIp(),
+        'unlock_account'         => handleUnlockAccount(),
+        default                  => jsonResponse(['success' => false, 'message' => 'Unknown action.']),
+    };
+} catch (\UnhandledMatchError $e) {
+    jsonResponse(['success' => false, 'message' => 'Unknown action.']);
+}
 
 function handleSaveSecuritySettings(): never {
     $allowed = [

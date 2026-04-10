@@ -41,17 +41,21 @@ try {
     $histPerPage = 25;
     $histTotal   = (int)$db->query('SELECT COUNT(*) FROM login_history')->fetchColumn();
     $histPager   = paginate($histTotal, $histPerPage, $histPage);
-    $histFilter  = $_GET['haction'] ?? '';
-    $histIp      = $_GET['hip'] ?? '';
-    $histUser    = $_GET['huser'] ?? '';
+    // Allowlist for the action filter to prevent any unexpected values being bound
+    $validActions = ['login_success', 'login_failed', 'logout', 'account_locked', 'ip_blocked', ''];
+    $histFilterRaw = $_GET['haction'] ?? '';
+    $histFilter    = in_array($histFilterRaw, $validActions, true) ? $histFilterRaw : '';
+    $histIp        = substr(trim($_GET['hip']    ?? ''), 0, 45);
+    $histUser      = substr(trim($_GET['huser']  ?? ''), 0, 100);
 
+    // $histWhere is built from literal SQL strings only; user input is always bound as parameters.
     $histWhere  = '1=1';
     $histParams = [];
     if ($histFilter !== '') { $histWhere .= ' AND action = ?';          $histParams[] = $histFilter; }
     if ($histIp !== '')     { $histWhere .= ' AND ip_address LIKE ?';   $histParams[] = '%' . $histIp . '%'; }
     if ($histUser !== '')   { $histWhere .= ' AND username LIKE ?';     $histParams[] = '%' . $histUser . '%'; }
 
-    // $histWhere is built entirely from literal strings above; user input only appears in bound params.
+    // WHERE clause uses only hardcoded column names; all user values are in $histParams as bound params.
     $histCountStmt = $db->prepare("SELECT COUNT(*) FROM login_history WHERE {$histWhere}");
     $histCountStmt->execute($histParams);
     $histTotal = (int)$histCountStmt->fetchColumn();

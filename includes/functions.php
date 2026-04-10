@@ -85,16 +85,24 @@ function isValidIp(string $ip): bool {
 }
 
 function getClientIp(): string {
-    $keys = ['HTTP_CF_CONNECTING_IP', 'HTTP_X_FORWARDED_FOR', 'HTTP_X_REAL_IP', 'REMOTE_ADDR'];
-    foreach ($keys as $key) {
-        if (!empty($_SERVER[$key])) {
-            $ip = trim(explode(',', $_SERVER[$key])[0]);
-            if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
-                return $ip;
+    $remoteAddr = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+
+    // Only trust proxy headers if REMOTE_ADDR is a known/configured trusted proxy.
+    // Without a trusted-proxy allowlist, always use REMOTE_ADDR to prevent IP spoofing.
+    $trustedProxies = defined('TRUSTED_PROXIES') ? (array)TRUSTED_PROXIES : [];
+    if (!empty($trustedProxies) && in_array($remoteAddr, $trustedProxies, true)) {
+        $proxyHeaders = ['HTTP_CF_CONNECTING_IP', 'HTTP_X_FORWARDED_FOR', 'HTTP_X_REAL_IP'];
+        foreach ($proxyHeaders as $key) {
+            if (!empty($_SERVER[$key])) {
+                $ip = trim(explode(',', $_SERVER[$key])[0]);
+                if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+                    return $ip;
+                }
             }
         }
     }
-    return $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+
+    return $remoteAddr;
 }
 
 function formatDate(string $date, string $format = 'M j, Y g:i A'): string {
