@@ -40,10 +40,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['site_next'])) {
                 $sql = file_get_contents($schemaFile);
                 // Split on semicolons and execute each statement
                 $statements = array_filter(array_map('trim', explode(';', $sql)));
+                $schemaErrors = [];
                 foreach ($statements as $stmt) {
                     if (!empty($stmt)) {
-                        try { $pdo->exec($stmt); } catch (PDOException) {}
+                        try { $pdo->exec($stmt); } catch (PDOException $ex) {
+                            // Collect non-trivial errors (ignore duplicate/already-exists)
+                            if (!str_contains($ex->getMessage(), 'already exists') &&
+                                !str_contains($ex->getMessage(), 'Duplicate entry')) {
+                                $schemaErrors[] = $ex->getMessage();
+                            }
+                        }
                     }
+                }
+                if (!empty($schemaErrors)) {
+                    $errors[] = 'Schema error: ' . implode('; ', array_slice($schemaErrors, 0, 3));
                 }
             }
 

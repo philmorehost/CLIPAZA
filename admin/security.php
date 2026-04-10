@@ -57,9 +57,9 @@ try {
     $histPager = paginate($histTotal, $histPerPage, $histPage);
 
     $histStmt = $db->prepare(
-        "SELECT * FROM login_history WHERE {$histWhere} ORDER BY created_at DESC LIMIT {$histPerPage} OFFSET {$histPager['offset']}"
+        "SELECT * FROM login_history WHERE {$histWhere} ORDER BY created_at DESC LIMIT ? OFFSET ?"
     );
-    $histStmt->execute($histParams);
+    $histStmt->execute([...$histParams, $histPerPage, $histPager['offset']]);
     $loginHistory = $histStmt->fetchAll();
 } catch (Throwable $e) {
     $settings = $blockedIps = $lockedAccounts = $countries = $loginHistory = [];

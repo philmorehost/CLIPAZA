@@ -90,13 +90,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admin_next'])) {
         <label class="form-label-dark">Password</label>
         <input type="password" name="admin_password" class="form-control form-control-dark"
                id="admin_password" data-password-strength="admin_pw" minlength="8" required>
-        <div class="password-strength-bar mt-2">
-            <div class="strength-fill" id="admin_pw_bar_inner" style="display:none;"></div>
-        </div>
-        <div id="admin_pw_label" class="password-strength-label"></div>
-        <div class="password-strength-bar mt-1" id="admin_pw_bar">
+        <div class="password-strength-bar mt-2" id="admin_pw_bar">
             <div class="strength-fill"></div>
         </div>
+        <div id="admin_pw_label" class="password-strength-label"></div>
     </div>
     <div class="mb-3">
         <label class="form-label-dark">Confirm Password</label>
