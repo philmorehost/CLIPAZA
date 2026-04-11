@@ -53,7 +53,7 @@ function handleSubmitKyc(): never {
         if (empty($idExpiry) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $idExpiry)) {
             jsonResponse(['success' => false, 'message' => 'Expiry date is required for this ID type.']);
         }
-        if (strtotime($idExpiry) <= time()) {
+        if (strtotime($idExpiry) < time()) {
             jsonResponse(['success' => false, 'message' => 'Your ID has expired. Please upload a valid, non-expired ID.']);
         }
     }

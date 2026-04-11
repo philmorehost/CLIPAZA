@@ -235,11 +235,11 @@ function handleRequestPayout(): never {
             jsonResponse(['success' => false, 'message' => 'Insufficient wallet balance.']);
         }
 
-        // Check for existing pending request
-        $stmt = $db->prepare("SELECT id FROM payout_requests WHERE user_id = ? AND status = 'pending' LIMIT 1");
+        // Check for existing pending or on_hold request
+        $stmt = $db->prepare("SELECT id FROM payout_requests WHERE user_id = ? AND status IN ('pending', 'on_hold') LIMIT 1");
         $stmt->execute([$userId]);
         if ($stmt->fetch()) {
-            jsonResponse(['success' => false, 'message' => 'You already have a pending payout request.']);
+            jsonResponse(['success' => false, 'message' => 'You already have a pending or on-hold payout request.']);
         }
 
         $db->beginTransaction();

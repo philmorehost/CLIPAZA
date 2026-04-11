@@ -154,7 +154,14 @@ function handlePayoutRequestAction(string $action): never {
             $transferResult = initiatePaystackTransfer($req);
             $transferCode   = $transferResult['transfer_code'] ?? null;
             $reference      = $transferResult['reference'] ?? null;
-            $transferStatus = $transferResult['status'] ?? 'processing';
+
+            // Warn admin when Paystack is not configured or transfer failed
+            $paystackNote = '';
+            if (($transferResult['status'] ?? '') === 'skipped') {
+                $paystackNote = ' (Paystack not configured — manual bank transfer required)';
+            } elseif (in_array($transferResult['status'] ?? '', ['recipient_error', 'transfer_error'], true)) {
+                $paystackNote = ' (Paystack error: ' . ($transferResult['error'] ?? 'unknown') . ' — manual transfer required)';
+            }
 
             $db->beginTransaction();
             $db->prepare(
@@ -163,9 +170,9 @@ function handlePayoutRequestAction(string $action): never {
                  WHERE id = ?"
             )->execute([$adminId, $adminNote ?: null, $transferCode, $reference, $requestId]);
 
-            // Update transaction to completed
+            // Update matching pending withdrawal transaction to completed
             $db->prepare(
-                "UPDATE transactions SET status = 'completed' WHERE user_id = ? AND type = 'withdrawal' AND status = 'pending' ORDER BY created_at DESC LIMIT 1"
+                "UPDATE transactions SET status = 'completed' WHERE user_id = ? AND type = 'withdrawal' AND status = 'pending' AND description = 'Payout request' ORDER BY created_at DESC LIMIT 1"
             )->execute([$userId]);
 
             $db->commit();
@@ -173,9 +180,9 @@ function handlePayoutRequestAction(string $action): never {
             sendNotification($userId, 'payout_approved', 'Payout Approved! 🎉',
                 '₦' . number_format($amount, 0) . ' has been approved and transfer initiated to your bank account.', '/wallet');
             sendNotification($adminId, 'admin_note', 'Payout Approved',
-                'Payout of ₦' . number_format($amount, 0) . ' approved for user #' . $userId . '.', '/admin/payouts.php');
+                'Payout of ₦' . number_format($amount, 0) . ' approved for user #' . $userId . $paystackNote . '.', '/admin/payouts.php');
 
-            jsonResponse(['success' => true, 'message' => 'Payout approved and transfer initiated.']);
+            jsonResponse(['success' => true, 'message' => 'Payout approved and transfer initiated.' . $paystackNote]);
 
         } elseif ($action === 'reject') {
             if (empty($reason)) {
@@ -194,9 +201,9 @@ function handlePayoutRequestAction(string $action): never {
             // Reverse amount to wallet
             $db->prepare("UPDATE user_profiles SET wallet_balance = wallet_balance + ? WHERE user_id = ?")->execute([$amount, $userId]);
 
-            // Update transaction to failed
+            // Update matching pending withdrawal transaction to failed
             $db->prepare(
-                "UPDATE transactions SET status = 'failed' WHERE user_id = ? AND type = 'withdrawal' AND status = 'pending' ORDER BY created_at DESC LIMIT 1"
+                "UPDATE transactions SET status = 'failed' WHERE user_id = ? AND type = 'withdrawal' AND status = 'pending' AND description = 'Payout request' ORDER BY created_at DESC LIMIT 1"
             )->execute([$userId]);
 
             // Credit refund transaction
@@ -391,6 +398,15 @@ function handleEditUser(): never {
 
         // Wallet adjustment
         if ($walletAdjust != 0) {
+            if ($walletAdjust < 0) {
+                // Ensure balance doesn't go negative
+                $checkStmt = $db->prepare("SELECT wallet_balance FROM user_profiles WHERE user_id = ? LIMIT 1");
+                $checkStmt->execute([$userId]);
+                $currentBalance = (float)($checkStmt->fetchColumn() ?: 0);
+                if ($currentBalance + $walletAdjust < 0) {
+                    jsonResponse(['success' => false, 'message' => 'Deduction would make wallet balance negative. Current balance: ₦' . number_format($currentBalance, 2)]);
+                }
+            }
             $db->prepare("UPDATE user_profiles SET wallet_balance = wallet_balance + ? WHERE user_id = ?")->execute([$walletAdjust, $userId]);
             $txType = $walletAdjust > 0 ? 'credit' : 'debit';
             $db->prepare(

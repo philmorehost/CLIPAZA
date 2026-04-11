@@ -113,7 +113,7 @@ renderNav(true, ['username' => $username], $userMode);
             <div class="mb-3">
               <label class="form-label-dark">Amount (₦)</label>
               <input type="number" name="amount" id="withdrawAmount" class="form-control-dark"
-                     min="<?= $minWithdrawal ?>" max="<?= min($maxWithdrawal, $walletBalance) ?>" step="1"
+                     min="<?= $minWithdrawal ?>" max="<?= $walletBalance ?>" step="1"
                      placeholder="Min ₦<?= number_format($minWithdrawal, 0) ?>" required>
               <?php if ($withdrawalFeePercent > 0 || $withdrawalFeeFlat > 0): ?>
               <div style="font-size:0.78rem;color:#888;margin-top:4px">

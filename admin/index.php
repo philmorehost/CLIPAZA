@@ -18,7 +18,7 @@ try {
     $db = db();
     $totalUsers      = (int)$db->query('SELECT COUNT(*) FROM users')->fetchColumn();
     $activeContests  = (int)$db->query("SELECT COUNT(*) FROM contests WHERE status = 'active'")->fetchColumn();
-    $totalRevenue    = (float)$db->query("SELECT COALESCE(SUM(amount),0) FROM transactions WHERE type='debit' AND status='completed'")->fetchColumn();
+    $totalContestFunded = (float)$db->query("SELECT COALESCE(SUM(amount),0) FROM transactions WHERE type='debit' AND status='completed'")->fetchColumn();
     $blockedIps      = (int)$db->query("SELECT COUNT(*) FROM ip_blocks WHERE blocked_until IS NULL OR blocked_until > NOW()")->fetchColumn();
     $totalDeposits   = (float)$db->query("SELECT COALESCE(SUM(amount),0) FROM transactions WHERE type='credit' AND status='completed'")->fetchColumn();
     $pendingPayouts  = (int)$db->query("SELECT COUNT(*) FROM payout_requests WHERE status='pending'")->fetchColumn();
@@ -172,7 +172,7 @@ try {
         <div class="col-6 col-md-3">
             <div class="stat-card">
                 <div class="stat-icon">📊</div>
-                <div class="stat-value">₦<?= number_format($totalRevenue, 0) ?></div>
+                <div class="stat-value">₦<?= number_format($totalContestFunded, 0) ?></div>
                 <div class="stat-label">Contest Funded</div>
             </div>
         </div>
