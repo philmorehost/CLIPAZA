@@ -11,9 +11,9 @@ if (session_status() === PHP_SESSION_NONE) session_start();
 requireUser();
 
 $userId = (int)$_SESSION['user_id'];
-$username = $_SESSION['username'] ?? '';
+$username = $_SESSION['username'] ?? ';
 $userMode = getUserMode();
-$userEmail = $_SESSION['user_email'] ?? '';
+$userEmail = $_SESSION['user_email'] ?? ';
 
 $csrf = generateCsrfToken();
 renderHead('Add Funds');
@@ -40,7 +40,7 @@ renderNav(true, ['username' => $username], $userMode);
           </form>
 
           <div class="mt-4 text-center">
-            <a href="/wallet" class="text-muted small text-decoration-none">← Back to Wallet</a>
+            <a href="wallet" class="text-muted small text-decoration-none">← Back to Wallet</a>
           </div>
         </div>
       </div>
@@ -56,10 +56,10 @@ document.getElementById('depositForm').addEventListener('submit', async function
   const amt = document.getElementById('depositAmount').value;
 
   btn.disabled = true; btn.textContent = 'Initializing...';
-  fb.innerHTML = '';
+  fb.innerHTML = ';
 
   try {
-    const r = await fetch('/ajax/payment_actions.php', {
+    const r = await fetch('ajax/payment_actions', {
       method: 'POST',
       headers: {'Content-Type': 'application/x-www-form-urlencoded'},
       body: new URLSearchParams({

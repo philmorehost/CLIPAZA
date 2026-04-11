@@ -47,18 +47,18 @@ try {
     $histTotal   = (int)$db->query('SELECT COUNT(*) FROM login_history')->fetchColumn();
     $histPager   = paginate($histTotal, $histPerPage, $histPage);
     // Allowlist for the action filter to prevent any unexpected values being bound
-    $validActions = ['login_success', 'login_failed', 'logout', 'account_locked', 'ip_blocked', ''];
-    $histFilterRaw = $_GET['haction'] ?? '';
-    $histFilter    = in_array($histFilterRaw, $validActions, true) ? $histFilterRaw : '';
-    $histIp        = substr(trim($_GET['hip']    ?? ''), 0, 45);
-    $histUser      = substr(trim($_GET['huser']  ?? ''), 0, 100);
+    $validActions = ['login_success', 'login_failed', 'logout', 'account_locked', 'ip_blocked', '];
+    $histFilterRaw = $_GET['haction'] ?? ';
+    $histFilter    = in_array($histFilterRaw, $validActions, true) ? $histFilterRaw : ';
+    $histIp        = substr(trim($_GET['hip']    ?? '), 0, 45);
+    $histUser      = substr(trim($_GET['huser']  ?? '), 0, 100);
 
     // $histWhere is built from literal SQL strings only; user input is always bound as parameters.
     $histWhere  = '1=1';
     $histParams = [];
-    if ($histFilter !== '') { $histWhere .= ' AND action = ?';          $histParams[] = $histFilter; }
-    if ($histIp !== '')     { $histWhere .= ' AND ip_address LIKE ?';   $histParams[] = '%' . $histIp . '%'; }
-    if ($histUser !== '')   { $histWhere .= ' AND username LIKE ?';     $histParams[] = '%' . $histUser . '%'; }
+    if ($histFilter !== ') { $histWhere .= ' AND action = ?';          $histParams[] = $histFilter; }
+    if ($histIp !== ')     { $histWhere .= ' AND ip_address LIKE ?';   $histParams[] = '%' . $histIp . '%'; }
+    if ($histUser !== ')   { $histWhere .= ' AND username LIKE ?';     $histParams[] = '%' . $histUser . '%'; }
 
     // WHERE clause uses only hardcoded column names; all user values are in $histParams as bound params.
     $histCountStmt = $db->prepare("SELECT COUNT(*) FROM login_history WHERE {$histWhere}");
@@ -84,11 +84,11 @@ try {
     $histPager = ['pages' => 1, 'current' => 1, 'hasPrev' => false, 'hasNext' => false];
 }
 
-function s(array $settings, string $key, string $default = ''): string {
+function s(array $settings, string $key, string $default = '): string {
     return htmlspecialchars($settings[$key] ?? $default, ENT_QUOTES, 'UTF-8');
 }
 function checked(array $settings, string $key, string $trueVal = '1'): string {
-    return ($settings[$key] ?? '') === $trueVal ? 'checked' : '';
+    return ($settings[$key] ?? ') === $trueVal ? 'checked' : ';
 }
 ?>
 <!DOCTYPE html>
@@ -108,17 +108,17 @@ function checked(array $settings, string $key, string $trueVal = '1'): string {
     <div class="sidebar-brand">Clipa<span>za</span></div>
     <div class="sidebar-nav">
         <ul class="nav flex-column">
-            <li class="nav-item"><a href="index.php" class="nav-link"><span class="nav-icon">⊞</span> Dashboard</a></li>
-            <li class="nav-item"><a href="security.php" class="nav-link active"><span class="nav-icon">🛡</span> Security</a></li>
-            <li class="nav-item"><a href="users.php" class="nav-link"><span class="nav-icon">👥</span> Users</a></li>
-            <li class="nav-item"><a href="contests.php" class="nav-link"><span class="nav-icon">🏆</span> Contests</a></li>
-            <li class="nav-item"><a href="entries.php" class="nav-link"><span class="nav-icon">✂️</span> Entries</a></li>
-            <li class="nav-item"><a href="payouts.php" class="nav-link"><span class="nav-icon">💸</span> Payouts</a></li>
-            <li class="nav-item"><a href="settings.php" class="nav-link"><span class="nav-icon">⚙</span> Settings</a></li>
+            <li class="nav-item"><a href="index" class="nav-link"><span class="nav-icon">⊞</span> Dashboard</a></li>
+            <li class="nav-item"><a href="security" class="nav-link active"><span class="nav-icon">🛡</span> Security</a></li>
+            <li class="nav-item"><a href="users" class="nav-link"><span class="nav-icon">👥</span> Users</a></li>
+            <li class="nav-item"><a href="contests" class="nav-link"><span class="nav-icon">🏆</span> Contests</a></li>
+            <li class="nav-item"><a href="entries" class="nav-link"><span class="nav-icon">✂️</span> Entries</a></li>
+            <li class="nav-item"><a href="payouts" class="nav-link"><span class="nav-icon">💸</span> Payouts</a></li>
+            <li class="nav-item"><a href="settings" class="nav-link"><span class="nav-icon">⚙</span> Settings</a></li>
         </ul>
         <hr class="divider-dark mx-3">
         <ul class="nav flex-column">
-            <li class="nav-item"><a href="logout.php" class="nav-link" style="color:var(--danger);"><span class="nav-icon">⇤</span> Logout</a></li>
+            <li class="nav-item"><a href="logout" class="nav-link" style="color:var(--danger);"><span class="nav-icon">⇤</span> Logout</a></li>
         </ul>
     </div>
 </nav>
@@ -127,10 +127,10 @@ function checked(array $settings, string $key, string $trueVal = '1'): string {
 <main class="admin-main">
     <div class="admin-topbar">
         <div class="d-flex align-items-center gap-3">
-            <button id="sidebarToggle" class="btn d-lg-none" style="color:#888;background:rgba(255,255,255,0.05);border-radius:8px;padding:6px 10px;">☰</button>
+            <button id="sidebarToggle" class="btn d-lg-none" style="color:#ccc;background:rgba(255,255,255,0.05);border-radius:8px;padding:6px 10px;">☰</button>
             <h1>Security Management</h1>
         </div>
-        <a href="index.php" style="font-size:0.8rem;color:#555;">← Dashboard</a>
+        <a href="index" style="font-size:0.8rem;color:#ccc;">← Dashboard</a>
     </div>
 
     <!-- Tabs -->
@@ -146,7 +146,7 @@ function checked(array $settings, string $key, string $trueVal = '1'): string {
         foreach ($tabs as $key => $label):
         ?>
         <li class="nav-item">
-            <a class="nav-link <?= $activeTab === $key ? 'active' : '' ?>"
+            <a class="nav-link <?= $activeTab === $key ? 'active' : ' ?>"
                href="?tab=<?= $key ?>">
                 <?= htmlspecialchars($label) ?>
             </a>
@@ -156,7 +156,7 @@ function checked(array $settings, string $key, string $trueVal = '1'): string {
 
     <!-- TAB: SETTINGS -->
     <?php if ($activeTab === 'settings'): ?>
-    <form id="securitySettingsForm" method="POST" action="ajax/security_actions.php">
+    <form id="securitySettingsForm" method="POST" action="ajax/security_actions">
         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrf) ?>">
         <input type="hidden" name="action" value="save_security_settings">
 
@@ -169,7 +169,7 @@ function checked(array $settings, string $key, string $trueVal = '1'): string {
                         <div class="d-flex align-items-center justify-content-between mb-3">
                             <div>
                                 <div style="font-weight:600;font-size:0.875rem;">Enable IP Protection</div>
-                                <div style="font-size:0.8rem;color:#555;">Block IPs with too many failures</div>
+                                <div style="font-size:0.8rem;color:#ccc;">Block IPs with too many failures</div>
                             </div>
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" name="ip_protection_enabled"
@@ -198,7 +198,7 @@ function checked(array $settings, string $key, string $trueVal = '1'): string {
                         <div class="d-flex align-items-center justify-content-between mb-3">
                             <div>
                                 <div style="font-weight:600;font-size:0.875rem;">Enable Username Protection</div>
-                                <div style="font-size:0.8rem;color:#555;">Lock accounts with too many failures</div>
+                                <div style="font-size:0.8rem;color:#ccc;">Lock accounts with too many failures</div>
                             </div>
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" name="username_protection_enabled"
@@ -219,7 +219,7 @@ function checked(array $settings, string $key, string $trueVal = '1'): string {
                         <div class="d-flex align-items-center justify-content-between mb-3">
                             <div>
                                 <div style="font-weight:600;font-size:0.875rem;">Apply protection to local addresses only</div>
-                                <div style="font-size:0.8rem;color:#555;">Only enforce username protection for local/private IPs</div>
+                                <div style="font-size:0.8rem;color:#ccc;">Only enforce username protection for local/private IPs</div>
                             </div>
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" name="protect_local_only"
@@ -228,8 +228,8 @@ function checked(array $settings, string $key, string $trueVal = '1'): string {
                         </div>
                         <div class="d-flex align-items-center justify-content-between">
                             <div>
-                                <div style="font-weight:600;font-size:0.875rem;">Allow username protection to lock the <code style="font-size:0.8rem;color:#aaa;">admin</code> / <code style="font-size:0.8rem;color:#aaa;">administrator</code> user</div>
-                                <div style="font-size:0.8rem;color:#555;">Enable locking of privileged accounts on brute force</div>
+                                <div style="font-weight:600;font-size:0.875rem;">Allow username protection to lock the <code style="font-size:0.8rem;color:#ccc;">admin</code> / <code style="font-size:0.8rem;color:#ccc;">administrator</code> user</div>
+                                <div style="font-size:0.8rem;color:#ccc;">Enable locking of privileged accounts on brute force</div>
                             </div>
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" name="allow_lock_admin"
@@ -255,7 +255,7 @@ function checked(array $settings, string $key, string $trueVal = '1'): string {
                                 $current = (int)($settings['block_duration_minutes'] ?? 60);
                                 foreach ($durations as $val => $label):
                                 ?>
-                                <option value="<?= $val ?>" <?= $current === $val ? 'selected' : '' ?>>
+                                <option value="<?= $val ?>" <?= $current === $val ? 'selected' : ' ?>>
                                     <?= htmlspecialchars($label) ?>
                                 </option>
                                 <?php endforeach; ?>
@@ -283,7 +283,7 @@ function checked(array $settings, string $key, string $trueVal = '1'): string {
                                 $currentOpt = $settings['ip_block_duration_option'] ?? '1day';
                                 foreach ($ipBlockOptions as $val => $label):
                                 ?>
-                                <option value="<?= $val ?>" <?= $currentOpt === $val ? 'selected' : '' ?>>
+                                <option value="<?= $val ?>" <?= $currentOpt === $val ? 'selected' : ' ?>>
                                     <?= htmlspecialchars($label) ?>
                                 </option>
                                 <?php endforeach; ?>
@@ -301,7 +301,7 @@ function checked(array $settings, string $key, string $trueVal = '1'): string {
                         <div class="d-flex align-items-center justify-content-between mb-3">
                             <div>
                                 <div style="font-weight:600;font-size:0.875rem;">Notify on IP Block</div>
-                                <div style="font-size:0.8rem;color:#555;">Send admin email when IP is blocked</div>
+                                <div style="font-size:0.8rem;color:#ccc;">Send admin email when IP is blocked</div>
                             </div>
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" name="notify_on_block"
@@ -311,7 +311,7 @@ function checked(array $settings, string $key, string $trueVal = '1'): string {
                         <div class="d-flex align-items-center justify-content-between mb-3">
                             <div>
                                 <div style="font-weight:600;font-size:0.875rem;">Notify on Account Lock</div>
-                                <div style="font-size:0.8rem;color:#555;">Send admin email when account is locked</div>
+                                <div style="font-size:0.8rem;color:#ccc;">Send admin email when account is locked</div>
                             </div>
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" name="notify_on_lock"
@@ -321,7 +321,7 @@ function checked(array $settings, string $key, string $trueVal = '1'): string {
                         <div class="d-flex align-items-center justify-content-between mb-3">
                             <div>
                                 <div style="font-weight:600;font-size:0.875rem;">Notify on admin login from unknown IP</div>
-                                <div style="font-size:0.8rem;color:#555;">Send notification when admin logs in from a non-whitelisted IP</div>
+                                <div style="font-size:0.8rem;color:#ccc;">Send notification when admin logs in from a non-whitelisted IP</div>
                             </div>
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" name="notify_admin_login_unknown_ip"
@@ -331,7 +331,7 @@ function checked(array $settings, string $key, string $trueVal = '1'): string {
                         <div class="d-flex align-items-center justify-content-between mb-3">
                             <div>
                                 <div style="font-weight:600;font-size:0.875rem;">Include username in brute force notifications</div>
-                                <div style="font-size:0.8rem;color:#555;">Include the targeted username in brute force alert emails</div>
+                                <div style="font-size:0.8rem;color:#ccc;">Include the targeted username in brute force alert emails</div>
                             </div>
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" name="notify_brute_force_with_username"
@@ -375,7 +375,7 @@ function checked(array $settings, string $key, string $trueVal = '1'): string {
                             </thead>
                             <tbody>
                                 <?php if (empty($blockedIps)): ?>
-                                <tr><td colspan="6" class="text-center py-4" style="color:#555;">No blocked IPs.</td></tr>
+                                <tr><td colspan="6" class="text-center py-4" style="color:#ccc;">No blocked IPs.</td></tr>
                                 <?php else: ?>
                                 <?php foreach ($blockedIps as $block): ?>
                                 <tr>
@@ -385,7 +385,7 @@ function checked(array $settings, string $key, string $trueVal = '1'): string {
                                             <?= htmlspecialchars($block['block_type']) ?>
                                         </span>
                                     </td>
-                                    <td><?= htmlspecialchars($block['reason'] ?? '') ?></td>
+                                    <td><?= htmlspecialchars($block['reason'] ?? ') ?></td>
                                     <td><?= htmlspecialchars(timeAgo($block['blocked_at'])) ?></td>
                                     <td><?= $block['blocked_until'] ? htmlspecialchars(formatDate($block['blocked_until'], 'M j, Y H:i')) : '<span class="badge-danger">Permanent</span>' ?></td>
                                     <td>
@@ -460,12 +460,12 @@ function checked(array $settings, string $key, string $trueVal = '1'): string {
                     </thead>
                     <tbody>
                         <?php if (empty($lockedAccounts)): ?>
-                        <tr><td colspan="5" class="text-center py-4" style="color:#555;">No locked accounts.</td></tr>
+                        <tr><td colspan="5" class="text-center py-4" style="color:#ccc;">No locked accounts.</td></tr>
                         <?php else: ?>
                         <?php foreach ($lockedAccounts as $lock): ?>
                         <tr>
                             <td><strong style="color:#fff;"><?= htmlspecialchars($lock['username']) ?></strong></td>
-                            <td><?= htmlspecialchars($lock['lock_reason'] ?? '') ?></td>
+                            <td><?= htmlspecialchars($lock['lock_reason'] ?? ') ?></td>
                             <td><?= htmlspecialchars(timeAgo($lock['locked_at'])) ?></td>
                             <td><?= $lock['locked_until'] ? htmlspecialchars(formatDate($lock['locked_until'], 'M j, Y H:i')) : '<span class="badge-danger">Permanent</span>' ?></td>
                             <td>
@@ -507,20 +507,20 @@ function checked(array $settings, string $key, string $trueVal = '1'): string {
                             data-country="<?= htmlspecialchars(strtolower($country['country_name'])) ?>"
                             data-code="<?= htmlspecialchars(strtolower($country['country_code'])) ?>">
                             <td>
-                                <code style="color:#aaa;"><?= htmlspecialchars($country['country_code']) ?></code>
+                                <code style="color:#ccc;"><?= htmlspecialchars($country['country_code']) ?></code>
                             </td>
                             <td><?= htmlspecialchars($country['country_name']) ?></td>
                             <td>
                                 <select class="form-select form-select-dark country-status-select"
                                         style="width:auto;padding:4px 8px;font-size:0.8rem;"
                                         data-code="<?= htmlspecialchars($country['country_code']) ?>">
-                                    <option value="not_specified" <?= $country['status'] === 'not_specified' ? 'selected' : '' ?>>
+                                    <option value="not_specified" <?= $country['status'] === 'not_specified' ? 'selected' : ' ?>>
                                         Not Specified
                                     </option>
-                                    <option value="whitelist" <?= $country['status'] === 'whitelist' ? 'selected' : '' ?>>
+                                    <option value="whitelist" <?= $country['status'] === 'whitelist' ? 'selected' : ' ?>>
                                         ✅ Whitelist
                                     </option>
-                                    <option value="blacklist" <?= $country['status'] === 'blacklist' ? 'selected' : '' ?>>
+                                    <option value="blacklist" <?= $country['status'] === 'blacklist' ? 'selected' : ' ?>>
                                         🚫 Blacklist
                                     </option>
                                 </select>
@@ -553,9 +553,9 @@ function checked(array $settings, string $key, string $trueVal = '1'): string {
                     <label class="form-label-dark">Action</label>
                     <select name="haction" class="form-select form-select-dark">
                         <option value="">All Actions</option>
-                        <option value="login_success" <?= $histFilter === 'login_success' ? 'selected' : '' ?>>Login Success</option>
-                        <option value="failed_login"  <?= $histFilter === 'failed_login'  ? 'selected' : '' ?>>Failed Login</option>
-                        <option value="logout"        <?= $histFilter === 'logout'        ? 'selected' : '' ?>>Logout</option>
+                        <option value="login_success" <?= $histFilter === 'login_success' ? 'selected' : ' ?>>Login Success</option>
+                        <option value="failed_login"  <?= $histFilter === 'failed_login'  ? 'selected' : ' ?>>Failed Login</option>
+                        <option value="logout"        <?= $histFilter === 'logout'        ? 'selected' : ' ?>>Logout</option>
                     </select>
                 </div>
                 <div class="col-md-3">
@@ -585,12 +585,12 @@ function checked(array $settings, string $key, string $trueVal = '1'): string {
                     </thead>
                     <tbody>
                         <?php if (empty($loginHistory)): ?>
-                        <tr><td colspan="6" class="text-center py-4" style="color:#555;">No records found.</td></tr>
+                        <tr><td colspan="6" class="text-center py-4" style="color:#ccc;">No records found.</td></tr>
                         <?php else: ?>
                         <?php foreach ($loginHistory as $entry): ?>
                         <tr>
                             <td><strong style="color:#fff;"><?= htmlspecialchars($entry['username']) ?></strong></td>
-                            <td><code style="color:#aaa;font-size:0.8rem;"><?= htmlspecialchars($entry['ip_address']) ?></code></td>
+                            <td><code style="color:#ccc;font-size:0.8rem;"><?= htmlspecialchars($entry['ip_address']) ?></code></td>
                             <td>
                                 <?php
                                 $ac = match($entry['action']) {
@@ -602,9 +602,9 @@ function checked(array $settings, string $key, string $trueVal = '1'): string {
                                 ?>
                                 <span class="<?= $ac ?>"><?= htmlspecialchars($entry['action']) ?></span>
                             </td>
-                            <td><?= htmlspecialchars($entry['details'] ?? '') ?></td>
-                            <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:0.75rem;color:#555;">
-                                <?= htmlspecialchars(substr($entry['user_agent'] ?? '', 0, 80)) ?>
+                            <td><?= htmlspecialchars($entry['details'] ?? ') ?></td>
+                            <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:0.75rem;color:#ccc;">
+                                <?= htmlspecialchars(substr($entry['user_agent'] ?? ', 0, 80)) ?>
                             </td>
                             <td style="white-space:nowrap;font-size:0.8rem;"><?= htmlspecialchars(formatDate($entry['created_at'], 'M j H:i')) ?></td>
                         </tr>
@@ -619,15 +619,15 @@ function checked(array $settings, string $key, string $trueVal = '1'): string {
         <div class="card-body" style="border-top:1px solid var(--border);">
             <nav>
                 <ul class="pagination pagination-dark mb-0 justify-content-center">
-                    <li class="page-item <?= !$histPager['hasPrev'] ? 'disabled' : '' ?>">
+                    <li class="page-item <?= !$histPager['hasPrev'] ? 'disabled' : ' ?>">
                         <a class="page-link" href="?tab=history&hpage=<?= $histPager['current'] - 1 ?>&haction=<?= urlencode($histFilter) ?>&hip=<?= urlencode($histIp) ?>&huser=<?= urlencode($histUser) ?>">‹</a>
                     </li>
                     <?php for ($p = max(1, $histPager['current'] - 2); $p <= min($histPager['pages'], $histPager['current'] + 2); $p++): ?>
-                    <li class="page-item <?= $p === $histPager['current'] ? 'active' : '' ?>">
+                    <li class="page-item <?= $p === $histPager['current'] ? 'active' : ' ?>">
                         <a class="page-link" href="?tab=history&hpage=<?= $p ?>&haction=<?= urlencode($histFilter) ?>&hip=<?= urlencode($histIp) ?>&huser=<?= urlencode($histUser) ?>"><?= $p ?></a>
                     </li>
                     <?php endfor; ?>
-                    <li class="page-item <?= !$histPager['hasNext'] ? 'disabled' : '' ?>">
+                    <li class="page-item <?= !$histPager['hasNext'] ? 'disabled' : ' ?>">
                         <a class="page-link" href="?tab=history&hpage=<?= $histPager['current'] + 1 ?>&haction=<?= urlencode($histFilter) ?>&hip=<?= urlencode($histIp) ?>&huser=<?= urlencode($histUser) ?>">›</a>
                     </li>
                 </ul>
@@ -649,7 +649,7 @@ async function handleManualBlock(e) {
     btn.disabled = true; btn.textContent = 'Blocking...';
     try {
         const data = new FormData(form);
-        const resp = await fetch('ajax/security_actions.php', { method: 'POST', body: data });
+        const resp = await fetch('ajax/security_actions', { method: 'POST', body: data });
         const json = await resp.json();
         if (typeof showToast === 'function') showToast(json.message || 'Done.', json.success ? 'success' : 'danger');
         if (json.success) setTimeout(() => location.reload(), 1000);

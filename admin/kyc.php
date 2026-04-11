@@ -40,12 +40,12 @@ try {
     <div class="sidebar-brand">Clipa<span>za</span></div>
     <div class="sidebar-nav">
         <ul class="nav flex-column">
-            <li class="nav-item"><a href="index.php" class="nav-link"><span class="nav-icon">⊞</span> Dashboard</a></li>
-            <li class="nav-item"><a href="users.php" class="nav-link"><span class="nav-icon">👥</span> Users</a></li>
-            <li class="nav-item"><a href="kyc.php" class="nav-link active"><span class="nav-icon">🆔</span> KYC Review</a></li>
-            <li class="nav-item"><a href="contests.php" class="nav-link"><span class="nav-icon">🏆</span> Contests</a></li>
-            <li class="nav-item"><a href="payouts.php" class="nav-link"><span class="nav-icon">💸</span> Payouts</a></li>
-            <li class="nav-item"><a href="settings.php" class="nav-link"><span class="nav-icon">⚙</span> Settings</a></li>
+            <li class="nav-item"><a href="index" class="nav-link"><span class="nav-icon">⊞</span> Dashboard</a></li>
+            <li class="nav-item"><a href="users" class="nav-link"><span class="nav-icon">👥</span> Users</a></li>
+            <li class="nav-item"><a href="kyc" class="nav-link active"><span class="nav-icon">🆔</span> KYC Review</a></li>
+            <li class="nav-item"><a href="contests" class="nav-link"><span class="nav-icon">🏆</span> Contests</a></li>
+            <li class="nav-item"><a href="payouts" class="nav-link"><span class="nav-icon">💸</span> Payouts</a></li>
+            <li class="nav-item"><a href="settings" class="nav-link"><span class="nav-icon">⚙</span> Settings</a></li>
         </ul>
     </div>
 </nav>
@@ -74,7 +74,7 @@ try {
                         <div class="mb-3">
                             <div class="small text-muted mb-1">ID Type: <?= e(strtoupper($r['kyc_id_type'])) ?></div>
                             <?php if ($r['kyc_id_path']): ?>
-                                <a href="/<?= e($r['kyc_id_path']) ?>" target="_blank" class="d-block mb-2">
+                                <a href="<?= e($r['kyc_id_path']) ?>" target="_blank" class="d-block mb-2">
                                     <img src="/<?= e($r['kyc_id_path']) ?>" class="img-fluid rounded border border-secondary" style="max-height:100px">
                                 </a>
                             <?php endif; ?>
@@ -106,7 +106,7 @@ try {
 document.querySelectorAll('.kyc-action').forEach(btn => {
     btn.addEventListener('click', async function() {
         const st = this.dataset.st;
-        let reason = '';
+        let reason = ';
         if (st === 'rejected') {
             reason = prompt('Enter rejection reason:');
             if (reason === null) return;
@@ -115,7 +115,7 @@ document.querySelectorAll('.kyc-action').forEach(btn => {
         }
 
         this.disabled = true;
-        const r = await fetch('/admin/ajax/admin_actions.php', {
+        const r = await fetch('ajax/admin_actions', {
             method:'POST',
             body: new URLSearchParams({
                 action:'review_kyc',

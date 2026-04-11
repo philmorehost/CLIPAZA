@@ -11,7 +11,7 @@ if (session_status() === PHP_SESSION_NONE) session_start();
 requireUser();
 
 $userId = (int)$_SESSION['user_id'];
-$username = $_SESSION['username'] ?? '';
+$username = $_SESSION['username'] ?? ';
 $userMode = getUserMode();
 
 // Load current KYC status
@@ -35,7 +35,7 @@ renderNav(true, ['username' => $username], $userMode);
     <div class="row justify-content-center">
       <div class="col-lg-8">
         <div class="d-flex align-items-center gap-3 mb-4">
-          <a href="/profile" class="text-muted text-decoration-none">← Back</a>
+          <a href="profile" class="text-muted text-decoration-none">← Back</a>
           <h2 class="fw-900 mb-0">Identity <span class="text-accent">Verification</span></h2>
         </div>
 
@@ -153,7 +153,7 @@ const bankSelect = document.getElementById('bankSelect');
 const verifyBtn = document.getElementById('verifyBankBtn');
 const bankResult = document.getElementById('bankResult');
 
-fetch('/ajax/payout_actions.php?action=get_banks')
+fetch('ajax/payout_actions.php?action=get_banks')
   .then(r => r.json())
   .then(d => {
     if (d.success) {
@@ -173,7 +173,7 @@ verifyBtn.addEventListener('click', async function() {
 
   this.disabled = true; this.textContent = 'Verifying...';
   try {
-    const r = await fetch('/ajax/payout_actions.php', {
+    const r = await fetch('ajax/payout_actions', {
       method: 'POST',
       headers: {'Content-Type':'application/x-www-form-urlencoded'},
       body: new URLSearchParams({action:'verify_account', account_number:num, bank_code:code, csrf_token: '<?= $csrf ?>'})
@@ -229,7 +229,7 @@ retakeBtn.addEventListener('click', function() {
   document.getElementById('cameraContainer').classList.remove('d-none');
   this.classList.add('d-none');
   captureBtn.classList.remove('d-none');
-  snapshotInput.value = '';
+  snapshotInput.value = ';
   checkFormReady();
 });
 
@@ -247,7 +247,7 @@ document.getElementById('kycForm')?.addEventListener('submit', async function(e)
   btn.disabled = true; btn.textContent = 'Submitting...';
 
   try {
-    const r = await fetch('/ajax/kyc_actions.php', {
+    const r = await fetch('ajax/kyc_actions', {
       method: 'POST',
       body: new FormData(this)
     });

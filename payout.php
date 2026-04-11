@@ -11,7 +11,7 @@ if (session_status() === PHP_SESSION_NONE) session_start();
 requireUser();
 
 $userId   = (int)$_SESSION['user_id'];
-$username = $_SESSION['username'] ?? '';
+$username = $_SESSION['username'] ?? ';
 $userMode = getUserMode();
 
 // Find pending payouts for this user
@@ -71,7 +71,7 @@ renderNav(true, ['username' => $username], $userMode);
         <?php if (!empty($pendingWins)): ?>
           <?php foreach ($pendingWins as $win): ?>
             <?php
-              $pIcon = match($win['platform'] ?? '') { 'tiktok'=>'🎵','instagram'=>'📸','facebook'=>'📘',default=>'🎬' };
+              $pIcon = match($win['platform'] ?? ') { 'tiktok'=>'🎵','instagram'=>'📸','facebook'=>'📘',default=>'🎬' };
               $perWinner = (int)$win['winner_count'] > 0
                   ? round((float)$win['prize_amount'] / (int)$win['winner_count'], 2)
                   : 0;
@@ -129,7 +129,7 @@ renderNav(true, ['username' => $username], $userMode);
 
             <?php if (!$kycApproved): ?>
                 <div class="alert alert-dark-warning small">
-                    Please complete <a href="/kyc" class="text-accent">KYC verification</a> to enable withdrawals.
+                    Please complete <a href="kyc" class="text-accent">KYC verification</a> to enable withdrawals.
                 </div>
             <?php else: ?>
                 <form id="walletWithdrawForm">
@@ -140,7 +140,7 @@ renderNav(true, ['username' => $username], $userMode);
                         <input type="number" name="amount" class="form-control-dark" min="1000" max="<?= $walletBalance ?>" placeholder="Min ₦1,000" required>
                     </div>
                     <div id="withdrawFeedback" class="mb-2"></div>
-                    <button type="submit" class="btn btn-accent" <?= $walletBalance < 1000 ? 'disabled' : '' ?>>Request Payout</button>
+                    <button type="submit" class="btn btn-accent" <?= $walletBalance < 1000 ? 'disabled' : ' ?>>Request Payout</button>
                 </form>
             <?php endif; ?>
         </div>
@@ -151,7 +151,7 @@ renderNav(true, ['username' => $username], $userMode);
             <div style="font-size:3rem;margin-bottom:16px">🏆</div>
             <h5 class="fw-700 mb-2">No winnings yet</h5>
             <p class="text-muted" style="font-size:0.9rem">Submit clips to contests and win prizes!</p>
-            <a href="/contests" class="btn btn-accent mt-2">Browse Contests</a>
+            <a href="contests" class="btn btn-accent mt-2">Browse Contests</a>
           </div>
         <?php endif; ?>
 
@@ -213,7 +213,7 @@ const csrf = <?= json_encode(generateCsrfToken()) ?>;
 // Load banks on page load
 (async function() {
   try {
-    const r = await fetch('/ajax/payout_actions.php?action=get_banks');
+    const r = await fetch('ajax/payout_actions.php?action=get_banks');
     const d = await r.json();
     if (d.success && d.banks) {
       document.querySelectorAll('.bank-select').forEach(sel => {
@@ -248,7 +248,7 @@ document.querySelectorAll('.verify-nuban-btn').forEach(btn => {
     btn.textContent = 'Verifying…';
 
     try {
-      const r = await fetch('/ajax/payout_actions.php', {
+      const r = await fetch('ajax/payout_actions', {
         method: 'POST',
         body: new URLSearchParams({ action:'verify_account', account_number: acctNum, bank_code: bankCode, csrf_token: csrf })
       });
@@ -285,10 +285,10 @@ document.querySelectorAll('.claim-form').forEach(form => {
     const btn = this.querySelector('.claim-submit-btn');
     btn.disabled = true;
     btn.textContent = 'Claiming…';
-    fb.innerHTML = '';
+    fb.innerHTML = ';
 
     try {
-      const r = await fetch('/ajax/payout_actions.php', {
+      const r = await fetch('ajax/payout_actions', {
         method: 'POST',
         body: new URLSearchParams(new FormData(this))
       });
@@ -313,9 +313,9 @@ document.getElementById('walletWithdrawForm')?.addEventListener('submit', async 
     e.preventDefault();
     const btn = this.querySelector('button');
     const fb = document.getElementById('withdrawFeedback');
-    btn.disabled = true; fb.innerHTML = '';
+    btn.disabled = true; fb.innerHTML = ';
     try {
-        const r = await fetch('/ajax/payout_actions.php', { method:'POST', body: new URLSearchParams(new FormData(this)) });
+        const r = await fetch('ajax/payout_actions', { method:'POST', body: new URLSearchParams(new FormData(this)) });
         const d = await r.json();
         if (d.success) { fb.innerHTML = '<div class="alert-dark-success small">'+d.message+'</div>'; setTimeout(()=>location.reload(), 1500); }
         else { fb.innerHTML = '<div class="alert-dark-danger small">'+d.message+'</div>'; btn.disabled = false; }
@@ -328,7 +328,7 @@ document.querySelectorAll('.appeal-form').forEach(form => {
         const btn = this.querySelector('button');
         btn.disabled = true;
         try {
-            const r = await fetch('/ajax/payout_actions.php', { method:'POST', body: new URLSearchParams(new FormData(this)) });
+            const r = await fetch('ajax/payout_actions', { method:'POST', body: new URLSearchParams(new FormData(this)) });
             const d = await r.json();
             if (d.success) location.reload();
             else { alert(d.message); btn.disabled = false; }

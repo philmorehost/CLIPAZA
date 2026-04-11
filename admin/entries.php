@@ -14,8 +14,8 @@ requireAdmin();
 $csrf    = generateCsrfToken();
 $page    = max(1, (int)($_GET['page'] ?? 1));
 $perPage = 20;
-$filter  = sanitizeInput($_GET['status'] ?? '');
-$platformF = sanitizeInput($_GET['platform'] ?? '');
+$filter  = sanitizeInput($_GET['status'] ?? ');
+$platformF = sanitizeInput($_GET['platform'] ?? ');
 
 $entries = [];
 $total    = 0;
@@ -65,25 +65,25 @@ try {
     <div class="sidebar-brand">Clipa<span>za</span></div>
     <div class="sidebar-nav">
         <ul class="nav flex-column">
-            <li class="nav-item"><a href="index.php" class="nav-link"><span class="nav-icon">⊞</span> Dashboard</a></li>
-            <li class="nav-item"><a href="users.php" class="nav-link"><span class="nav-icon">👥</span> Users</a></li>
-            <li class="nav-item"><a href="contests.php" class="nav-link"><span class="nav-icon">🏆</span> Contests</a></li>
-            <li class="nav-item"><a href="entries.php" class="nav-link active"><span class="nav-icon">✂️</span> Entries</a></li>
-            <li class="nav-item"><a href="payouts.php" class="nav-link"><span class="nav-icon">💸</span> Payouts</a></li>
-            <li class="nav-item"><a href="security.php" class="nav-link"><span class="nav-icon">🛡</span> Security</a></li>
-            <li class="nav-item"><a href="settings.php" class="nav-link"><span class="nav-icon">⚙</span> Settings</a></li>
+            <li class="nav-item"><a href="index" class="nav-link"><span class="nav-icon">⊞</span> Dashboard</a></li>
+            <li class="nav-item"><a href="users" class="nav-link"><span class="nav-icon">👥</span> Users</a></li>
+            <li class="nav-item"><a href="contests" class="nav-link"><span class="nav-icon">🏆</span> Contests</a></li>
+            <li class="nav-item"><a href="entries" class="nav-link active"><span class="nav-icon">✂️</span> Entries</a></li>
+            <li class="nav-item"><a href="payouts" class="nav-link"><span class="nav-icon">💸</span> Payouts</a></li>
+            <li class="nav-item"><a href="security" class="nav-link"><span class="nav-icon">🛡</span> Security</a></li>
+            <li class="nav-item"><a href="settings" class="nav-link"><span class="nav-icon">⚙</span> Settings</a></li>
         </ul>
         <hr class="divider-dark mx-3">
         <ul class="nav flex-column">
-            <li class="nav-item"><a href="logout.php" class="nav-link" style="color:var(--danger)"><span class="nav-icon">⇤</span> Logout</a></li>
+            <li class="nav-item"><a href="logout" class="nav-link" style="color:var(--danger)"><span class="nav-icon">⇤</span> Logout</a></li>
         </ul>
     </div>
 </nav>
 <main class="admin-main">
     <div class="admin-topbar">
         <div class="d-flex align-items-center gap-3">
-            <button id="sidebarToggle" class="btn d-lg-none" style="color:#888;background:rgba(255,255,255,0.05);border-radius:8px;padding:6px 10px;">☰</button>
-            <span style="color:#888;font-size:0.9rem">Welcome, <strong style="color:#fff"><?= e($_SESSION['username'] ?? '') ?></strong></span>
+            <button id="sidebarToggle" class="btn d-lg-none" style="color:#ccc;background:rgba(255,255,255,0.05);border-radius:8px;padding:6px 10px;">☰</button>
+            <span style="color:#ccc;font-size:0.9rem">Welcome, <strong style="color:#fff"><?= e($_SESSION['username'] ?? ') ?></strong></span>
         </div>
     </div>
     <div class="p-4">
@@ -97,13 +97,13 @@ try {
             <select name="status" class="form-control-dark" style="max-width:140px;font-size:0.85rem" onchange="this.form.submit()">
                 <option value="">All Status</option>
                 <?php foreach (['pending','approved','rejected'] as $s): ?>
-                    <option value="<?= $s ?>" <?= $filter===$s?'selected':'' ?>><?= ucfirst($s) ?></option>
+                    <option value="<?= $s ?>" <?= $filter===$s?'selected':' ?>><?= ucfirst($s) ?></option>
                 <?php endforeach; ?>
             </select>
             <select name="platform" class="form-control-dark" style="max-width:140px;font-size:0.85rem" onchange="this.form.submit()">
                 <option value="">All Platforms</option>
                 <?php foreach (['tiktok','instagram','facebook'] as $p): ?>
-                    <option value="<?= $p ?>" <?= $platformF===$p?'selected':'' ?>><?= ucfirst($p) ?></option>
+                    <option value="<?= $p ?>" <?= $platformF===$p?'selected':' ?>><?= ucfirst($p) ?></option>
                 <?php endforeach; ?>
             </select>
             <button type="submit" class="btn btn-sm btn-outline-accent">Filter</button>
@@ -149,7 +149,7 @@ try {
                         <td>
                             <a href="<?= e($e['clip_url']) ?>" target="_blank" class="text-accent" style="font-size:0.78rem;max-width:120px;display:block;overflow:hidden;text-overflow:ellipsis">Open Link</a>
                         </td>
-                        <td style="font-size:0.8rem;color:#888"><?= e(timeAgo($e['submitted_at'])) ?></td>
+                        <td style="font-size:0.8rem;color:#ccc"><?= e(timeAgo($e['submitted_at'])) ?></td>
                         <td>
                             <div class="d-flex gap-1">
                                 <?php if (!$e['disqualified']): ?>
@@ -170,7 +170,7 @@ try {
         <?php if ($pag['pages'] > 1): ?>
         <nav class="mt-3"><ul class="pagination pagination-dark justify-content-center">
             <?php for ($i=1;$i<=$pag['pages'];$i++): ?>
-                <li class="page-item <?= $i===$page?'active':'' ?>"><a class="page-link" href="?page=<?= $i ?>&status=<?= e($filter) ?>&platform=<?= e($platformF) ?>"><?= $i ?></a></li>
+                <li class="page-item <?= $i===$page?'active':' ?>"><a class="page-link" href="?page=<?= $i ?>&status=<?= e($filter) ?>&platform=<?= e($platformF) ?>"><?= $i ?></a></li>
             <?php endfor; ?>
         </ul></nav>
         <?php endif; ?>
@@ -184,7 +184,7 @@ document.querySelectorAll('.dqb').forEach(btn => {
         const reason = prompt('Reason for disqualification?');
         if (reason === null) return;
         this.disabled = true;
-        const r = await fetch('/admin/ajax/admin_actions.php', {
+        const r = await fetch('ajax/admin_actions', {
             method:'POST', body: new URLSearchParams({action:'disqualify_entry', entry_id:this.dataset.id, reason:reason, csrf_token:this.dataset.csrf})
         });
         const d = await r.json();

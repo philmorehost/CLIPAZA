@@ -14,7 +14,7 @@ requireAdmin();
 $csrf    = generateCsrfToken();
 $page    = max(1, (int)($_GET['page'] ?? 1));
 $perPage = 20;
-$filter  = sanitizeInput($_GET['status'] ?? '');
+$filter  = sanitizeInput($_GET['status'] ?? ');
 
 $payouts = [];
 $total    = 0;
@@ -61,25 +61,25 @@ try {
     <div class="sidebar-brand">Clipa<span>za</span></div>
     <div class="sidebar-nav">
         <ul class="nav flex-column">
-            <li class="nav-item"><a href="index.php" class="nav-link"><span class="nav-icon">⊞</span> Dashboard</a></li>
-            <li class="nav-item"><a href="users.php" class="nav-link"><span class="nav-icon">👥</span> Users</a></li>
-            <li class="nav-item"><a href="contests.php" class="nav-link"><span class="nav-icon">🏆</span> Contests</a></li>
-            <li class="nav-item"><a href="entries.php" class="nav-link"><span class="nav-icon">✂️</span> Entries</a></li>
-            <li class="nav-item"><a href="payouts.php" class="nav-link active"><span class="nav-icon">💸</span> Payouts</a></li>
-            <li class="nav-item"><a href="security.php" class="nav-link"><span class="nav-icon">🛡</span> Security</a></li>
-            <li class="nav-item"><a href="settings.php" class="nav-link"><span class="nav-icon">⚙</span> Settings</a></li>
+            <li class="nav-item"><a href="index" class="nav-link"><span class="nav-icon">⊞</span> Dashboard</a></li>
+            <li class="nav-item"><a href="users" class="nav-link"><span class="nav-icon">👥</span> Users</a></li>
+            <li class="nav-item"><a href="contests" class="nav-link"><span class="nav-icon">🏆</span> Contests</a></li>
+            <li class="nav-item"><a href="entries" class="nav-link"><span class="nav-icon">✂️</span> Entries</a></li>
+            <li class="nav-item"><a href="payouts" class="nav-link active"><span class="nav-icon">💸</span> Payouts</a></li>
+            <li class="nav-item"><a href="security" class="nav-link"><span class="nav-icon">🛡</span> Security</a></li>
+            <li class="nav-item"><a href="settings" class="nav-link"><span class="nav-icon">⚙</span> Settings</a></li>
         </ul>
         <hr class="divider-dark mx-3">
         <ul class="nav flex-column">
-            <li class="nav-item"><a href="logout.php" class="nav-link" style="color:var(--danger)"><span class="nav-icon">⇤</span> Logout</a></li>
+            <li class="nav-item"><a href="logout" class="nav-link" style="color:var(--danger)"><span class="nav-icon">⇤</span> Logout</a></li>
         </ul>
     </div>
 </nav>
 <main class="admin-main">
     <div class="admin-topbar">
         <div class="d-flex align-items-center gap-3">
-            <button id="sidebarToggle" class="btn d-lg-none" style="color:#888;background:rgba(255,255,255,0.05);border-radius:8px;padding:6px 10px;">☰</button>
-            <span style="color:#888;font-size:0.9rem">Welcome, <strong style="color:#fff"><?= e($_SESSION['username'] ?? '') ?></strong></span>
+            <button id="sidebarToggle" class="btn d-lg-none" style="color:#ccc;background:rgba(255,255,255,0.05);border-radius:8px;padding:6px 10px;">☰</button>
+            <span style="color:#ccc;font-size:0.9rem">Welcome, <strong style="color:#fff"><?= e($_SESSION['username'] ?? ') ?></strong></span>
         </div>
     </div>
     <div class="p-4">
@@ -90,7 +90,7 @@ try {
 
         <!-- Filter tabs -->
         <div class="d-flex gap-2 mb-4 flex-wrap">
-            <?php foreach (['' => 'All', 'claimed' => 'Claimed', 'processing' => 'Processing', 'completed' => 'Completed', 'failed' => 'Failed', 'pending' => 'Pending'] as $val => $label): ?>
+            <?php foreach ([' => 'All', 'claimed' => 'Claimed', 'processing' => 'Processing', 'completed' => 'Completed', 'failed' => 'Failed', 'pending' => 'Pending'] as $val => $label): ?>
                 <a href="?status=<?= $val ?>" class="btn btn-sm <?= $filter===$val ? 'btn-accent' : 'btn-outline-accent' ?>"><?= $label ?></a>
             <?php endforeach; ?>
         </div>
@@ -142,7 +142,7 @@ try {
                             ?>
                             <span class="<?= $sc ?>" style="font-size:0.72rem"><?= e(ucfirst($p['status'])) ?></span>
                         </td>
-                        <td style="font-size:0.8rem;color:#888"><?= e(formatDate($p['created_at'], 'M j, Y')) ?></td>
+                        <td style="font-size:0.8rem;color:#ccc"><?= e(formatDate($p['created_at'], 'M j, Y')) ?></td>
                         <td>
                             <div class="d-flex gap-1 flex-wrap">
                                 <?php if ($p['status'] === 'claimed' || ($p['status'] === 'pending' && $p['account_number'])): ?>
@@ -176,7 +176,7 @@ try {
         <?php if ($pag['pages'] > 1): ?>
         <nav class="mt-3"><ul class="pagination pagination-dark justify-content-center">
             <?php for ($i=1;$i<=$pag['pages'];$i++): ?>
-                <li class="page-item <?= $i===$page?'active':'' ?>"><a class="page-link" href="?page=<?= $i ?>&status=<?= e($filter) ?>"><?= $i ?></a></li>
+                <li class="page-item <?= $i===$page?'active':' ?>"><a class="page-link" href="?page=<?= $i ?>&status=<?= e($filter) ?>"><?= $i ?></a></li>
             <?php endfor; ?>
         </ul></nav>
         <?php endif; ?>
@@ -189,7 +189,7 @@ document.querySelectorAll('.ppb').forEach(btn => {
     btn.addEventListener('click', async function() {
         if (!confirm('Initiate payout via Paystack?')) return;
         this.disabled = true;
-        const r = await fetch('/admin/ajax/admin_actions.php', {
+        const r = await fetch('ajax/admin_actions', {
             method:'POST', body: new URLSearchParams({action:'process_payout', payout_id:this.dataset.id, csrf_token:this.dataset.csrf})
         });
         const d = await r.json();
@@ -201,7 +201,7 @@ document.querySelectorAll('.ppb').forEach(btn => {
 document.querySelectorAll('.usb').forEach(btn => {
     btn.addEventListener('click', async function() {
         const st = this.dataset.st;
-        let reason = '';
+        let reason = ';
         if (st === 'rejected' || st === 'cancelled') {
             reason = prompt('Reason for ' + st + ':');
             if (reason === null) return;
@@ -210,7 +210,7 @@ document.querySelectorAll('.usb').forEach(btn => {
         }
 
         this.disabled = true;
-        const r = await fetch('/admin/ajax/admin_actions.php', {
+        const r = await fetch('ajax/admin_actions', {
             method:'POST', body: new URLSearchParams({action:'update_payout_status', payout_id:this.dataset.id, status:st, reason:reason, csrf_token:this.dataset.csrf})
         });
         const d = await r.json();

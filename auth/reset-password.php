@@ -10,8 +10,8 @@ require_once $root . '/includes/layout.php';
 if (session_status() === PHP_SESSION_NONE) session_start();
 if (!empty($_SESSION['user_id'])) redirect('/dashboard');
 
-$token    = sanitizeInput($_GET['token'] ?? '');
-$error    = '';
+$token    = sanitizeInput($_GET['token'] ?? ');
+$error    = ';
 $success  = false;
 $tokenRow = null;
 
@@ -33,11 +33,11 @@ if (!$tokenRow && !$error) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $tokenRow) {
-    if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) {
+    if (!verifyCsrfToken($_POST['csrf_token'] ?? ')) {
         $error = 'Invalid request. Please try again.';
     } else {
-        $password        = $_POST['password'] ?? '';
-        $confirmPassword = $_POST['confirm_password'] ?? '';
+        $password        = $_POST['password'] ?? ';
+        $confirmPassword = $_POST['confirm_password'] ?? ';
 
         if (strlen($password) < 8) {
             $error = 'Password must be at least 8 characters.';
@@ -63,7 +63,7 @@ renderHead('Reset Password');
 <div class="public-page d-flex align-items-center justify-content-center" style="min-height:100vh;background:#000;padding:40px 16px">
   <div class="w-100" style="max-width:400px">
     <div class="text-center mb-4">
-      <a href="/" class="text-decoration-none">
+      <a href="index" class="text-decoration-none">
         <span style="font-size:1.5rem;font-weight:900;color:#fff;letter-spacing:-0.5px">Clipaza<span style="color:var(--accent)">.</span></span>
       </a>
     </div>
@@ -74,14 +74,14 @@ renderHead('Reset Password');
           <div style="font-size:2.5rem;margin-bottom:12px">✅</div>
           <h5 class="fw-700 mb-2">Password updated!</h5>
           <p class="text-muted" style="font-size:0.9rem">Your password has been reset successfully.</p>
-          <a href="/auth/login" class="btn btn-accent mt-2">Sign In Now</a>
+          <a href="auth/login" class="btn btn-accent mt-2">Sign In Now</a>
         </div>
       <?php elseif ($error && !$tokenRow): ?>
         <div class="text-center py-3">
           <div style="font-size:2.5rem;margin-bottom:12px">⚠️</div>
           <h5 class="fw-700 mb-2">Invalid Reset Link</h5>
           <p class="text-muted" style="font-size:0.9rem"><?= e($error) ?></p>
-          <a href="/auth/forgot-password" class="btn btn-outline-accent mt-2">Request New Link</a>
+          <a href="auth/forgot-password" class="btn btn-outline-accent mt-2">Request New Link</a>
         </div>
       <?php else: ?>
         <h5 class="fw-700 mb-4">Set new password</h5>

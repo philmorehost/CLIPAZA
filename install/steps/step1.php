@@ -76,7 +76,7 @@ if ($allPass && isset($_POST['next'])) {
     <form method="POST">
         <button type="submit" name="next" value="1"
                 class="btn btn-accent"
-                <?= !$allPass ? 'disabled' : '' ?>>
+                <?= !$allPass ? 'disabled' : ' ?>>
             Continue →
         </button>
     </form>

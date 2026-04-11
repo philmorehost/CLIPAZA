@@ -11,7 +11,7 @@ if (session_status() === PHP_SESSION_NONE) session_start();
 
 $isLoggedIn = !empty($_SESSION['user_id']);
 $userId     = $isLoggedIn ? (int)$_SESSION['user_id'] : 0;
-$username   = $_SESSION['username'] ?? '';
+$username   = $_SESSION['username'] ?? ';
 $userMode   = getUserMode();
 
 $contestId = (int)($_GET['id'] ?? 0);
@@ -45,7 +45,7 @@ try {
 
 $isActive  = $contest['status'] === 'active'
     && (empty($contest['end_date']) || strtotime($contest['end_date']) > time());
-$timeLeft  = '';
+$timeLeft  = ';
 if (!empty($contest['end_date'])) {
     $secs = strtotime($contest['end_date']) - time();
     if ($secs > 0) {
@@ -91,7 +91,7 @@ renderNav($isLoggedIn, ['username' => $username], $userMode);
             <span class="badge badge-inactive">⚫ <?= e(ucfirst($contest['status'])) ?></span>
           <?php endif; ?>
           <?php if ($timeLeft): ?>
-            <span class="countdown-timer <?= strpos($timeLeft, 'Expired') !== false ? 'countdown-urgent' : '' ?>"><?= e($timeLeft) ?></span>
+            <span class="countdown-timer <?= strpos($timeLeft, 'Expired') !== false ? 'countdown-urgent' : ' ?>"><?= e($timeLeft) ?></span>
           <?php endif; ?>
         </div>
         <h1 class="fw-900 mb-1" style="font-size:clamp(1.4rem,3vw,2rem);letter-spacing:-0.5px"><?= e($contest['title']) ?></h1>
@@ -194,10 +194,10 @@ renderNav($isLoggedIn, ['username' => $username], $userMode);
             <ul class="nav nav-tabs mb-3" id="lbTabs" style="border-bottom:1px solid #222">
               <?php foreach ($platforms as $idx => $p): ?>
                 <?php
-                  $pIcon = match($p['platform']) { 'tiktok'=>'🎵','instagram'=>'📸','facebook'=>'📘',default=>'' };
+                  $pIcon = match($p['platform']) { 'tiktok'=>'🎵','instagram'=>'📸','facebook'=>'📘',default=>' };
                 ?>
                 <li class="nav-item">
-                  <button class="nav-link <?= $idx===0?'active':'' ?> text-white"
+                  <button class="nav-link <?= $idx===0?'active':' ?> text-white"
                           data-bs-toggle="tab"
                           data-bs-target="#lb-<?= e($p['platform']) ?>"
                           style="background:none;border:none;border-bottom:2px solid transparent;font-size:0.85rem;padding:8px 16px">
@@ -212,7 +212,7 @@ renderNav($isLoggedIn, ['username' => $username], $userMode);
                   $lb  = getLeaderboard(db(), $contestId, $p['platform']);
                   $perW = (int)$p['winner_count'] > 0 ? (float)$p['prize_amount'] / (int)$p['winner_count'] : 0;
                 ?>
-                <div class="tab-pane fade <?= $idx===0?'show active':'' ?>" id="lb-<?= e($p['platform']) ?>">
+                <div class="tab-pane fade <?= $idx===0?'show active':' ?>" id="lb-<?= e($p['platform']) ?>">
                   <?php if (empty($lb)): ?>
                     <p class="text-muted text-center py-3" style="font-size:0.85rem">No entries yet. Be the first!</p>
                   <?php else: ?>
@@ -224,7 +224,7 @@ renderNav($isLoggedIn, ['username' => $username], $userMode);
                           $rankIcon = match($rankNum) { 1=>'🥇', 2=>'🥈', 3=>'🥉', default=>"#{$rankNum}" };
                           $prizeAmt = $rankNum <= (int)$p['winner_count'] ? '₦' . number_format($perW, 0) : '—';
                         ?>
-                        <div class="leaderboard-row <?= $isMe ? 'leaderboard-row--me' : '' ?>">
+                        <div class="leaderboard-row <?= $isMe ? 'leaderboard-row--me' : ' ?>">
                           <span class="lb-rank"><?= $rankIcon ?></span>
                           <span class="lb-name">
                             <?= e($row['username']) ?>
@@ -258,14 +258,14 @@ renderNav($isLoggedIn, ['username' => $username], $userMode);
               <div style="font-size:2rem;margin-bottom:12px">✂️</div>
               <h6 class="fw-700 mb-2">Ready to clip?</h6>
               <p class="text-muted mb-3" style="font-size:0.85rem">Create a free account to submit your clip and win.</p>
-              <a href="/auth/register" class="btn btn-accent w-100 mb-2">Sign Up Free</a>
-              <a href="/auth/login" class="btn btn-outline-accent w-100">Sign In</a>
+              <a href="auth/register" class="btn btn-accent w-100 mb-2">Sign Up Free</a>
+              <a href="auth/login" class="btn btn-outline-accent w-100">Sign In</a>
             </div>
           <?php else: ?>
             <h6 class="fw-700 mb-3">Submit Your Clip</h6>
             <?php if (!empty($myEntries)): ?>
               <div class="alert-dark-success mb-3" style="font-size:0.82rem">
-                ✅ You've already submitted <?= count($myEntries) ?> clip<?= count($myEntries)!==1?'s':'' ?>.
+                ✅ You've already submitted <?= count($myEntries) ?> clip<?= count($myEntries)!==1?'s':' ?>.
               </div>
             <?php endif; ?>
             <form id="clipForm">
@@ -277,11 +277,11 @@ renderNav($isLoggedIn, ['username' => $username], $userMode);
                   <option value="">Select platform</option>
                   <?php foreach ($platforms as $p): ?>
                     <?php
-                      $pIcon = match($p['platform']) { 'tiktok'=>'🎵','instagram'=>'📸','facebook'=>'📘',default=>'' };
+                      $pIcon = match($p['platform']) { 'tiktok'=>'🎵','instagram'=>'📸','facebook'=>'📘',default=>' };
                       $alreadySubmitted = isset($myEntries[$p['platform']]);
                     ?>
-                    <option value="<?= e($p['platform']) ?>" <?= $alreadySubmitted ? 'disabled' : '' ?>>
-                      <?= $pIcon ?> <?= ucfirst(e($p['platform'])) ?> <?= $alreadySubmitted ? '(submitted)' : '' ?>
+                    <option value="<?= e($p['platform']) ?>" <?= $alreadySubmitted ? 'disabled' : ' ?>>
+                      <?= $pIcon ?> <?= ucfirst(e($p['platform'])) ?> <?= $alreadySubmitted ? '(submitted)' : ' ?>
                     </option>
                   <?php endforeach; ?>
                 </select>
@@ -312,13 +312,13 @@ document.getElementById('clipForm')?.addEventListener('submit', async function(e
   const fb  = document.getElementById('submitFeedback');
   btn.disabled = true;
   btn.textContent = 'Submitting…';
-  fb.innerHTML = '';
+  fb.innerHTML = ';
 
   const data = new FormData(this);
   data.set('action', 'submit_clip');
 
   try {
-    const r = await fetch('/ajax/contest_actions.php', { method: 'POST', body: new URLSearchParams(data) });
+    const r = await fetch('ajax/contest_actions', { method: 'POST', body: new URLSearchParams(data) });
     const d = await r.json();
     if (d.success) {
       fb.innerHTML = '<div class="alert-dark-success" style="font-size:0.82rem">✅ ' + d.message + '</div>';

@@ -84,8 +84,8 @@ try {
 
     // 4. Update site_settings for missing keys
     $settings = [
-        'google_client_id' => '',
-        'google_client_secret' => '',
+        'google_client_id' => ',
+        'google_client_secret' => ',
         'cron_key' => 'default_cron_key_123'
     ];
 

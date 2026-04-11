@@ -9,9 +9,9 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $host = trim($_POST['db_host'] ?? 'localhost');
 $port = (int)($_POST['db_port'] ?? 3306);
-$name = trim($_POST['db_name'] ?? '');
-$user = trim($_POST['db_user'] ?? '');
-$pass = $_POST['db_pass'] ?? '';
+$name = trim($_POST['db_name'] ?? ');
+$user = trim($_POST['db_user'] ?? ');
+$pass = $_POST['db_pass'] ?? ';
 
 if (empty($user)) {
     echo json_encode(['success' => false, 'message' => 'Database user is required.']);
@@ -57,7 +57,7 @@ try {
 } catch (PDOException $e) {
     $message = $e->getMessage();
     // Sanitize error message to avoid leaking credentials
-    $message = preg_replace('/\[.*?\]/', '', $message);
+    $message = preg_replace('/\[.*?\]/', ', $message);
     $message = trim($message);
     echo json_encode(['success' => false, 'message' => 'Connection failed: ' . $message]);
 }

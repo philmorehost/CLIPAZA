@@ -5,7 +5,7 @@ header('Content-Type: application/json; charset=utf-8');
 
 $root = dirname(__DIR__, 2);
 
-if (!file_exists($root . '/config/config.php')) {
+if (!file_exists($root . '/config/config')) {
     echo json_encode(['success' => false, 'message' => 'Application not configured.']);
     exit;
 }
@@ -16,21 +16,21 @@ require_once $root . '/includes/functions.php';
 require_once $root . '/includes/auth.php';
 
 // Must be admin
-if (empty($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'admin') {
+if (empty($_SESSION['user_id']) || ($_SESSION['user_role'] ?? ') !== 'admin') {
     http_response_code(403);
     echo json_encode(['success' => false, 'message' => 'Unauthorized.']);
     exit;
 }
 
 // CSRF check
-$token = $_POST['csrf_token'] ?? '';
+$token = $_POST['csrf_token'] ?? ';
 if (!verifyCsrfToken($token)) {
     http_response_code(403);
     echo json_encode(['success' => false, 'message' => 'Invalid CSRF token.']);
     exit;
 }
 
-$action = $_POST['action'] ?? '';
+$action = $_POST['action'] ?? ';
 
 try {
     match ($action) {
@@ -68,7 +68,7 @@ function saveSiteSetting(string $key, string $value): bool {
  */
 function processUpload(string $inputName, string $destDir, array $allowedExts, int $maxBytes = 2097152): string {
     if (!isset($_FILES[$inputName]) || $_FILES[$inputName]['error'] === UPLOAD_ERR_NO_FILE) {
-        return '';
+        return ';
     }
 
     $file = $_FILES[$inputName];
@@ -122,7 +122,7 @@ function processUpload(string $inputName, string $destDir, array $allowedExts, i
  * Remove a previously stored file from disk (silent fail).
  */
 function deleteOldFile(string $webPath, string $webRoot): void {
-    if ($webPath === '') return;
+    if ($webPath === ') return;
     $normalized = str_replace('\\', '/', $webRoot);
     $fullPath   = rtrim($normalized, '/') . '/' . ltrim($webPath, '/');
     if (file_exists($fullPath) && is_file($fullPath)) {
@@ -137,8 +137,8 @@ function deleteOldFile(string $webPath, string $webRoot): void {
 function handleSaveGeneral(): never {
     $root = dirname(__DIR__, 2);
 
-    $siteName = sanitizeInput($_POST['site_name'] ?? '');
-    if ($siteName === '') {
+    $siteName = sanitizeInput($_POST['site_name'] ?? ');
+    if ($siteName === ') {
         jsonResponse(['success' => false, 'message' => 'Site name cannot be empty.']);
     }
 
@@ -147,9 +147,9 @@ function handleSaveGeneral(): never {
     // Logo upload
     try {
         $logoPath = processUpload('site_logo', $root . '/uploads/logo', ['png', 'jpg', 'jpeg']);
-        if ($logoPath !== '') {
+        if ($logoPath !== ') {
             // Clean up old logo file
-            deleteOldFile(getSetting('site_logo', ''), $root);
+            deleteOldFile(getSetting('site_logo', '), $root);
             saveSiteSetting('site_logo', $logoPath);
         }
     } catch (\RuntimeException $e) {
@@ -159,9 +159,9 @@ function handleSaveGeneral(): never {
     // Favicon upload
     try {
         $faviconPath = processUpload('site_favicon', $root . '/uploads/favicon', ['png', 'jpg', 'jpeg', 'ico']);
-        if ($faviconPath !== '') {
+        if ($faviconPath !== ') {
             // Clean up old favicon file
-            deleteOldFile(getSetting('site_favicon', ''), $root);
+            deleteOldFile(getSetting('site_favicon', '), $root);
             saveSiteSetting('site_favicon', $faviconPath);
         }
     } catch (\RuntimeException $e) {
@@ -180,9 +180,9 @@ function handleSaveSeo(): never {
     ];
 
     foreach ($fields as $key => $maxLen) {
-        $value = substr(trim($_POST[$key] ?? ''), 0, $maxLen);
+        $value = substr(trim($_POST[$key] ?? '), 0, $maxLen);
         // og_image_url: only allow empty or valid URL
-        if ($key === 'og_image_url' && $value !== '') {
+        if ($key === 'og_image_url' && $value !== ') {
             if (!filter_var($value, FILTER_VALIDATE_URL)) {
                 jsonResponse(['success' => false, 'message' => 'OG Image URL is not a valid URL.']);
             }
@@ -197,8 +197,8 @@ function handleSaveCode(): never {
     // WARNING: These values are intentionally stored and output as raw HTML/JS.
     // They are injected into every public page. Only trusted admins should edit these.
     // If an admin account is compromised, these fields are a potential XSS vector.
-    $headerCode  = $_POST['custom_header_code'] ?? '';
-    $adsenseCode = $_POST['adsense_code'] ?? '';
+    $headerCode  = $_POST['custom_header_code'] ?? ';
+    $adsenseCode = $_POST['adsense_code'] ?? ';
 
     saveSiteSetting('custom_header_code', $headerCode);
     saveSiteSetting('adsense_code', $adsenseCode);
@@ -228,7 +228,7 @@ function handleSaveAds(): never {
         }
         saveSiteSetting('ads_txt_content', $content);
     } else {
-        $content = $_POST['ads_txt_content'] ?? '';
+        $content = $_POST['ads_txt_content'] ?? ';
         saveSiteSetting('ads_txt_content', $content);
     }
 
@@ -248,7 +248,7 @@ function handleSaveIntegrations(): never {
     ];
 
     foreach ($fields as $key => $maxLen) {
-        $value = substr(trim($_POST[$key] ?? ''), 0, (int)$maxLen);
+        $value = substr(trim($_POST[$key] ?? '), 0, (int)$maxLen);
         saveSiteSetting($key, $value);
     }
 

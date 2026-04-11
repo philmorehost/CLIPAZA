@@ -7,7 +7,7 @@ class Database {
     public static function getInstance(): PDO {
         if (self::$instance === null) {
             if (!defined('DB_HOST')) {
-                $cfg = dirname(__DIR__) . '/config/config.php';
+                $cfg = dirname(__DIR__) . '/config/config';
                 if (file_exists($cfg)) require_once $cfg;
                 else throw new RuntimeException('Database not configured.');
             }

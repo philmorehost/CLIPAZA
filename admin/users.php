@@ -14,9 +14,9 @@ requireAdmin();
 $csrf    = generateCsrfToken();
 $page    = max(1, (int)($_GET['page'] ?? 1));
 $perPage = 20;
-$filter  = sanitizeInput($_GET['status'] ?? '');
-$roleF   = sanitizeInput($_GET['role'] ?? '');
-$search  = sanitizeInput($_GET['q'] ?? '');
+$filter  = sanitizeInput($_GET['status'] ?? ');
+$roleF   = sanitizeInput($_GET['role'] ?? ');
+$search  = sanitizeInput($_GET['q'] ?? ');
 
 $users = [];
 $total = 0;
@@ -41,7 +41,7 @@ try {
     $total = (int)$cnt->fetchColumn();
     $pag   = paginate($total, $perPage, $page);
     $listParams = array_merge($params, [$perPage, $pag['offset']]);
-    $stmt = $db->prepare("SELECT u.*, up.active_mode FROM users u LEFT JOIN user_profiles up ON up.user_id = u.id WHERE {$where} ORDER BY u.created_at DESC LIMIT ? OFFSET ?");
+    $stmt = $db->prepare("SELECT u.*, up.active_mode, up.wallet_balance FROM users u LEFT JOIN user_profiles up ON up.user_id = u.id WHERE {$where} ORDER BY u.created_at DESC LIMIT ? OFFSET ?");
     $stmt->execute($listParams);
     $users = $stmt->fetchAll();
 } catch (Throwable) {}
@@ -61,25 +61,25 @@ try {
     <div class="sidebar-brand">Clipa<span>za</span></div>
     <div class="sidebar-nav">
         <ul class="nav flex-column">
-            <li class="nav-item"><a href="index.php" class="nav-link"><span class="nav-icon">⊞</span> Dashboard</a></li>
-            <li class="nav-item"><a href="users.php" class="nav-link active"><span class="nav-icon">👥</span> Users</a></li>
-            <li class="nav-item"><a href="contests.php" class="nav-link"><span class="nav-icon">🏆</span> Contests</a></li>
-            <li class="nav-item"><a href="entries.php" class="nav-link"><span class="nav-icon">✂️</span> Entries</a></li>
-            <li class="nav-item"><a href="payouts.php" class="nav-link"><span class="nav-icon">💸</span> Payouts</a></li>
-            <li class="nav-item"><a href="security.php" class="nav-link"><span class="nav-icon">🛡</span> Security</a></li>
-            <li class="nav-item"><a href="settings.php" class="nav-link"><span class="nav-icon">⚙</span> Settings</a></li>
+            <li class="nav-item"><a href="index" class="nav-link"><span class="nav-icon">⊞</span> Dashboard</a></li>
+            <li class="nav-item"><a href="users" class="nav-link active"><span class="nav-icon">👥</span> Users</a></li>
+            <li class="nav-item"><a href="contests" class="nav-link"><span class="nav-icon">🏆</span> Contests</a></li>
+            <li class="nav-item"><a href="entries" class="nav-link"><span class="nav-icon">✂️</span> Entries</a></li>
+            <li class="nav-item"><a href="payouts" class="nav-link"><span class="nav-icon">💸</span> Payouts</a></li>
+            <li class="nav-item"><a href="security" class="nav-link"><span class="nav-icon">🛡</span> Security</a></li>
+            <li class="nav-item"><a href="settings" class="nav-link"><span class="nav-icon">⚙</span> Settings</a></li>
         </ul>
         <hr class="divider-dark mx-3">
         <ul class="nav flex-column">
-            <li class="nav-item"><a href="logout.php" class="nav-link" style="color:var(--danger)"><span class="nav-icon">⇤</span> Logout</a></li>
+            <li class="nav-item"><a href="logout" class="nav-link" style="color:var(--danger)"><span class="nav-icon">⇤</span> Logout</a></li>
         </ul>
     </div>
 </nav>
 <main class="admin-main">
     <div class="admin-topbar">
         <div class="d-flex align-items-center gap-3">
-            <button id="sidebarToggle" class="btn d-lg-none" style="color:#888;background:rgba(255,255,255,0.05);border-radius:8px;padding:6px 10px;">☰</button>
-            <span style="color:#888;font-size:0.9rem">Welcome, <strong style="color:#fff"><?= e($_SESSION['username'] ?? '') ?></strong></span>
+            <button id="sidebarToggle" class="btn d-lg-none" style="color:#ccc;background:rgba(255,255,255,0.05);border-radius:8px;padding:6px 10px;">☰</button>
+            <span style="color:#ccc;font-size:0.9rem">Welcome, <strong style="color:#fff"><?= e($_SESSION['username'] ?? ') ?></strong></span>
         </div>
     </div>
     <div class="p-4">
@@ -92,13 +92,13 @@ try {
             <select name="status" class="form-control-dark" style="max-width:140px;font-size:0.85rem" onchange="this.form.submit()">
                 <option value="">All Status</option>
                 <?php foreach (['active','inactive','banned','pending'] as $s): ?>
-                    <option value="<?= $s ?>" <?= $filter===$s?'selected':'' ?>><?= ucfirst($s) ?></option>
+                    <option value="<?= $s ?>" <?= $filter===$s?'selected':' ?>><?= ucfirst($s) ?></option>
                 <?php endforeach; ?>
             </select>
             <select name="role" class="form-control-dark" style="max-width:140px;font-size:0.85rem" onchange="this.form.submit()">
                 <option value="">All Roles</option>
                 <?php foreach (['admin','user','moderator'] as $r): ?>
-                    <option value="<?= $r ?>" <?= $roleF===$r?'selected':'' ?>><?= ucfirst($r) ?></option>
+                    <option value="<?= $r ?>" <?= $roleF===$r?'selected':' ?>><?= ucfirst($r) ?></option>
                 <?php endforeach; ?>
             </select>
             <button type="submit" class="btn btn-sm btn-outline-accent">Filter</button>
@@ -118,8 +118,8 @@ try {
                             <?php $sc = $u['status']==='active' ? 'badge-success' : ($u['status']==='banned' ? 'badge-danger' : 'badge-muted'); ?>
                             <span class="<?= $sc ?>" style="font-size:0.75rem"><?= e(ucfirst($u['status'])) ?></span>
                         </td>
-                        <td style="font-size:0.82rem;color:#888"><?= e(ucfirst($u['active_mode'] ?? 'clipper')) ?></td>
-                        <td style="font-size:0.8rem;color:#888"><?= e(formatDate($u['created_at'],'M j, Y')) ?></td>
+                        <td style="font-size:0.82rem;color:#ccc"><?= e(ucfirst($u['active_mode'] ?? 'clipper')) ?></td>
+                        <td style="font-size:0.8rem;color:#ccc"><?= e(formatDate($u['created_at'],'M j, Y')) ?></td>
                         <td>
                             <div class="d-flex gap-1 flex-wrap">
                                 <button class="btn btn-xs btn-outline-accent edit-user-btn"
@@ -129,11 +129,11 @@ try {
                                             "email" => $u["email"],
                                             "role" => $u["role"],
                                             "status" => $u["status"],
-                                            "wallet_balance" => getProfile($u["id"])["wallet_balance"] ?? 0
+                                            "wallet_balance" => $u["wallet_balance"] ?? 0
                                         ]) ?>'>Edit</button>
                                 <button class="btn btn-xs btn-outline-info impersonate-btn" data-id="<?= $u['id'] ?>" data-csrf="<?= e($csrf) ?>">Login as</button>
                             <?php if ($u['status']!=='active'): ?><button class="btn btn-xs btn-outline-accent uab" data-id="<?= $u['id'] ?>" data-st="active" data-csrf="<?= e($csrf) ?>">Activate</button><?php endif; ?>
-                            <?php if ($u['status']!=='inactive'): ?><button class="btn btn-xs uab" style="background:#1a1a1a;color:#aaa;font-size:0.72rem;border:1px solid #2a2a2a" data-id="<?= $u['id'] ?>" data-st="inactive" data-csrf="<?= e($csrf) ?>">Suspend</button><?php endif; ?>
+                            <?php if ($u['status']!=='inactive'): ?><button class="btn btn-xs uab" style="background:#1a1a1a;color:#ccc;font-size:0.72rem;border:1px solid #2a2a2a" data-id="<?= $u['id'] ?>" data-st="inactive" data-csrf="<?= e($csrf) ?>">Suspend</button><?php endif; ?>
                             <?php if ($u['status']!=='banned'): ?><button class="btn btn-xs uab" style="background:rgba(220,38,38,0.1);color:#f87171;font-size:0.72rem;border:1px solid rgba(220,38,38,0.2)" data-id="<?= $u['id'] ?>" data-st="banned" data-csrf="<?= e($csrf) ?>">Ban</button><?php endif; ?>
                             </div>
                         </td>
@@ -146,7 +146,7 @@ try {
         <?php if ($pag['pages'] > 1): ?>
         <nav class="mt-3"><ul class="pagination pagination-dark justify-content-center">
             <?php for ($i=1;$i<=$pag['pages'];$i++): ?>
-                <li class="page-item <?= $i===$page?'active':'' ?>"><a class="page-link" href="?page=<?= $i ?>&status=<?= e($filter) ?>&role=<?= e($roleF) ?>&q=<?= urlencode($search) ?>"><?= $i ?></a></li>
+                <li class="page-item <?= $i===$page?'active':' ?>"><a class="page-link" href="?page=<?= $i ?>&status=<?= e($filter) ?>&role=<?= e($roleF) ?>&q=<?= urlencode($search) ?>"><?= $i ?></a></li>
             <?php endfor; ?>
         </ul></nav>
         <?php endif; ?>
@@ -215,7 +215,7 @@ document.querySelectorAll('.uab').forEach(btn => {
     btn.addEventListener('click', async function() {
         if (!confirm('Change user status?')) return;
         this.disabled = true;
-        const r = await fetch('ajax/admin_actions.php', {
+        const r = await fetch('ajax/admin_actions', {
             method:'POST', body: new URLSearchParams({action:'update_user_status', user_id:this.dataset.id, status:this.dataset.st, csrf_token:this.dataset.csrf})
         });
         const d = await r.json();
@@ -228,11 +228,11 @@ document.querySelectorAll('.impersonate-btn').forEach(btn => {
     btn.addEventListener('click', async function() {
         if (!confirm('Login as this user? You will be redirected to their dashboard.')) return;
         this.disabled = true;
-        const r = await fetch('ajax/admin_actions.php', {
+        const r = await fetch('ajax/admin_actions', {
             method:'POST', body: new URLSearchParams({action:'login_as_user', user_id:this.dataset.id, csrf_token:this.dataset.csrf})
         });
         const d = await r.json();
-        if (d.success) window.location.href = '../dashboard.php';
+        if (d.success) window.location.href = '../dashboard';
         else { alert(d.message||'Error'); this.disabled=false; }
     });
 });
@@ -255,7 +255,7 @@ document.getElementById('editUserForm').addEventListener('submit', async functio
     e.preventDefault();
     const btn = this.querySelector('button[type="submit"]');
     btn.disabled = true;
-    const r = await fetch('ajax/admin_actions.php', {
+    const r = await fetch('ajax/admin_actions', {
         method:'POST', body: new FormData(this)
     });
     const d = await r.json();

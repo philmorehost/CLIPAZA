@@ -12,7 +12,7 @@ requireUser();
 
 $userId   = (int)$_SESSION['user_id'];
 $mode     = getUserMode();
-$username = $_SESSION['username'] ?? '';
+$username = $_SESSION['username'] ?? ';
 
 // Load profile
 $profile = [];
@@ -23,8 +23,8 @@ try {
     $profile = $stmt->fetch() ?: [];
 } catch (Throwable) {}
 
-$errorMsg   = $_GET['error'] ?? '';
-$successMsg = $_GET['success'] ?? '';
+$errorMsg   = $_GET['error'] ?? ';
+$successMsg = $_GET['success'] ?? ';
 
 // --- CREATOR stats ---
 $activeContests = 0;
@@ -107,7 +107,7 @@ renderNav(true, ['username' => $username], $mode);
     <?php if (!empty($_SESSION['impersonating'])): ?>
       <div class="alert-dark-info mb-4 d-flex align-items-center justify-content-between">
         <span>🕵️ You are currently logged in as <strong><?= e($username) ?></strong> (Impersonation Mode)</span>
-        <a href="/admin/ajax/admin_actions.php?action=return_to_admin" class="btn btn-sm btn-accent">Return to Admin</a>
+        <a href="admin/ajax/admin_actions.php?action=return_to_admin" class="btn btn-sm btn-accent">Return to Admin</a>
       </div>
     <?php endif; ?>
 
@@ -152,7 +152,7 @@ renderNav(true, ['username' => $username], $mode);
 
       <div class="d-flex align-items-center justify-content-between mb-3">
         <h6 class="fw-700 mb-0">Your Contests</h6>
-        <a href="/create-contest" class="btn btn-accent btn-sm">+ Create Contest</a>
+        <a href="create-contest" class="btn btn-accent btn-sm">+ Create Contest</a>
       </div>
 
       <?php if (empty($recentContests)): ?>
@@ -160,7 +160,7 @@ renderNav(true, ['username' => $username], $mode);
           <div style="font-size:2.5rem;margin-bottom:12px">🎬</div>
           <h6 class="fw-700 mb-2">No contests yet</h6>
           <p class="text-muted mb-3" style="font-size:0.85rem">Create your first contest to start getting clips.</p>
-          <a href="/create-contest" class="btn btn-accent">Create Contest</a>
+          <a href="create-contest" class="btn btn-accent">Create Contest</a>
         </div>
       <?php else: ?>
         <div class="row g-3">
@@ -186,9 +186,9 @@ renderNav(true, ['username' => $username], $mode);
                   <span>Ends <?= e($endLabel) ?></span>
                 </div>
                 <div class="d-flex gap-2">
-                  <a href="/contest?id=<?= (int)$c['id'] ?>" class="btn btn-sm btn-outline-accent">View</a>
+                  <a href="contest?id=<?= (int)$c['id'] ?>" class="btn btn-sm btn-outline-accent">View</a>
                   <?php if ($c['escrow_status'] === 'unfunded' && $c['status'] === 'draft'): ?>
-                    <a href="/payment/fund-contest?contest_id=<?= (int)$c['id'] ?>" class="btn btn-sm btn-accent">Fund &amp; Activate</a>
+                    <a href="payment/fund-contest?contest_id=<?= (int)$c['id'] ?>" class="btn btn-sm btn-accent">Fund &amp; Activate</a>
                   <?php endif; ?>
                 </div>
               </div>
@@ -222,7 +222,7 @@ renderNav(true, ['username' => $username], $mode);
 
       <div class="d-flex align-items-center justify-content-between mb-3">
         <h6 class="fw-700 mb-0">Your Submissions</h6>
-        <a href="/contests" class="btn btn-accent btn-sm">Browse Contests</a>
+        <a href="contests" class="btn btn-accent btn-sm">Browse Contests</a>
       </div>
 
       <?php if (empty($myEntries)): ?>
@@ -230,13 +230,13 @@ renderNav(true, ['username' => $username], $mode);
           <div style="font-size:2.5rem;margin-bottom:12px">✂️</div>
           <h6 class="fw-700 mb-2">No submissions yet</h6>
           <p class="text-muted mb-3" style="font-size:0.85rem">Browse active contests and submit your clips to start earning.</p>
-          <a href="/contests" class="btn btn-accent">Browse Contests</a>
+          <a href="contests" class="btn btn-accent">Browse Contests</a>
         </div>
       <?php else: ?>
         <div class="row g-3">
           <?php foreach ($myEntries as $entry): ?>
             <?php
-              $platformIcon = match($entry['platform'] ?? '') {
+              $platformIcon = match($entry['platform'] ?? ') {
                   'tiktok'    => '🎵',
                   'instagram' => '📸',
                   'facebook'  => '📘',
@@ -295,9 +295,9 @@ renderNav(true, ['username' => $username], $mode);
             <span style="font-size:0.82rem;color:#e1306c">📸 <?= e($profile['instagram_handle']) ?></span>
           <?php endif; ?>
           <?php if (empty($profile['youtube_handle']) && empty($profile['tiktok_handle']) && empty($profile['instagram_handle'])): ?>
-            <a href="/profile" class="text-accent text-decoration-none" style="font-size:0.82rem">+ Add social handles</a>
+            <a href="profile" class="text-accent text-decoration-none" style="font-size:0.82rem">+ Add social handles</a>
           <?php endif; ?>
-          <a href="/profile" class="ms-auto btn btn-sm btn-outline-accent">Edit Profile</a>
+          <a href="profile" class="ms-auto btn btn-sm btn-outline-accent">Edit Profile</a>
         </div>
       </div>
     <?php endif; ?>
@@ -312,7 +312,7 @@ document.querySelectorAll('.verify-btn').forEach(btn => {
     this.disabled = true;
     this.textContent = 'Verifying…';
 
-    fetch('/ajax/contest_actions.php', {
+    fetch('ajax/contest_actions', {
       method: 'POST',
       headers: {'Content-Type': 'application/x-www-form-urlencoded'},
       body: new URLSearchParams({
@@ -344,7 +344,7 @@ document.getElementById('modeSwitchBtn')?.addEventListener('click', function() {
   const btn = this;
   btn.disabled = true;
   btn.textContent = 'Switching…';
-  fetch('/ajax/user_actions.php', {
+  fetch('ajax/user_actions', {
     method: 'POST',
     headers: {'Content-Type': 'application/x-www-form-urlencoded'},
     body: new URLSearchParams({

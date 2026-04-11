@@ -7,8 +7,8 @@ require_once $root . '/includes/functions.php';
 
 if (session_status() === PHP_SESSION_NONE) session_start();
 
-$clientId = getSetting('google_client_id', '');
-$redirectUri = rtrim(getSetting('site_url', 'http://localhost'), '/') . '/auth/google-callback.php';
+$clientId = getSetting('google_client_id', ');
+$redirectUri = rtrim(getSetting('site_url', 'http://localhost'), '/') . '/auth/google-callback';
 
 if (empty($clientId)) {
     die('Google OAuth is not configured. Please contact the administrator.');

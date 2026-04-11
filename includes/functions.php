@@ -19,7 +19,7 @@ function generateCsrfToken(): string {
 
 function verifyCsrfToken(string $token): bool {
     if (session_status() === PHP_SESSION_NONE) session_start();
-    $stored = $_SESSION['csrf_token'] ?? '';
+    $stored = $_SESSION['csrf_token'] ?? ';
     return hash_equals($stored, $token);
 }
 
@@ -35,7 +35,7 @@ function jsonResponse(array $data, int $status = 200): never {
     exit;
 }
 
-function getSetting(string $key, string $default = ''): string {
+function getSetting(string $key, string $default = '): string {
     try {
         $db = db();
         $stmt = $db->prepare('SELECT setting_value FROM site_settings WHERE setting_key = ? LIMIT 1');
@@ -47,7 +47,7 @@ function getSetting(string $key, string $default = ''): string {
     }
 }
 
-function getSecuritySetting(string $key, string $default = ''): string {
+function getSecuritySetting(string $key, string $default = '): string {
     try {
         $db = db();
         $stmt = $db->prepare('SELECT setting_value FROM security_settings WHERE setting_key = ? LIMIT 1');

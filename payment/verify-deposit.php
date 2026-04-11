@@ -7,7 +7,7 @@ require_once $root . '/includes/functions.php';
 
 if (session_status() === PHP_SESSION_NONE) session_start();
 
-$reference = sanitizeInput($_GET['reference'] ?? '');
+$reference = sanitizeInput($_GET['reference'] ?? ');
 
 if (empty($reference)) {
     header('Location: /wallet?error=no_reference');
@@ -21,7 +21,7 @@ if (empty($reference)) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verifying Deposit... — Clipaza</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="/assets/css/style.css" rel="stylesheet">
+    <link href="assets/css/style.css" rel="stylesheet">
 </head>
 <body style="background:#000;color:#fff;display:flex;align-items:center;justify-content:center;height:100vh">
     <div class="text-center">
@@ -31,7 +31,7 @@ if (empty($reference)) {
     </div>
     <script>
         const ref = '<?= e($reference) ?>';
-        fetch('/ajax/payment_actions.php', {
+        fetch('../ajax/payment_actions', {
             method: 'POST',
             headers: {'Content-Type':'application/x-www-form-urlencoded'},
             body: new URLSearchParams({action:'verify_deposit', reference: ref})

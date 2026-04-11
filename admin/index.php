@@ -69,37 +69,37 @@ try {
     <div class="sidebar-nav">
         <ul class="nav flex-column">
             <li class="nav-item">
-                <a href="index.php" class="nav-link active">
+                <a href="index" class="nav-link active">
                     <span class="nav-icon">⊞</span> Dashboard
                 </a>
             </li>
             <li class="nav-item">
-                <a href="security.php" class="nav-link">
+                <a href="security" class="nav-link">
                     <span class="nav-icon">🛡</span> Security
                 </a>
             </li>
             <li class="nav-item">
-                <a href="users.php" class="nav-link">
+                <a href="users" class="nav-link">
                     <span class="nav-icon">👥</span> Users
                 </a>
             </li>
             <li class="nav-item">
-                <a href="contests.php" class="nav-link">
+                <a href="contests" class="nav-link">
                     <span class="nav-icon">🏆</span> Contests
                 </a>
             </li>
             <li class="nav-item">
-                <a href="entries.php" class="nav-link">
+                <a href="entries" class="nav-link">
                     <span class="nav-icon">✂️</span> Entries
                 </a>
             </li>
             <li class="nav-item">
-                <a href="payouts.php" class="nav-link">
+                <a href="payouts" class="nav-link">
                     <span class="nav-icon">💸</span> Payouts
                 </a>
             </li>
             <li class="nav-item">
-                <a href="settings.php" class="nav-link">
+                <a href="settings" class="nav-link">
                     <span class="nav-icon">⚙</span> Settings
                 </a>
             </li>
@@ -107,7 +107,7 @@ try {
         <hr class="divider-dark mx-3">
         <ul class="nav flex-column">
             <li class="nav-item">
-                <a href="logout.php" class="nav-link" style="color:var(--danger);">
+                <a href="logout" class="nav-link" style="color:var(--danger);">
                     <span class="nav-icon">⇤</span> Logout
                 </a>
             </li>
@@ -119,11 +119,11 @@ try {
 <main class="admin-main">
     <div class="admin-topbar">
         <div class="d-flex align-items-center gap-3">
-            <button id="sidebarToggle" class="btn d-lg-none" style="color:#888;background:rgba(255,255,255,0.05);border-radius:8px;padding:6px 10px;">☰</button>
+            <button id="sidebarToggle" class="btn d-lg-none" style="color:#ccc;background:rgba(255,255,255,0.05);border-radius:8px;padding:6px 10px;">☰</button>
             <h1>Dashboard</h1>
         </div>
-        <div style="font-size:0.875rem;color:#555;">
-            Welcome, <strong style="color:#fff;"><?= htmlspecialchars($_SESSION['username'] ?? '') ?></strong>
+        <div style="font-size:0.875rem;color:#ccc;">
+            Welcome, <strong style="color:#fff;"><?= htmlspecialchars($_SESSION['username'] ?? ') ?></strong>
         </div>
     </div>
 
@@ -207,25 +207,25 @@ try {
         <div class="card-body">
             <div class="row g-3">
                 <div class="col-6 col-md-3">
-                    <a href="users.php" class="btn btn-outline-accent w-100 py-3 d-flex flex-column align-items-center gap-2">
+                    <a href="users" class="btn btn-outline-accent w-100 py-3 d-flex flex-column align-items-center gap-2">
                         <span style="font-size:1.5rem">👥</span>
                         <span>Manage Users</span>
                     </a>
                 </div>
                 <div class="col-6 col-md-3">
-                    <a href="kyc.php" class="btn btn-outline-accent w-100 py-3 d-flex flex-column align-items-center gap-2">
+                    <a href="kyc" class="btn btn-outline-accent w-100 py-3 d-flex flex-column align-items-center gap-2">
                         <span style="font-size:1.5rem">🆔</span>
                         <span>KYC Review</span>
                     </a>
                 </div>
                 <div class="col-6 col-md-3">
-                    <a href="contests.php" class="btn btn-outline-accent w-100 py-3 d-flex flex-column align-items-center gap-2">
+                    <a href="contests" class="btn btn-outline-accent w-100 py-3 d-flex flex-column align-items-center gap-2">
                         <span style="font-size:1.5rem">🏆</span>
                         <span>Contests</span>
                     </a>
                 </div>
                 <div class="col-6 col-md-3">
-                    <a href="payouts.php" class="btn btn-outline-accent w-100 py-3 d-flex flex-column align-items-center gap-2">
+                    <a href="payouts" class="btn btn-outline-accent w-100 py-3 d-flex flex-column align-items-center gap-2">
                         <span style="font-size:1.5rem">💸</span>
                         <span>Payouts</span>
                     </a>
@@ -240,7 +240,7 @@ try {
             <div class="card-dark">
                 <div class="card-header d-flex justify-content-between">
                     <span>Recent Deposits</span>
-                    <a href="transactions.php" class="text-muted" style="font-size:0.75rem">View All</a>
+                    <a href="transactions" class="text-muted" style="font-size:0.75rem">View All</a>
                 </div>
                 <div class="card-body p-0">
                     <table class="table-dark-custom w-100">
@@ -263,7 +263,7 @@ try {
             <div class="card-dark">
                 <div class="card-header d-flex justify-content-between">
                     <span>Recent Payouts</span>
-                    <a href="payouts.php" class="text-muted" style="font-size:0.75rem">View All</a>
+                    <a href="payouts" class="text-muted" style="font-size:0.75rem">View All</a>
                 </div>
                 <div class="card-body p-0">
                     <table class="table-dark-custom w-100">
@@ -290,7 +290,7 @@ try {
     <div class="card-dark mb-4">
         <div class="card-header d-flex align-items-center justify-content-between">
             <span>Recent Login Activity</span>
-            <a href="security.php?tab=history" style="font-size:0.8rem;color:#888;">View All →</a>
+            <a href="security.php?tab=history" style="font-size:0.8rem;color:#ccc;">View All →</a>
         </div>
         <div class="card-body p-0">
             <div style="overflow-x:auto;">
@@ -306,17 +306,17 @@ try {
                     </thead>
                     <tbody>
                         <?php if (empty($loginHistory)): ?>
-                        <tr><td colspan="5" class="text-center py-4" style="color:#555;">No login history yet.</td></tr>
+                        <tr><td colspan="5" class="text-center py-4" style="color:#ccc;">No login history yet.</td></tr>
                         <?php else: ?>
                         <?php foreach ($loginHistory as $entry): ?>
                         <tr>
                             <td>
                                 <strong style="color:#fff;"><?= htmlspecialchars($entry['username']) ?></strong>
-                                <?php if (($entry['role'] ?? '') === 'admin'): ?>
+                                <?php if (($entry['role'] ?? ') === 'admin'): ?>
                                 <span class="badge-accent ms-1" style="font-size:0.65rem;">admin</span>
                                 <?php endif; ?>
                             </td>
-                            <td><code style="color:#aaa;font-size:0.8rem;"><?= htmlspecialchars($entry['ip_address']) ?></code></td>
+                            <td><code style="color:#ccc;font-size:0.8rem;"><?= htmlspecialchars($entry['ip_address']) ?></code></td>
                             <td>
                                 <?php
                                 $actionClass = match($entry['action']) {
@@ -329,7 +329,7 @@ try {
                                 <span class="<?= $actionClass ?>"><?= htmlspecialchars($entry['action']) ?></span>
                             </td>
                             <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                                <?= htmlspecialchars($entry['details'] ?? '') ?>
+                                <?= htmlspecialchars($entry['details'] ?? ') ?>
                             </td>
                             <td style="white-space:nowrap;"><?= htmlspecialchars(timeAgo($entry['created_at'])) ?></td>
                         </tr>
@@ -352,19 +352,19 @@ try {
                     $userEnabled = getSecuritySetting('username_protection_enabled', '1') === '1';
                     ?>
                     <div class="d-flex align-items-center justify-content-between py-2 border-bottom" style="border-color:#222!important;">
-                        <span style="color:#aaa;font-size:0.875rem;">IP Brute Force Protection</span>
+                        <span style="color:#ccc;font-size:0.875rem;">IP Brute Force Protection</span>
                         <span class="<?= $ipEnabled ? 'badge-success' : 'badge-danger' ?>"><?= $ipEnabled ? 'Active' : 'Disabled' ?></span>
                     </div>
                     <div class="d-flex align-items-center justify-content-between py-2 border-bottom" style="border-color:#222!important;">
-                        <span style="color:#aaa;font-size:0.875rem;">Username Protection</span>
+                        <span style="color:#ccc;font-size:0.875rem;">Username Protection</span>
                         <span class="<?= $userEnabled ? 'badge-success' : 'badge-danger' ?>"><?= $userEnabled ? 'Active' : 'Disabled' ?></span>
                     </div>
                     <div class="d-flex align-items-center justify-content-between py-2">
-                        <span style="color:#aaa;font-size:0.875rem;">Blocked IPs</span>
+                        <span style="color:#ccc;font-size:0.875rem;">Blocked IPs</span>
                         <span class="<?= $blockedIps > 0 ? 'badge-warning' : 'badge-success' ?>"><?= $blockedIps ?></span>
                     </div>
                     <div class="mt-3">
-                        <a href="security.php" class="btn btn-outline-accent" style="font-size:0.8rem;padding:8px 16px;">Manage Security →</a>
+                        <a href="security" class="btn btn-outline-accent" style="font-size:0.8rem;padding:8px 16px;">Manage Security →</a>
                     </div>
                 </div>
             </div>

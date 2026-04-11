@@ -11,7 +11,7 @@ if (session_status() === PHP_SESSION_NONE) session_start();
 requireUser();
 
 $userId = (int)$_SESSION['user_id'];
-$username = $_SESSION['username'] ?? '';
+$username = $_SESSION['username'] ?? ';
 $userMode = getUserMode();
 
 // Load profile and transactions
@@ -43,8 +43,8 @@ renderNav(true, ['username' => $username], $userMode);
           <div class="text-muted small mb-1 uppercase fw-700 letter-spacing-1">Available Balance</div>
           <div class="display-5 fw-900 text-accent mb-4">₦<?= number_format($balance, 2) ?></div>
           <div class="d-grid gap-2">
-            <a href="/deposit" class="btn btn-accent py-3 fw-700">Add Funds</a>
-            <a href="/payout" class="btn btn-outline-accent py-3 fw-700">Withdraw</a>
+            <a href="deposit" class="btn btn-accent py-3 fw-700">Add Funds</a>
+            <a href="payout" class="btn btn-outline-accent py-3 fw-700">Withdraw</a>
           </div>
         </div>
       </div>

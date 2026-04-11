@@ -10,13 +10,13 @@ if (empty($dbConfig)) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['site_next'])) {
-    $siteName       = trim($_POST['site_name'] ?? '');
-    $siteUrl        = rtrim(trim($_POST['site_url'] ?? ''), '/');
-    $adminEmail     = trim($_POST['admin_email'] ?? '');
-    $smtpHost       = trim($_POST['smtp_host'] ?? '');
+    $siteName       = trim($_POST['site_name'] ?? ');
+    $siteUrl        = rtrim(trim($_POST['site_url'] ?? '), '/');
+    $adminEmail     = trim($_POST['admin_email'] ?? ');
+    $smtpHost       = trim($_POST['smtp_host'] ?? ');
     $smtpPort       = trim($_POST['smtp_port'] ?? '587');
-    $smtpUser       = trim($_POST['smtp_user'] ?? '');
-    $smtpPass       = $_POST['smtp_pass'] ?? '';
+    $smtpUser       = trim($_POST['smtp_user'] ?? ');
+    $smtpPass       = $_POST['smtp_pass'] ?? ';
     $smtpEncryption = $_POST['smtp_encryption'] ?? 'tls';
 
     if (empty($siteName))   $errors[] = 'Site name is required.';
@@ -27,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['site_next'])) {
         $root       = dirname(__DIR__, 2);
         $configDir  = $root . '/config';
         $schemaFile = __DIR__ . '/../schema.sql';
-        $tmplFile   = $configDir . '/config.template.php';
+        $tmplFile   = $configDir . '/config.template';
 
         // Run schema
         try {
@@ -102,7 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['site_next'])) {
                     '{{APP_KEY}}'        => $appKey,
                 ];
                 $config = str_replace(array_keys($replacements), array_values($replacements), $config);
-                if (!file_put_contents($configDir . '/config.php', $config)) {
+                if (!file_put_contents($configDir . '/config', $config)) {
                     $errors[] = 'Failed to write config.php. Check directory permissions.';
                 }
             } else {
@@ -123,7 +123,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['site_next'])) {
                 $config .= "define('SMTP_ENCRYPTION', '" . addslashes($smtpEncryption) . "');\n";
                 $config .= "define('APP_KEY', '" . $appKey . "');\n";
                 $config .= "define('INSTALLED', true);\n";
-                if (!file_put_contents($configDir . '/config.php', $config)) {
+                if (!file_put_contents($configDir . '/config', $config)) {
                     $errors[] = 'Failed to write config.php. Check directory permissions.';
                 }
             }
@@ -161,17 +161,17 @@ $siteUrl = $_SESSION['site_config']['siteUrl'] ?? (isset($_SERVER['HTTPS']) && $
     <div class="mb-3">
         <label class="form-label-dark">Admin Email</label>
         <input type="email" name="admin_email" class="form-control form-control-dark"
-               value="<?= htmlspecialchars($_POST['admin_email'] ?? '') ?>" required>
+               value="<?= htmlspecialchars($_POST['admin_email'] ?? ') ?>" required>
     </div>
 
     <hr class="divider-dark">
-    <p style="font-size:0.8rem;color:#555;margin-bottom:16px;">SMTP Settings (optional — leave blank to use PHP mail)</p>
+    <p style="font-size:0.8rem;color:#ccc;margin-bottom:16px;">SMTP Settings (optional — leave blank to use PHP mail)</p>
 
     <div class="row g-3">
         <div class="col-md-8">
             <label class="form-label-dark">SMTP Host</label>
             <input type="text" name="smtp_host" class="form-control form-control-dark"
-                   value="<?= htmlspecialchars($_POST['smtp_host'] ?? '') ?>" placeholder="smtp.gmail.com">
+                   value="<?= htmlspecialchars($_POST['smtp_host'] ?? ') ?>" placeholder="smtp.gmail.com">
         </div>
         <div class="col-md-4">
             <label class="form-label-dark">SMTP Port</label>
@@ -181,25 +181,25 @@ $siteUrl = $_SESSION['site_config']['siteUrl'] ?? (isset($_SERVER['HTTPS']) && $
         <div class="col-md-6">
             <label class="form-label-dark">SMTP User</label>
             <input type="email" name="smtp_user" class="form-control form-control-dark"
-                   value="<?= htmlspecialchars($_POST['smtp_user'] ?? '') ?>" placeholder="user@gmail.com">
+                   value="<?= htmlspecialchars($_POST['smtp_user'] ?? ') ?>" placeholder="user@gmail.com">
         </div>
         <div class="col-md-6">
             <label class="form-label-dark">SMTP Password</label>
             <input type="password" name="smtp_pass" class="form-control form-control-dark"
-                   value="<?= htmlspecialchars($_POST['smtp_pass'] ?? '') ?>">
+                   value="<?= htmlspecialchars($_POST['smtp_pass'] ?? ') ?>">
         </div>
         <div class="col-12">
             <label class="form-label-dark">Encryption</label>
             <select name="smtp_encryption" class="form-select form-select-dark">
-                <option value="tls" <?= ($_POST['smtp_encryption'] ?? 'tls') === 'tls' ? 'selected' : '' ?>>TLS (Recommended)</option>
-                <option value="ssl" <?= ($_POST['smtp_encryption'] ?? '') === 'ssl' ? 'selected' : '' ?>>SSL</option>
-                <option value="none" <?= ($_POST['smtp_encryption'] ?? '') === 'none' ? 'selected' : '' ?>>None</option>
+                <option value="tls" <?= ($_POST['smtp_encryption'] ?? 'tls') === 'tls' ? 'selected' : ' ?>>TLS (Recommended)</option>
+                <option value="ssl" <?= ($_POST['smtp_encryption'] ?? ') === 'ssl' ? 'selected' : ' ?>>SSL</option>
+                <option value="none" <?= ($_POST['smtp_encryption'] ?? ') === 'none' ? 'selected' : ' ?>>None</option>
             </select>
         </div>
     </div>
 
     <div class="d-flex justify-content-between align-items-center mt-4">
-        <a href="?step=2" class="btn" style="color:#888;background:rgba(255,255,255,0.05);border-radius:8px;padding:10px 20px;">← Back</a>
+        <a href="?step=2" class="btn" style="color:#ccc;background:rgba(255,255,255,0.05);border-radius:8px;padding:10px 20px;">← Back</a>
         <button type="submit" name="site_next" value="1" class="btn btn-accent">Continue →</button>
     </div>
 </form>

@@ -3,7 +3,7 @@ declare(strict_types=1);
 session_start();
 
 $root = dirname(__DIR__);
-$configFile = $root . '/config/config.php';
+$configFile = $root . '/config/config';
 
 if (!file_exists($configFile)) {
     die('Application not installed. <a href="../install/">Run installer</a>');
@@ -15,18 +15,18 @@ require_once $root . '/includes/functions.php';
 require_once $root . '/includes/security.php';
 require_once $root . '/includes/auth.php';
 
-if (isLoggedIn() && ($_SESSION['user_role'] ?? '') === 'admin') {
-    redirect('index.php');
+if (isLoggedIn() && ($_SESSION['user_role'] ?? ') === 'admin') {
+    redirect('index');
 }
 
-$error   = '';
+$error   = ';
 $locked  = false;
 $csrf    = generateCsrfToken();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $token    = $_POST['csrf_token'] ?? '';
-    $username = trim($_POST['username'] ?? '');
-    $password = $_POST['password'] ?? '';
+    $token    = $_POST['csrf_token'] ?? ';
+    $username = trim($_POST['username'] ?? ');
+    $password = $_POST['password'] ?? ';
 
     if (!verifyCsrfToken($token)) {
         $error = 'Invalid request. Please try again.';
@@ -35,11 +35,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $result = login($username, $password);
         if ($result['success']) {
-            if (($_SESSION['user_role'] ?? '') !== 'admin') {
+            if (($_SESSION['user_role'] ?? ') !== 'admin') {
                 logout();
                 $error = 'Access denied. Admin account required.';
             } else {
-                redirect('index.php');
+                redirect('index');
             }
         } else {
             $error = $result['message'];
@@ -64,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <div style="width:100%;max-width:400px;padding:24px;">
     <div class="text-center mb-4">
         <div style="font-size:1.8rem;font-weight:900;letter-spacing:-1px;">Clipa<span style="color:#CCFF00;">za</span></div>
-        <p style="color:#555;font-size:0.875rem;margin-top:4px;">Admin Panel</p>
+        <p style="color:#ccc;font-size:0.875rem;margin-top:4px;">Admin Panel</p>
     </div>
 
     <div class="card-dark">
@@ -81,23 +81,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="mb-3">
                     <label class="form-label-dark">Username or Email</label>
                     <input type="text" name="username" class="form-control form-control-dark"
-                           value="<?= htmlspecialchars($_POST['username'] ?? '') ?>"
-                           autocomplete="username" required <?= $locked ? 'disabled' : '' ?>>
+                           value="<?= htmlspecialchars($_POST['username'] ?? ') ?>"
+                           autocomplete="username" required <?= $locked ? 'disabled' : ' ?>>
                 </div>
                 <div class="mb-4">
                     <label class="form-label-dark">Password</label>
                     <input type="password" name="password" class="form-control form-control-dark"
-                           autocomplete="current-password" required <?= $locked ? 'disabled' : '' ?>>
+                           autocomplete="current-password" required <?= $locked ? 'disabled' : ' ?>>
                 </div>
-                <button type="submit" class="btn btn-accent w-100" <?= $locked ? 'disabled' : '' ?>>
+                <button type="submit" class="btn btn-accent w-100" <?= $locked ? 'disabled' : ' ?>>
                     Sign In
                 </button>
             </form>
         </div>
     </div>
 
-    <p class="text-center mt-3" style="font-size:0.8rem;color:#555;">
-        <a href="../" style="color:#555;">← Back to site</a>
+    <p class="text-center mt-3" style="font-size:0.8rem;color:#ccc;">
+        <a href="../" style="color:#ccc;">← Back to site</a>
     </p>
 </div>
 

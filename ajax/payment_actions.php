@@ -8,7 +8,7 @@ require_once $root . '/includes/auth.php';
 
 if (session_status() === PHP_SESSION_NONE) session_start();
 
-$action = sanitizeInput($_POST['action'] ?? '');
+$action = sanitizeInput($_POST['action'] ?? ');
 
 switch ($action) {
     case 'init_payment':
@@ -28,7 +28,7 @@ switch ($action) {
 }
 
 function paystackRequest(string $method, string $endpoint, array $data = []): array {
-    $secretKey = getSetting('paystack_secret_key', '');
+    $secretKey = getSetting('paystack_secret_key', ');
     if (defined('PAYSTACK_SECRET_KEY') && PAYSTACK_SECRET_KEY) {
         $secretKey = PAYSTACK_SECRET_KEY;
     }
@@ -68,12 +68,12 @@ function handleInitPayment(): never {
     if (empty($_SESSION['user_id'])) {
         jsonResponse(['success' => false, 'message' => 'Authentication required.'], 401);
     }
-    if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) {
+    if (!verifyCsrfToken($_POST['csrf_token'] ?? ')) {
         jsonResponse(['success' => false, 'message' => 'Invalid request.'], 403);
     }
 
     $userId    = (int)$_SESSION['user_id'];
-    $userEmail = $_SESSION['user_email'] ?? '';
+    $userEmail = $_SESSION['user_email'] ?? ';
     $contestId = (int)($_POST['contest_id'] ?? 0);
 
     try {
@@ -99,7 +99,7 @@ function handleInitPayment(): never {
                 'contest_id' => $contestId,
                 'user_id'    => $userId,
             ],
-            'callback_url' => rtrim(getSetting('site_url', ''), '/') . '/payment/verify?reference=' . urlencode($reference),
+            'callback_url' => rtrim(getSetting('site_url', '), '/') . '/payment/verify?reference=' . urlencode($reference),
         ]);
 
         if (!empty($result['error'])) {
@@ -115,7 +115,7 @@ function handleInitPayment(): never {
 
         jsonResponse([
             'success'           => true,
-            'authorization_url' => $result['data']['authorization_url'] ?? '',
+            'authorization_url' => $result['data']['authorization_url'] ?? ',
             'reference'         => $reference,
         ]);
     } catch (Throwable $e) {
@@ -125,10 +125,10 @@ function handleInitPayment(): never {
 
 function handleInitDeposit(): never {
     if (empty($_SESSION['user_id'])) jsonResponse(['success' => false, 'message' => 'Unauthorized'], 401);
-    if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) jsonResponse(['success' => false, 'message' => 'Invalid CSRF'], 403);
+    if (!verifyCsrfToken($_POST['csrf_token'] ?? ')) jsonResponse(['success' => false, 'message' => 'Invalid CSRF'], 403);
 
     $userId = (int)$_SESSION['user_id'];
-    $email = $_SESSION['user_email'] ?? '';
+    $email = $_SESSION['user_email'] ?? ';
     $amount = (float)($_POST['amount'] ?? 0);
 
     if ($amount < 500) jsonResponse(['success' => false, 'message' => 'Minimum deposit is ₦500.']);
@@ -141,7 +141,7 @@ function handleInitDeposit(): never {
         'amount' => $amountKobo,
         'reference' => $reference,
         'metadata' => ['type' => 'deposit', 'user_id' => $userId],
-        'callback_url' => rtrim(getSetting('site_url', ''), '/') . '/payment/verify-deposit?reference=' . urlencode($reference),
+        'callback_url' => rtrim(getSetting('site_url', '), '/') . '/payment/verify-deposit?reference=' . urlencode($reference),
     ]);
 
     if (!empty($result['error'])) jsonResponse(['success' => false, 'message' => $result['error']]);
@@ -157,7 +157,7 @@ function handleInitDeposit(): never {
 }
 
 function handleVerifyDeposit(): never {
-    $reference = sanitizeInput($_REQUEST['reference'] ?? '');
+    $reference = sanitizeInput($_REQUEST['reference'] ?? ');
     if (empty($reference)) jsonResponse(['success' => false, 'message' => 'No reference']);
 
     $result = paystackRequest('GET', '/transaction/verify/' . urlencode($reference));
@@ -195,7 +195,7 @@ function handleVerifyDeposit(): never {
 }
 
 function handleVerifyPayment(): never {
-    $reference = sanitizeInput($_POST['reference'] ?? $_GET['reference'] ?? '');
+    $reference = sanitizeInput($_POST['reference'] ?? $_GET['reference'] ?? ');
     if (empty($reference)) {
         jsonResponse(['success' => false, 'message' => 'Payment reference is required.']);
     }

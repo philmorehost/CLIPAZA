@@ -10,7 +10,7 @@ require_once $root . '/includes/layout.php';
 if (session_status() === PHP_SESSION_NONE) session_start();
 
 $isLoggedIn = isLoggedIn();
-$username   = $_SESSION['username'] ?? '';
+$username   = $_SESSION['username'] ?? ';
 $userMode   = getUserMode();
 
 renderHead('Rules & Compliance');
@@ -53,7 +53,7 @@ renderNav($isLoggedIn, ['username' => $username], $userMode);
 
         <div class="text-center mt-5">
           <p class="text-muted" style="font-size:0.9rem">By using Clipaza, you agree to these rules and our full Terms of Service.</p>
-          <a href="/auth/register" class="btn btn-accent">Start Earning Now</a>
+          <a href="auth/register" class="btn btn-accent">Start Earning Now</a>
         </div>
       </div>
     </div>

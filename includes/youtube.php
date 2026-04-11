@@ -59,7 +59,7 @@ function verifyYoutubeEngagement(string $accessToken, string $videoId, string $c
             $found = false;
             if (!empty($response['items'])) {
                 foreach ($response['items'] as $item) {
-                    $authorId = $item['snippet']['topLevelComment']['snippet']['authorChannelId']['value'] ?? '';
+                    $authorId = $item['snippet']['topLevelComment']['snippet']['authorChannelId']['value'] ?? ';
                     if ($authorId === $userChannelId) {
                         $found = true;
                         break;

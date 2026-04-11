@@ -11,27 +11,27 @@ if (session_status() === PHP_SESSION_NONE) session_start();
 requireCreatorMode();
 
 $userId   = (int)$_SESSION['user_id'];
-$username = $_SESSION['username'] ?? '';
+$username = $_SESSION['username'] ?? ';
 
 $errors  = [];
 $success = false;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) {
+    if (!verifyCsrfToken($_POST['csrf_token'] ?? ')) {
         $errors[] = 'Invalid request token. Please try again.';
     } else {
-        $title            = sanitizeInput($_POST['title'] ?? '');
-        $youtubeUrl       = sanitizeInput($_POST['youtube_url'] ?? '');
-        $youtubeVideoId   = sanitizeInput($_POST['youtube_video_id'] ?? '');
-        $youtubeTitle     = sanitizeInput($_POST['youtube_title'] ?? '');
-        $youtubeThumbnail = sanitizeInput($_POST['youtube_thumbnail'] ?? '');
+        $title            = sanitizeInput($_POST['title'] ?? ');
+        $youtubeUrl       = sanitizeInput($_POST['youtube_url'] ?? ');
+        $youtubeVideoId   = sanitizeInput($_POST['youtube_video_id'] ?? ');
+        $youtubeTitle     = sanitizeInput($_POST['youtube_title'] ?? ');
+        $youtubeThumbnail = sanitizeInput($_POST['youtube_thumbnail'] ?? ');
         $mustSubscribe    = !empty($_POST['must_subscribe']) ? 1 : 0;
         $mustLike         = !empty($_POST['must_like']) ? 1 : 0;
         $mustComment      = !empty($_POST['must_comment']) ? 1 : 0;
-        $clipStart        = sanitizeInput($_POST['clip_start_time'] ?? '');
-        $clipEnd          = sanitizeInput($_POST['clip_end_time'] ?? '');
-        $clipInstructions = sanitizeInput($_POST['clip_instructions'] ?? '');
-        $endDate          = sanitizeInput($_POST['end_date'] ?? '');
+        $clipStart        = sanitizeInput($_POST['clip_start_time'] ?? ');
+        $clipEnd          = sanitizeInput($_POST['clip_end_time'] ?? ');
+        $clipInstructions = sanitizeInput($_POST['clip_instructions'] ?? ');
+        $endDate          = sanitizeInput($_POST['end_date'] ?? ');
 
         // Platform prizes
         $platformData = [];
@@ -79,7 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'draft','unfunded',?)"
                 );
                 $stmt->execute([
-                    $userId, $title, '', $youtubeUrl, $youtubeVideoId, $youtubeTitle,
+                    $userId, $title, ', $youtubeUrl, $youtubeVideoId, $youtubeTitle,
                     $youtubeThumbnail, $mustSubscribe, $mustLike, $mustComment,
                     $clipStart ?: null, $clipEnd ?: null, $clipInstructions ?: null,
                     $totalPrize, $platformFee, $totalAmount,
@@ -117,7 +117,7 @@ renderNav(true, ['username' => $username], 'creator');
     <div class="row justify-content-center">
       <div class="col-lg-8">
         <div class="d-flex align-items-center gap-3 mb-4">
-          <a href="/dashboard" class="text-muted text-decoration-none" style="font-size:0.85rem">← Back</a>
+          <a href="dashboard" class="text-muted text-decoration-none" style="font-size:0.85rem">← Back</a>
           <h3 class="fw-900 mb-0" style="letter-spacing:-0.5px">Create Contest</h3>
         </div>
 
@@ -164,7 +164,7 @@ renderNav(true, ['username' => $username], 'creator');
             <div class="d-flex flex-wrap gap-3">
               <?php foreach (['must_subscribe' => 'Must Subscribe', 'must_like' => 'Must Like', 'must_comment' => 'Must Comment'] as $name => $label): ?>
                 <label class="d-flex align-items-center gap-2 cursor-pointer">
-                  <input type="checkbox" name="<?= $name ?>" class="form-check-input" style="background:#111;border-color:#333;width:18px;height:18px">
+                  <input type="checkbox" name="<?= $name ?>" class="form-check-input" style="background:#111;border-color:#ccc;width:18px;height:18px">
                   <span style="font-size:0.9rem"><?= $label ?></span>
                 </label>
               <?php endforeach; ?>
@@ -200,7 +200,7 @@ renderNav(true, ['username' => $username], 'creator');
                 <div class="d-flex align-items-center gap-2 mb-2">
                   <input type="checkbox" name="enable_<?= $pKey ?>" id="enable_<?= $pKey ?>"
                          class="form-check-input platform-toggle" data-platform="<?= $pKey ?>"
-                         style="background:#111;border-color:#333;width:18px;height:18px">
+                         style="background:#111;border-color:#ccc;width:18px;height:18px">
                   <label for="enable_<?= $pKey ?>" class="fw-600" style="cursor:pointer"><?= $icon ?> <?= $label ?></label>
                 </div>
                 <div class="row g-2 platform-fields" id="fields_<?= $pKey ?>" style="display:none">
@@ -293,7 +293,7 @@ document.getElementById('fetchYtBtn').addEventListener('click', async function()
   document.getElementById('ytError').style.display = 'none';
 
   try {
-    const r = await fetch('/ajax/contest_actions.php', {
+    const r = await fetch('ajax/contest_actions', {
       method: 'POST',
       headers: {'Content-Type':'application/x-www-form-urlencoded'},
       body: new URLSearchParams({ action: 'fetch_youtube_info', youtube_url: url, csrf_token: <?= json_encode(generateCsrfToken()) ?> })

@@ -8,18 +8,18 @@ require_once $root . '/includes/auth.php';
 
 if (session_status() === PHP_SESSION_NONE) session_start();
 
-$code = $_GET['code'] ?? '';
-$state = $_GET['state'] ?? '';
+$code = $_GET['code'] ?? ';
+$state = $_GET['state'] ?? ';
 
-if (empty($code) || $state !== ($_SESSION['google_oauth_state'] ?? '')) {
+if (empty($code) || $state !== ($_SESSION['google_oauth_state'] ?? ')) {
     die('Invalid request.');
 }
 
 unset($_SESSION['google_oauth_state']);
 
-$clientId = getSetting('google_client_id', '');
-$clientSecret = getSetting('google_client_secret', '');
-$redirectUri = rtrim(getSetting('site_url', 'http://localhost'), '/') . '/auth/google-callback.php';
+$clientId = getSetting('google_client_id', ');
+$clientSecret = getSetting('google_client_secret', ');
+$redirectUri = rtrim(getSetting('site_url', 'http://localhost'), '/') . '/auth/google-callback';
 
 // Exchange code for token
 $ch = curl_init('https://oauth2.googleapis.com/token');
@@ -42,7 +42,7 @@ if (empty($data['access_token'])) {
 }
 
 $accessToken = $data['access_token'];
-$refreshToken = $data['refresh_token'] ?? '';
+$refreshToken = $data['refresh_token'] ?? ';
 
 // Get user info
 $ch = curl_init('https://www.googleapis.com/oauth2/v2/userinfo');
@@ -57,8 +57,8 @@ if (empty($userInfo['email'])) {
 }
 
 $email = $userInfo['email'];
-$name = $userInfo['name'] ?? '';
-$googleId = $userInfo['id'] ?? '';
+$name = $userInfo['name'] ?? ';
+$googleId = $userInfo['id'] ?? ';
 
 try {
     $db = db();

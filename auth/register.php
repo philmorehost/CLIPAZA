@@ -12,17 +12,17 @@ if (!empty($_SESSION['user_id'])) redirect('/dashboard');
 
 $errors  = [];
 $success = false;
-$formData = ['display_name' => '', 'email' => '', 'username' => ''];
+$formData = ['display_name' => ', 'email' => ', 'username' => '];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) {
+    if (!verifyCsrfToken($_POST['csrf_token'] ?? ')) {
         $errors[] = 'Invalid request. Please try again.';
     } else {
-        $displayName     = sanitizeInput($_POST['display_name'] ?? '');
-        $email           = sanitizeInput($_POST['email'] ?? '');
-        $username        = sanitizeInput($_POST['username'] ?? '');
-        $password        = $_POST['password'] ?? '';
-        $confirmPassword = $_POST['confirm_password'] ?? '';
+        $displayName     = sanitizeInput($_POST['display_name'] ?? ');
+        $email           = sanitizeInput($_POST['email'] ?? ');
+        $username        = sanitizeInput($_POST['username'] ?? ');
+        $password        = $_POST['password'] ?? ';
+        $confirmPassword = $_POST['confirm_password'] ?? ';
 
         $formData = ['display_name' => $displayName, 'email' => $email, 'username' => $username];
 
@@ -83,7 +83,7 @@ renderHead('Create Account');
 <div class="public-page d-flex align-items-center justify-content-center" style="min-height:100vh;background:#000;padding:40px 16px">
   <div class="w-100" style="max-width:420px">
     <div class="text-center mb-4">
-      <a href="/" class="text-decoration-none">
+      <a href="index" class="text-decoration-none">
         <span style="font-size:1.5rem;font-weight:900;color:#fff;letter-spacing:-0.5px">Clipaza<span style="color:var(--accent)">.</span></span>
       </a>
       <p class="text-muted mt-2 mb-0" style="font-size:0.9rem">Join as a creator or clipper</p>
@@ -129,7 +129,7 @@ renderHead('Create Account');
           <span class="px-2 text-muted" style="font-size:0.8rem">OR</span>
           <hr class="flex-grow-1 border-secondary">
         </div>
-        <a href="/auth/google-auth.php" class="btn btn-outline-light w-100 d-flex align-items-center justify-content-center gap-2" style="background:#fff;color:#000;border:none">
+        <a href="auth/google-auth" class="btn btn-outline-light w-100 d-flex align-items-center justify-content-center gap-2" style="background:#fff;color:#000;border:none">
           <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" height="18" alt="Google">
           Continue with Google
         </a>
@@ -137,7 +137,7 @@ renderHead('Create Account');
     </div>
 
     <p class="text-center text-muted mt-3" style="font-size:0.85rem">
-      Already have an account? <a href="/auth/login" class="text-accent text-decoration-none">Sign in</a>
+      Already have an account? <a href="auth/login" class="text-accent text-decoration-none">Sign in</a>
     </p>
   </div>
 </div>

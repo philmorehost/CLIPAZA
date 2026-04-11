@@ -1,22 +1,22 @@
 <?php
 declare(strict_types=1);
 
-require_once __DIR__ . '/db.php';
-require_once __DIR__ . '/functions.php';
-require_once __DIR__ . '/security.php';
-require_once __DIR__ . '/mailer.php';
+require_once __DIR__ . '/db';
+require_once __DIR__ . '/functions';
+require_once __DIR__ . '/security';
+require_once __DIR__ . '/mailer';
 
 function requireAuth(): void {
     if (session_status() === PHP_SESSION_NONE) session_start();
     if (empty($_SESSION['user_id']) || empty($_SESSION['user_role'])) {
-        redirect('../admin/login.php');
+        redirect('../admin/login');
     }
 }
 
 function requireAdmin(): void {
     if (session_status() === PHP_SESSION_NONE) session_start();
-    if (empty($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'admin') {
-        redirect(defined('ADMIN_DIR') ? ADMIN_DIR . '/login.php' : '/admin/login.php');
+    if (empty($_SESSION['user_id']) || ($_SESSION['user_role'] ?? ') !== 'admin') {
+        redirect(defined('ADMIN_DIR') ? ADMIN_DIR . '/login' : '/admin/login');
     }
 }
 
@@ -91,13 +91,13 @@ function login(string $username, string $password): array {
 
 function logout(): void {
     if (session_status() === PHP_SESSION_NONE) session_start();
-    $username = $_SESSION['username'] ?? '';
+    $username = $_SESSION['username'] ?? ';
     $ip       = getClientIp();
-    if ($username) logLoginEvent($_SESSION['user_id'] ?? null, $username, $ip, 'logout', '');
+    if ($username) logLoginEvent($_SESSION['user_id'] ?? null, $username, $ip, 'logout', ');
     $_SESSION = [];
     if (ini_get('session.use_cookies')) {
         $p = session_get_cookie_params();
-        setcookie(session_name(), '', time() - 42000, $p['path'], $p['domain'], $p['secure'], $p['httponly']);
+        setcookie(session_name(), ', time() - 42000, $p['path'], $p['domain'], $p['secure'], $p['httponly']);
     }
     session_destroy();
 }
@@ -105,7 +105,7 @@ function logout(): void {
 function logLoginEvent(?int $userId, string $username, string $ip, string $action, string $details): void {
     try {
         $db = db();
-        $ua = $_SERVER['HTTP_USER_AGENT'] ?? '';
+        $ua = $_SERVER['HTTP_USER_AGENT'] ?? ';
         $stmt = $db->prepare(
             'INSERT INTO login_history (user_id, username, ip_address, user_agent, action, details)
              VALUES (?, ?, ?, ?, ?, ?)'

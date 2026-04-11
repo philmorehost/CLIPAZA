@@ -14,6 +14,6 @@ define('SMTP_USER', '{{SMTP_USER}}');
 define('SMTP_PASS', '{{SMTP_PASS}}');
 define('SMTP_ENCRYPTION', '{{SMTP_ENCRYPTION}}');
 define('APP_KEY', '{{APP_KEY}}');
-define('PAYSTACK_SECRET_KEY', '');
-define('PAYSTACK_PUBLIC_KEY', '');
+define('PAYSTACK_SECRET_KEY', ');
+define('PAYSTACK_PUBLIC_KEY', ');
 define('INSTALLED', true);

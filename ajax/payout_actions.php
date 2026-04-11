@@ -8,7 +8,7 @@ require_once $root . '/includes/auth.php';
 
 if (session_status() === PHP_SESSION_NONE) session_start();
 
-$action = sanitizeInput($_REQUEST['action'] ?? '');
+$action = sanitizeInput($_REQUEST['action'] ?? ');
 
 switch ($action) {
     case 'get_banks':
@@ -31,7 +31,7 @@ switch ($action) {
 }
 
 function paystackGet(string $endpoint): array {
-    $secretKey = getSetting('paystack_secret_key', '');
+    $secretKey = getSetting('paystack_secret_key', ');
     if (defined('PAYSTACK_SECRET_KEY') && PAYSTACK_SECRET_KEY) {
         $secretKey = PAYSTACK_SECRET_KEY;
     }
@@ -95,12 +95,12 @@ function handleGetBanks(): never {
 }
 
 function handleVerifyAccount(): never {
-    if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) {
+    if (!verifyCsrfToken($_POST['csrf_token'] ?? ')) {
         jsonResponse(['success' => false, 'message' => 'Invalid request.'], 403);
     }
 
-    $accountNumber = sanitizeInput($_POST['account_number'] ?? '');
-    $bankCode      = sanitizeInput($_POST['bank_code'] ?? '');
+    $accountNumber = sanitizeInput($_POST['account_number'] ?? ');
+    $bankCode      = sanitizeInput($_POST['bank_code'] ?? ');
 
     if (!preg_match('/^\d{10}$/', $accountNumber)) {
         jsonResponse(['success' => false, 'message' => 'Account number must be 10 digits.']);
@@ -120,13 +120,13 @@ function handleVerifyAccount(): never {
 
     jsonResponse([
         'success'      => true,
-        'account_name' => $result['data']['account_name'] ?? '',
+        'account_name' => $result['data']['account_name'] ?? ',
     ]);
 }
 
 function handleWalletPayoutRequest(): never {
     if (empty($_SESSION['user_id'])) jsonResponse(['success' => false, 'message' => 'Unauthorized'], 401);
-    if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) jsonResponse(['success' => false, 'message' => 'Invalid CSRF'], 403);
+    if (!verifyCsrfToken($_POST['csrf_token'] ?? ')) jsonResponse(['success' => false, 'message' => 'Invalid CSRF'], 403);
 
     $userId = (int)$_SESSION['user_id'];
     $amount = (float)($_POST['amount'] ?? 0);
@@ -169,11 +169,11 @@ function handleWalletPayoutRequest(): never {
 
 function handlePayoutAppeal(): never {
     if (empty($_SESSION['user_id'])) jsonResponse(['success' => false, 'message' => 'Unauthorized'], 401);
-    if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) jsonResponse(['success' => false, 'message' => 'Invalid CSRF'], 403);
+    if (!verifyCsrfToken($_POST['csrf_token'] ?? ')) jsonResponse(['success' => false, 'message' => 'Invalid CSRF'], 403);
 
     $userId = (int)$_SESSION['user_id'];
     $payoutId = (int)($_POST['payout_id'] ?? 0);
-    $message = sanitizeInput($_POST['message'] ?? '');
+    $message = sanitizeInput($_POST['message'] ?? ');
 
     if (empty($message)) jsonResponse(['success' => false, 'message' => 'Appeal message is required.']);
 
@@ -191,16 +191,16 @@ function handleClaimPrize(): never {
     if (empty($_SESSION['user_id'])) {
         jsonResponse(['success' => false, 'message' => 'Authentication required.'], 401);
     }
-    if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) {
+    if (!verifyCsrfToken($_POST['csrf_token'] ?? ')) {
         jsonResponse(['success' => false, 'message' => 'Invalid request.'], 403);
     }
 
     $userId      = (int)$_SESSION['user_id'];
     $entryId     = (int)($_POST['entry_id'] ?? 0);
-    $bankCode    = sanitizeInput($_POST['bank_code'] ?? '');
-    $bankName    = sanitizeInput($_POST['bank_name'] ?? '');
-    $acctNum     = sanitizeInput($_POST['account_number'] ?? '');
-    $acctName    = sanitizeInput($_POST['account_name'] ?? '');
+    $bankCode    = sanitizeInput($_POST['bank_code'] ?? ');
+    $bankName    = sanitizeInput($_POST['bank_name'] ?? ');
+    $acctNum     = sanitizeInput($_POST['account_number'] ?? ');
+    $acctName    = sanitizeInput($_POST['account_name'] ?? ');
 
     if (!preg_match('/^\d{10}$/', $acctNum)) {
         jsonResponse(['success' => false, 'message' => 'Invalid account number.']);
@@ -264,7 +264,7 @@ function handleClaimPrize(): never {
         $prizeAmount = (float)$existingPayout['amount'];
 
         // Paystack Payout Implementation
-        $secretKey = getSetting('paystack_secret_key', '');
+        $secretKey = getSetting('paystack_secret_key', ');
         if (defined('PAYSTACK_SECRET_KEY') && PAYSTACK_SECRET_KEY) {
             $secretKey = PAYSTACK_SECRET_KEY;
         }
@@ -327,7 +327,7 @@ function handleClaimPrize(): never {
 }
 
 function paystackPost(string $endpoint, array $data): array {
-    $secretKey = getSetting('paystack_secret_key', '');
+    $secretKey = getSetting('paystack_secret_key', ');
     if (defined('PAYSTACK_SECRET_KEY') && PAYSTACK_SECRET_KEY) {
         $secretKey = PAYSTACK_SECRET_KEY;
     }

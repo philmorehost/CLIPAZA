@@ -11,9 +11,9 @@ require_once $root . '/includes/auth.php';
 
 requireAdmin();
 
-$action = sanitizeInput($_POST['action'] ?? $_GET['action'] ?? '');
+$action = sanitizeInput($_POST['action'] ?? $_GET['action'] ?? ');
 
-if ($action !== 'return_to_admin' && !verifyCsrfToken($_POST['csrf_token'] ?? '')) {
+if ($action !== 'return_to_admin' && !verifyCsrfToken($_POST['csrf_token'] ?? ')) {
     jsonResponse(['success' => false, 'message' => 'Invalid CSRF token.'], 403);
 }
 
@@ -80,8 +80,8 @@ function handleLoginAsUser(): never {
 
 function handleEditUser(): never {
     $userId = (int)($_POST['user_id'] ?? 0);
-    $username = sanitizeInput($_POST['username'] ?? '');
-    $email = sanitizeInput($_POST['email'] ?? '');
+    $username = sanitizeInput($_POST['username'] ?? ');
+    $email = sanitizeInput($_POST['email'] ?? ');
     $role = sanitizeInput($_POST['role'] ?? 'user');
     $status = sanitizeInput($_POST['status'] ?? 'active');
     $wallet = (float)($_POST['wallet_balance'] ?? 0);
@@ -110,7 +110,7 @@ function handleEditUser(): never {
 
 function handleUpdateUserStatus(): never {
     $userId = (int)($_POST['user_id'] ?? 0);
-    $status = sanitizeInput($_POST['status'] ?? '');
+    $status = sanitizeInput($_POST['status'] ?? ');
     if (!in_array($status, ['active', 'inactive', 'banned', 'pending'], true)) {
         jsonResponse(['success' => false, 'message' => 'Invalid status.']);
     }
@@ -124,7 +124,7 @@ function handleUpdateUserStatus(): never {
 
 function handleUpdateContestStatus(): never {
     $contestId = (int)($_POST['contest_id'] ?? 0);
-    $status    = sanitizeInput($_POST['status'] ?? '');
+    $status    = sanitizeInput($_POST['status'] ?? ');
     if (!in_array($status, ['draft', 'active', 'expired', 'cancelled'], true)) {
         jsonResponse(['success' => false, 'message' => 'Invalid status.']);
     }
@@ -145,7 +145,7 @@ function handleProcessPayout(): never {
         $payout = $stmt->fetch();
         if (!$payout) jsonResponse(['success' => false, 'message' => 'Payout not found or not claimable.']);
 
-        $secretKey = getSetting('paystack_secret_key', '');
+        $secretKey = getSetting('paystack_secret_key', ');
         if (defined('PAYSTACK_SECRET_KEY') && PAYSTACK_SECRET_KEY) {
             $secretKey = PAYSTACK_SECRET_KEY;
         }
@@ -222,8 +222,8 @@ function handleDisqualifyEntry(): never {
 
 function handleUpdatePayoutStatus(): never {
     $payoutId = (int)($_POST['payout_id'] ?? 0);
-    $status   = sanitizeInput($_POST['status'] ?? '');
-    $reason   = sanitizeInput($_POST['reason'] ?? '');
+    $status   = sanitizeInput($_POST['status'] ?? ');
+    $reason   = sanitizeInput($_POST['reason'] ?? ');
 
     if (!in_array($status, ['pending', 'claimed', 'processing', 'completed', 'failed', 'rejected', 'cancelled'], true)) {
         jsonResponse(['success' => false, 'message' => 'Invalid status.']);
@@ -285,8 +285,8 @@ function handleUpdatePayoutStatus(): never {
 
 function handleReviewKyc(): never {
     $targetUserId = (int)($_POST['user_id'] ?? 0);
-    $status = sanitizeInput($_POST['status'] ?? '');
-    $reason = sanitizeInput($_POST['reason'] ?? '');
+    $status = sanitizeInput($_POST['status'] ?? ');
+    $reason = sanitizeInput($_POST['reason'] ?? ');
 
     if (!in_array($status, ['approved', 'rejected'], true)) {
         jsonResponse(['success' => false, 'message' => 'Invalid status.']);
@@ -315,7 +315,7 @@ function handleReviewKyc(): never {
 
 function handleReturnToAdmin(): never {
     if (empty($_SESSION['impersonating']) || empty($_SESSION['admin_user_id'])) {
-        redirect('../../dashboard.php');
+        redirect('../../dashboard');
     }
 
     try {
@@ -327,7 +327,7 @@ function handleReturnToAdmin(): never {
         if (!$admin || $admin['role'] !== 'admin') {
              // Fallback logout if admin not found
              session_destroy();
-             redirect('../../admin/login.php');
+             redirect('../../admin/login');
         }
 
         $_SESSION['user_id'] = $admin['id'];
@@ -337,7 +337,7 @@ function handleReturnToAdmin(): never {
         unset($_SESSION['impersonating']);
         unset($_SESSION['admin_user_id']);
 
-        redirect('../../admin/index.php');
+        redirect('../../admin/index');
     } catch (Throwable $e) {
         redirect('../../dashboard.php?error=return_failed');
     }

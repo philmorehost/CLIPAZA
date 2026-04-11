@@ -8,7 +8,7 @@ require_once $root . '/includes/auth.php';
 
 if (session_status() === PHP_SESSION_NONE) session_start();
 
-$action = sanitizeInput($_REQUEST['action'] ?? '');
+$action = sanitizeInput($_REQUEST['action'] ?? ');
 
 switch ($action) {
     case 'fetch_youtube_info':
@@ -31,13 +31,13 @@ switch ($action) {
 }
 
 function handleFetchYoutubeInfo(): never {
-    $youtubeUrl = sanitizeInput($_REQUEST['youtube_url'] ?? '');
+    $youtubeUrl = sanitizeInput($_REQUEST['youtube_url'] ?? ');
     if (empty($youtubeUrl)) {
         jsonResponse(['success' => false, 'message' => 'YouTube URL is required.']);
     }
 
     // Extract video ID from URL
-    $videoId = '';
+    $videoId = ';
     if (preg_match('/[?&]v=([a-zA-Z0-9_-]{11})/', $youtubeUrl, $m)) {
         $videoId = $m[1];
     } elseif (preg_match('/youtu\.be\/([a-zA-Z0-9_-]{11})/', $youtubeUrl, $m)) {
@@ -51,7 +51,7 @@ function handleFetchYoutubeInfo(): never {
     }
 
     // Try YouTube Data API first if key configured
-    $apiKey = getSetting('youtube_api_key', '');
+    $apiKey = getSetting('youtube_api_key', ');
     if ($apiKey) {
         $apiUrl = 'https://www.googleapis.com/youtube/v3/videos?id=' . urlencode($videoId)
                 . '&key=' . urlencode($apiKey) . '&part=snippet&fields=items(snippet(title,thumbnails))';
@@ -63,8 +63,8 @@ function handleFetchYoutubeInfo(): never {
                 jsonResponse([
                     'success'       => true,
                     'video_id'      => $videoId,
-                    'title'         => $snippet['title'] ?? '',
-                    'thumbnail_url' => $snippet['thumbnails']['high']['url'] ?? $snippet['thumbnails']['default']['url'] ?? '',
+                    'title'         => $snippet['title'] ?? ',
+                    'thumbnail_url' => $snippet['thumbnails']['high']['url'] ?? $snippet['thumbnails']['default']['url'] ?? ',
                 ]);
             }
         }
@@ -89,7 +89,7 @@ function handleFetchYoutubeInfo(): never {
         jsonResponse([
             'success'       => true,
             'video_id'      => $videoId,
-            'title'         => $data['title'] ?? '',
+            'title'         => $data['title'] ?? ',
             'thumbnail_url' => $thumbUrl,
         ]);
     }
@@ -107,15 +107,15 @@ function handleSubmitClip(): never {
     if (empty($_SESSION['user_id'])) {
         jsonResponse(['success' => false, 'message' => 'You must be logged in to submit a clip.'], 401);
     }
-    if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) {
+    if (!verifyCsrfToken($_POST['csrf_token'] ?? ')) {
         jsonResponse(['success' => false, 'message' => 'Invalid request.'], 403);
     }
 
     $userId    = (int)$_SESSION['user_id'];
     $contestId = (int)($_POST['contest_id'] ?? 0);
-    $platform  = sanitizeInput($_POST['platform'] ?? '');
-    $clipUrl   = sanitizeInput($_POST['clip_url'] ?? '');
-    $ytHandle  = sanitizeInput($_POST['youtube_handle'] ?? '');
+    $platform  = sanitizeInput($_POST['platform'] ?? ');
+    $clipUrl   = sanitizeInput($_POST['clip_url'] ?? ');
+    $ytHandle  = sanitizeInput($_POST['youtube_handle'] ?? ');
 
     if (!in_array($platform, ['tiktok', 'instagram', 'facebook'], true)) {
         jsonResponse(['success' => false, 'message' => 'Invalid platform selected.']);
@@ -176,7 +176,7 @@ function handleUpdateViews(): never {
     if (empty($_SESSION['user_id'])) {
         jsonResponse(['success' => false, 'message' => 'Authentication required.'], 401);
     }
-    if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) {
+    if (!verifyCsrfToken($_POST['csrf_token'] ?? ')) {
         jsonResponse(['success' => false, 'message' => 'Invalid request.'], 403);
     }
 
@@ -202,13 +202,13 @@ function handleVerifyEngagement(): never {
     }
 
     $contestId = (int)($_POST['contest_id'] ?? 0);
-    $accessToken = $_SESSION['google_access_token'] ?? ''; // We need to store this in session during login
+    $accessToken = $_SESSION['google_access_token'] ?? '; // We need to store this in session during login
 
     if (empty($accessToken)) {
         jsonResponse(['success' => false, 'message' => 'YouTube access token not found. Please log in with Google again.']);
     }
 
-    require_once dirname(__DIR__) . '/includes/youtube.php';
+    require_once dirname(__DIR__) . '/includes/youtube';
 
     try {
         $db = db();
@@ -228,11 +228,11 @@ function handleVerifyEngagement(): never {
 
         // We need the creator's channel ID if subscription is required.
         // It's probably stored in user_profiles of the creator.
-        $creatorChannelId = '';
+        $creatorChannelId = ';
         if ($requirements['subscribe']) {
             $stmt = $db->prepare('SELECT youtube_channel_id FROM user_profiles WHERE user_id = ? LIMIT 1');
             $stmt->execute([$contest['creator_id']]);
-            $creatorChannelId = $stmt->fetchColumn() ?: '';
+            $creatorChannelId = $stmt->fetchColumn() ?: ';
         }
 
         $result = verifyYoutubeEngagement($accessToken, $contest['youtube_video_id'], $creatorChannelId, $requirements);
@@ -259,7 +259,7 @@ function handleVerifyEngagement(): never {
 
 function handleGetLeaderboard(): never {
     $contestId = (int)($_GET['contest_id'] ?? 0);
-    $platform  = sanitizeInput($_GET['platform'] ?? '');
+    $platform  = sanitizeInput($_GET['platform'] ?? ');
 
     if (!in_array($platform, ['tiktok', 'instagram', 'facebook'], true)) {
         jsonResponse(['success' => false, 'message' => 'Invalid platform.']);

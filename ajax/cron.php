@@ -8,7 +8,7 @@ require_once $root . '/includes/contest_manager.php';
 
 // Protected by a key
 $cronKey = getSetting('cron_key', 'default_cron_key');
-if (($_GET['key'] ?? '') !== $cronKey) {
+if (($_GET['key'] ?? ') !== $cronKey) {
     http_response_code(403);
     die('Unauthorized');
 }

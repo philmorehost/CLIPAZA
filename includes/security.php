@@ -103,7 +103,7 @@ class BruteForceProtection {
         string $ip,
         string $type = 'temporary',
         int $durationMinutes = 60,
-        string $reason = '',
+        string $reason = ',
         ?int $createdBy = null
     ): bool {
         try {
@@ -135,7 +135,7 @@ class BruteForceProtection {
         }
     }
 
-    public static function lockAccount(string $username, int $durationMinutes = 60, string $reason = ''): bool {
+    public static function lockAccount(string $username, int $durationMinutes = 60, string $reason = '): bool {
         try {
             $db = db();
             $until = date('Y-m-d H:i:s', time() + $durationMinutes * 60);
