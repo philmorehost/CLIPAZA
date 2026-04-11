@@ -24,12 +24,12 @@ $pag   = paginate(0, $perPage, 1);
 
 try {
     $db     = db();
-    $where  = '1=1';
+    $where  = "u.role != 'admin'";
     $params = [];
     if ($filter && in_array($filter, ['active','inactive','banned','pending'], true)) {
         $where .= ' AND u.status = ?'; $params[] = $filter;
     }
-    if ($roleF && in_array($roleF, ['admin','user','moderator'], true)) {
+    if ($roleF && in_array($roleF, ['user','moderator'], true)) {
         $where .= ' AND u.role = ?'; $params[] = $roleF;
     }
     if ($search) {
@@ -68,6 +68,7 @@ try {
             <li class="nav-item"><a href="kyc.php" class="nav-link"><span class="nav-icon">🪪</span> KYC</a></li>
             <li class="nav-item"><a href="security.php" class="nav-link"><span class="nav-icon">🛡</span> Security</a></li>
             <li class="nav-item"><a href="settings.php" class="nav-link"><span class="nav-icon">⚙</span> Settings</a></li>
+            <li class="nav-item"><a href="profile.php" class="nav-link"><span class="nav-icon">👤</span> Profile</a></li>
         </ul>
         <hr class="divider-dark mx-3">
         <ul class="nav flex-column">
@@ -97,7 +98,7 @@ try {
             </select>
             <select name="role" class="form-control-dark" style="max-width:140px;font-size:0.85rem" onchange="this.form.submit()">
                 <option value="">All Roles</option>
-                <?php foreach (['admin','user','moderator'] as $r): ?>
+                <?php foreach (['user','moderator'] as $r): ?>
                     <option value="<?= $r ?>" <?= $roleF===$r?'selected':'' ?>><?= ucfirst($r) ?></option>
                 <?php endforeach; ?>
             </select>

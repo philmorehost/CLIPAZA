@@ -45,6 +45,9 @@ switch ($action) {
     case 'reject_kyc':
         handleKycAction($action);
         break;
+    case 'update_admin_profile':
+        handleUpdateAdminProfile();
+        break;
     default:
         jsonResponse(['success' => false, 'message' => 'Unknown action.'], 400);
 }
@@ -446,5 +449,79 @@ function handleKycAction(string $action): never {
         }
     } catch (Throwable) {
         jsonResponse(['success' => false, 'message' => 'Action failed.']);
+    }
+}
+
+function handleUpdateAdminProfile(): never {
+    $adminId  = (int)($_SESSION['user_id'] ?? 0);
+    $field    = sanitizeInput($_POST['field'] ?? '');
+
+    try {
+        $db = db();
+
+        if ($field === 'info') {
+            $username = sanitizeInput($_POST['username'] ?? '');
+            $email    = sanitizeInput($_POST['email'] ?? '');
+
+            if ($username === '' || $email === '') {
+                jsonResponse(['success' => false, 'message' => 'Username and email are required.']);
+            }
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                jsonResponse(['success' => false, 'message' => 'Invalid email address.']);
+            }
+
+            // Check uniqueness (exclude current admin)
+            $chk = $db->prepare("SELECT id FROM users WHERE username = ? AND id != ? LIMIT 1");
+            $chk->execute([$username, $adminId]);
+            if ($chk->fetch()) {
+                jsonResponse(['success' => false, 'message' => 'Username is already taken.']);
+            }
+            $chk = $db->prepare("SELECT id FROM users WHERE email = ? AND id != ? LIMIT 1");
+            $chk->execute([$email, $adminId]);
+            if ($chk->fetch()) {
+                jsonResponse(['success' => false, 'message' => 'Email is already in use.']);
+            }
+
+            $db->prepare("UPDATE users SET username = ?, email = ?, updated_at = NOW() WHERE id = ? AND role = 'admin'")
+               ->execute([$username, $email, $adminId]);
+
+            // Refresh session username
+            $_SESSION['username'] = $username;
+
+            jsonResponse(['success' => true, 'message' => 'Profile updated successfully.']);
+
+        } elseif ($field === 'password') {
+            $currentPw  = $_POST['current_password'] ?? '';
+            $newPw      = $_POST['new_password'] ?? '';
+            $confirmPw  = $_POST['confirm_password'] ?? '';
+
+            if ($currentPw === '' || $newPw === '' || $confirmPw === '') {
+                jsonResponse(['success' => false, 'message' => 'All password fields are required.']);
+            }
+            if ($newPw !== $confirmPw) {
+                jsonResponse(['success' => false, 'message' => 'New passwords do not match.']);
+            }
+            if (strlen($newPw) < 8) {
+                jsonResponse(['success' => false, 'message' => 'New password must be at least 8 characters.']);
+            }
+
+            $stmt = $db->prepare("SELECT password FROM users WHERE id = ? AND role = 'admin' LIMIT 1");
+            $stmt->execute([$adminId]);
+            $row = $stmt->fetch();
+
+            if (!$row || !password_verify($currentPw, $row['password'])) {
+                jsonResponse(['success' => false, 'message' => 'Current password is incorrect.']);
+            }
+
+            $hash = password_hash($newPw, PASSWORD_DEFAULT);
+            $db->prepare("UPDATE users SET password = ?, updated_at = NOW() WHERE id = ?")->execute([$hash, $adminId]);
+
+            jsonResponse(['success' => true, 'message' => 'Password changed successfully.']);
+
+        } else {
+            jsonResponse(['success' => false, 'message' => 'Unknown profile field.']);
+        }
+    } catch (Throwable) {
+        jsonResponse(['success' => false, 'message' => 'Profile update failed.']);
     }
 }

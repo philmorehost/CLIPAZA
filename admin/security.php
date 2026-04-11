@@ -113,6 +113,7 @@ function checked(array $settings, string $key, string $trueVal = '1'): string {
             <li class="nav-item"><a href="users.php" class="nav-link"><span class="nav-icon">👥</span> Users</a></li>
             <li class="nav-item"><a href="contests.php" class="nav-link"><span class="nav-icon">🏆</span> Contests</a></li>
             <li class="nav-item"><a href="settings.php" class="nav-link"><span class="nav-icon">⚙</span> Settings</a></li>
+            <li class="nav-item"><a href="profile.php" class="nav-link"><span class="nav-icon">👤</span> Profile</a></li>
         </ul>
         <hr class="divider-dark mx-3">
         <ul class="nav flex-column">
