@@ -3,7 +3,7 @@ declare(strict_types=1);
 session_start();
 
 $root = dirname(__DIR__);
-if (file_exists($root . '/config/config')) {
+if (file_exists($root . '/config/config.php')) {
     require_once $root . '/config/config.php';
     require_once $root . '/includes/db.php';
     require_once $root . '/includes/functions.php';
@@ -14,5 +14,5 @@ if (file_exists($root . '/config/config')) {
     session_destroy();
 }
 
-header('Location: login');
+header('Location: login.php');
 exit;

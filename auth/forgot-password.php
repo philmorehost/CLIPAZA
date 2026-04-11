@@ -12,13 +12,13 @@ if (session_status() === PHP_SESSION_NONE) session_start();
 if (!empty($_SESSION['user_id'])) redirect('/dashboard');
 
 $submitted = false;
-$error     = ';
+$error     = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (!verifyCsrfToken($_POST['csrf_token'] ?? ')) {
+    if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) {
         $error = 'Invalid request. Please try again.';
     } else {
-        $email = sanitizeInput($_POST['email'] ?? ');
+        $email = sanitizeInput($_POST['email'] ?? '');
         if (!isValidEmail($email)) {
             $error = 'Please enter a valid email address.';
         } else {
@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'INSERT INTO password_resets (email, token, expires_at) VALUES (?, ?, ?)'
                     )->execute([$email, $token, $expiry]);
 
-                    $siteUrl  = defined('SITE_URL') ? SITE_URL : getSetting('site_url', ');
+                    $siteUrl  = defined('SITE_URL') ? SITE_URL : getSetting('site_url', '');
                     $resetUrl = rtrim($siteUrl, '/') . '/auth/reset-password?token=' . urlencode($token);
                     $siteName = getSetting('site_name', 'Clipaza');
                     $username = e($user['username']);
@@ -67,7 +67,7 @@ renderHead('Forgot Password');
 <div class="public-page d-flex align-items-center justify-content-center" style="min-height:100vh;background:#000;padding:40px 16px">
   <div class="w-100" style="max-width:400px">
     <div class="text-center mb-4">
-      <a href="index" class="text-decoration-none">
+      <a href="/" class="text-decoration-none">
         <span style="font-size:1.5rem;font-weight:900;color:#fff;letter-spacing:-0.5px">Clipaza<span style="color:var(--accent)">.</span></span>
       </a>
     </div>
@@ -78,7 +78,7 @@ renderHead('Forgot Password');
           <div style="font-size:2.5rem;margin-bottom:12px">📬</div>
           <h5 class="fw-700 mb-2">Check your inbox</h5>
           <p class="text-muted" style="font-size:0.9rem">If an account exists for that email, we've sent a password reset link. It expires in 1 hour.</p>
-          <a href="auth/login" class="btn btn-outline-accent mt-2">Back to Login</a>
+          <a href="/auth/login" class="btn btn-outline-accent mt-2">Back to Login</a>
         </div>
       <?php else: ?>
         <h5 class="fw-700 mb-2">Reset your password</h5>
@@ -100,7 +100,7 @@ renderHead('Forgot Password');
     </div>
 
     <p class="text-center text-muted mt-3" style="font-size:0.85rem">
-      Remembered it? <a href="auth/login" class="text-accent text-decoration-none">Sign in</a>
+      Remembered it? <a href="/auth/login" class="text-accent text-decoration-none">Sign in</a>
     </p>
   </div>
 </div>

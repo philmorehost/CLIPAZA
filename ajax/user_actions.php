@@ -10,11 +10,11 @@ if (session_status() === PHP_SESSION_NONE) session_start();
 if (empty($_SESSION['user_id'])) {
     jsonResponse(['success' => false, 'message' => 'Authentication required.'], 401);
 }
-if (!verifyCsrfToken($_POST['csrf_token'] ?? ')) {
+if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) {
     jsonResponse(['success' => false, 'message' => 'Invalid CSRF token.'], 403);
 }
 
-$action = sanitizeInput($_POST['action'] ?? ');
+$action = sanitizeInput($_POST['action'] ?? '');
 $userId = (int)$_SESSION['user_id'];
 
 switch ($action) {
@@ -43,28 +43,23 @@ function handleSwitchMode(int $userId): never {
 
         $newMode = ($profile['active_mode'] ?? 'clipper') === 'clipper' ? 'creator' : 'clipper';
 
-        if ($profile) {
-            $db->prepare('UPDATE user_profiles SET active_mode = ? WHERE user_id = ?')
-               ->execute([$newMode, $userId]);
-        } else {
-            $db->prepare('INSERT INTO user_profiles (user_id, active_mode) VALUES (?, ?)')
-               ->execute([$userId, $newMode]);
-        }
+        $db->prepare('UPDATE user_profiles SET active_mode = ? WHERE user_id = ?')
+           ->execute([$newMode, $userId]);
 
         $_SESSION['user_mode'] = $newMode;
         jsonResponse(['success' => true, 'new_mode' => $newMode]);
-    } catch (Throwable $e) {
-        jsonResponse(['success' => false, 'message' => 'Failed to switch mode: ' . $e->getMessage()]);
+    } catch (Throwable) {
+        jsonResponse(['success' => false, 'message' => 'Failed to switch mode.']);
     }
 }
 
 function handleUpdateProfile(int $userId): never {
-    $displayName     = sanitizeInput($_POST['display_name'] ?? ');
-    $bio             = sanitizeInput($_POST['bio'] ?? ');
-    $youtubeHandle   = sanitizeInput($_POST['youtube_handle'] ?? ');
-    $tiktokHandle    = sanitizeInput($_POST['tiktok_handle'] ?? ');
-    $instagramHandle = sanitizeInput($_POST['instagram_handle'] ?? ');
-    $facebookHandle  = sanitizeInput($_POST['facebook_handle'] ?? ');
+    $displayName     = sanitizeInput($_POST['display_name'] ?? '');
+    $bio             = sanitizeInput($_POST['bio'] ?? '');
+    $youtubeHandle   = sanitizeInput($_POST['youtube_handle'] ?? '');
+    $tiktokHandle    = sanitizeInput($_POST['tiktok_handle'] ?? '');
+    $instagramHandle = sanitizeInput($_POST['instagram_handle'] ?? '');
+    $facebookHandle  = sanitizeInput($_POST['facebook_handle'] ?? '');
 
     try {
         $db = db();
@@ -105,11 +100,11 @@ function handleToggleNotifications(int $userId): never {
 }
 
 function handleSavePaystackSettings(): never {
-    if (($_SESSION['user_role'] ?? ') !== 'admin') {
+    if (($_SESSION['user_role'] ?? '') !== 'admin') {
         jsonResponse(['success' => false, 'message' => 'Admin access required.'], 403);
     }
-    $pubKey    = sanitizeInput($_POST['paystack_public_key'] ?? ');
-    $secretKey = sanitizeInput($_POST['paystack_secret_key'] ?? ');
+    $pubKey    = sanitizeInput($_POST['paystack_public_key'] ?? '');
+    $secretKey = sanitizeInput($_POST['paystack_secret_key'] ?? '');
     try {
         $db = db();
         foreach ([['paystack_public_key', $pubKey], ['paystack_secret_key', $secretKey]] as [$k, $v]) {

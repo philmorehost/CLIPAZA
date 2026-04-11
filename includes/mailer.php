@@ -12,16 +12,16 @@ class Mailer {
     private string $fromName;
 
     public function __construct() {
-        $this->smtpHost  = defined('SMTP_HOST')       ? SMTP_HOST       : ';
+        $this->smtpHost  = defined('SMTP_HOST')       ? SMTP_HOST       : '';
         $this->smtpPort  = defined('SMTP_PORT')        ? (int)SMTP_PORT  : 587;
-        $this->smtpUser  = defined('SMTP_USER')        ? SMTP_USER       : ';
-        $this->smtpPass  = defined('SMTP_PASS')        ? SMTP_PASS       : ';
+        $this->smtpUser  = defined('SMTP_USER')        ? SMTP_USER       : '';
+        $this->smtpPass  = defined('SMTP_PASS')        ? SMTP_PASS       : '';
         $this->encryption = defined('SMTP_ENCRYPTION') ? SMTP_ENCRYPTION : 'tls';
         $this->fromEmail = defined('ADMIN_EMAIL')      ? ADMIN_EMAIL     : $this->smtpUser;
         $this->fromName  = defined('SITE_NAME')        ? SITE_NAME       : 'Clipaza';
     }
 
-    public function send(string $to, string $subject, string $htmlBody, string $textBody = '): bool {
+    public function send(string $to, string $subject, string $htmlBody, string $textBody = ''): bool {
         try {
             $this->queueEmail($to, $subject, $htmlBody);
             return $this->sendDirect($to, $subject, $htmlBody, $textBody);
@@ -30,12 +30,12 @@ class Mailer {
         }
     }
 
-    private function sendDirect(string $to, string $subject, string $htmlBody, string $textBody = '): bool {
+    private function sendDirect(string $to, string $subject, string $htmlBody, string $textBody = ''): bool {
         if (empty($this->smtpHost)) {
             return $this->sendViaMail($to, $subject, $htmlBody);
         }
 
-        $boundary = md5(uniqid(', true));
+        $boundary = md5(uniqid('', true));
         $headers  = implode("\r\n", [
             'MIME-Version: 1.0',
             "From: {$this->fromName} <{$this->fromEmail}>",
@@ -70,63 +70,6 @@ class Mailer {
         } catch (Throwable) {}
     }
 
-    public function sendPayoutUpdate(string $to, string $username, string $status, string $amount, string $reason = '): bool {
-        $site = defined('SITE_NAME') ? SITE_NAME : 'Clipaza';
-        $subject = "[{$site}] Payout Request Update: " . ucfirst($status);
-        $statusColor = match($status) {
-            'completed' => '#00cc66',
-            'rejected' => '#ff4444',
-            'cancelled' => '#ffaa00',
-            default => '#CCFF00'
-        };
-
-        $html = "
-        <div style='font-family:sans-serif;max-width:600px;margin:0 auto;background:#111;color:#fff;padding:32px;border-radius:12px;'>
-            <h2 style='color:#CCFF00;margin-bottom:16px;'>{$site}</h2>
-            <p>Hello <strong>" . htmlspecialchars($username, ENT_QUOTES) . "</strong>,</p>
-            <p>Your payout request of <strong>₦" . number_format((float)$amount, 2) . "</strong> has been marked as <span style='color:{$statusColor};font-weight:700;'>".strtoupper($status)."</span>.</p>";
-
-        if ($reason) {
-            $html .= "<p style='background:#222;padding:15px;border-radius:8px;'><strong>Reason:</strong> " . htmlspecialchars($reason, ENT_QUOTES) . "</p>";
-        }
-
-        if ($status === 'rejected') {
-            $html .= "<p>The funds have been returned to your wallet balance.</p>";
-        }
-
-        $html .= "
-            <hr style='border-color:#ccc;margin:24px 0;'>
-            <p style='color:#ccc;font-size:0.85em;'>This is an automated message from {$site}.</p>
-        </div>";
-        return $this->send($to, $subject, $html);
-    }
-
-    public function sendKycUpdate(string $to, string $username, string $status, string $reason = '): bool {
-        $site = defined('SITE_NAME') ? SITE_NAME : 'Clipaza';
-        $subject = "[{$site}] KYC Verification Update: " . ucfirst($status);
-        $statusColor = ($status === 'approved') ? '#00cc66' : '#ff4444';
-
-        $html = "
-        <div style='font-family:sans-serif;max-width:600px;margin:0 auto;background:#111;color:#fff;padding:32px;border-radius:12px;'>
-            <h2 style='color:#CCFF00;margin-bottom:16px;'>{$site}</h2>
-            <p>Hello <strong>" . htmlspecialchars($username, ENT_QUOTES) . "</strong>,</p>
-            <p>Your identity verification (KYC) request has been <span style='color:{$statusColor};font-weight:700;'>".strtoupper($status)."</span>.</p>";
-
-        if ($reason) {
-            $html .= "<p style='background:#222;padding:15px;border-radius:8px;'><strong>Feedback:</strong> " . htmlspecialchars($reason, ENT_QUOTES) . "</p>";
-        }
-
-        if ($status === 'approved') {
-            $html .= "<p>You can now request payouts from your wallet to your verified bank account.</p>";
-        }
-
-        $html .= "
-            <hr style='border-color:#ccc;margin:24px 0;'>
-            <p style='color:#ccc;font-size:0.85em;'>This is an automated message from {$site}.</p>
-        </div>";
-        return $this->send($to, $subject, $html);
-    }
-
     public function sendLoginNotification(string $to, string $username, string $ip): bool {
         $site    = htmlspecialchars(defined('SITE_NAME') ? SITE_NAME : 'Clipaza', ENT_QUOTES);
         $subject = "[{$site}] New login to your account";
@@ -138,8 +81,8 @@ class Mailer {
             <p><strong>IP Address:</strong> " . htmlspecialchars($ip, ENT_QUOTES) . "</p>
             <p><strong>Time:</strong> " . htmlspecialchars(date('Y-m-d H:i:s T'), ENT_QUOTES) . "</p>
             <p>If this was not you, please contact support immediately.</p>
-            <hr style='border-color:#ccc;margin:24px 0;'>
-            <p style='color:#ccc;font-size:0.85em;'>This is an automated message from {$site}.</p>
+            <hr style='border-color:#555;margin:24px 0;'>
+            <p style='color:#888;font-size:0.85em;'>This is an automated message from {$site}.</p>
         </div>";
         return $this->send($to, $subject, $html);
     }

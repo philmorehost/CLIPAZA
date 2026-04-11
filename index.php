@@ -25,7 +25,7 @@ if (version_compare(PHP_VERSION, '8.0.0', '<')) {
         .box{background:#fff;border-left:4px solid #e74c3c;border-radius:4px;
              padding:2rem 2.5rem;max-width:480px;box-shadow:0 2px 8px rgba(0,0,0,.1)}
         h2{margin-top:0;color:#e74c3c}
-        p{line-height:1.6;color:#ccc}
+        p{line-height:1.6;color:#888}
         code{background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:.9em}
     </style>
 </head>
@@ -42,7 +42,7 @@ if (version_compare(PHP_VERSION, '8.0.0', '<')) {
 }
 
 $root = __DIR__;
-$configFile = $root . '/config/config';
+$configFile = $root . '/config/config.php';
 $lockFile   = $root . '/installer.lock';
 
 // If not yet installed, redirect to the installer
@@ -55,31 +55,31 @@ $siteName    = 'Clipaza';
 $siteTagline = 'Earn Money Clipping Videos';
 
 // SEO / branding settings
-$seoTitle       = ';
+$seoTitle       = '';
 $seoDescription = 'Turn viral moments into real income. Clipaza rewards creators and clippers for finding and sharing the best video clips.';
-$seoKeywords    = ';
-$ogImageUrl     = ';
-$customHeader   = ';
-$adsenseCode    = ';
-$siteFavicon    = ';
-$siteLogo       = ';
+$seoKeywords    = '';
+$ogImageUrl     = '';
+$customHeader   = '';
+$adsenseCode    = '';
+$siteFavicon    = '';
+$siteLogo       = '';
 
 if (file_exists($configFile)) {
     require_once $configFile;
     require_once $root . '/includes/db.php';
     require_once $root . '/includes/functions.php';
     $siteName       = getSetting('site_name', 'Clipaza');
-    $seoTitle       = getSetting('seo_title', ');
+    $seoTitle       = getSetting('seo_title', '');
     $seoDescription = getSetting('seo_description', $seoDescription);
-    $seoKeywords    = getSetting('seo_keywords', ');
-    $ogImageUrl     = getSetting('og_image_url', ');
-    $customHeader   = getSetting('custom_header_code', ');
-    $adsenseCode    = getSetting('adsense_code', ');
-    $siteFavicon    = getSetting('site_favicon', ');
-    $siteLogo       = getSetting('site_logo', ');
+    $seoKeywords    = getSetting('seo_keywords', '');
+    $ogImageUrl     = getSetting('og_image_url', '');
+    $customHeader   = getSetting('custom_header_code', '');
+    $adsenseCode    = getSetting('adsense_code', '');
+    $siteFavicon    = getSetting('site_favicon', '');
+    $siteLogo       = getSetting('site_logo', '');
 }
 
-$pageTitle = $seoTitle !== ' ? $seoTitle : (htmlspecialchars($siteName) . ' — Earn Money Clipping Videos');
+$pageTitle = $seoTitle !== '' ? $seoTitle : (htmlspecialchars($siteName) . ' — Earn Money Clipping Videos');
 
 // Load active contests for trending section
 $trendingContests = [];
@@ -100,10 +100,10 @@ if (file_exists($configFile)) {
 }
 
 $waitlistSuccess = false;
-$waitlistError   = ';
+$waitlistError   = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['waitlist_email'])) {
-    $email = filter_var(trim($_POST['waitlist_email'] ?? '), FILTER_VALIDATE_EMAIL);
+    $email = filter_var(trim($_POST['waitlist_email'] ?? ''), FILTER_VALIDATE_EMAIL);
     if ($email && file_exists($configFile)) {
         try {
             $db   = db();
@@ -130,30 +130,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['waitlist_email'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($pageTitle) ?></title>
     <meta name="description" content="<?= htmlspecialchars($seoDescription) ?>">
-    <?php if ($seoKeywords !== '): ?>
+    <?php if ($seoKeywords !== ''): ?>
     <meta name="keywords" content="<?= htmlspecialchars($seoKeywords) ?>">
     <?php endif; ?>
-    <?php if ($ogImageUrl !== '): ?>
+    <?php if ($ogImageUrl !== ''): ?>
     <meta property="og:image" content="<?= htmlspecialchars($ogImageUrl) ?>">
     <meta property="og:title" content="<?= htmlspecialchars($pageTitle) ?>">
     <meta property="og:description" content="<?= htmlspecialchars($seoDescription) ?>">
     <meta property="og:type" content="website">
     <?php endif; ?>
     <meta name="twitter:card" content="summary_large_image">
-    <?php if ($siteFavicon !== '): ?>
+    <?php if ($siteFavicon !== ''): ?>
     <link rel="icon" href="<?= htmlspecialchars($siteFavicon) ?>">
     <?php endif; ?>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="assets/css/style.css" rel="stylesheet">
-    <?php if ($customHeader !== '): ?>
+    <link href="/assets/css/style.css" rel="stylesheet">
+    <?php if ($customHeader !== ''): ?>
     <?= $customHeader ?>
     <?php endif; ?>
 </head>
 <body>
-<?php if ($adsenseCode !== '): ?>
+<?php if ($adsenseCode !== ''): ?>
 <?= $adsenseCode ?>
 <?php endif; ?>
 
@@ -161,24 +161,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['waitlist_email'])) {
 <nav class="navbar-clipaza">
     <div class="container">
         <div class="d-flex align-items-center justify-content-between">
-            <a href="index" class="navbar-brand-clipaza">
-                <?php if ($siteLogo !== '): ?>
+            <a href="/" class="navbar-brand-clipaza">
+                <?php if ($siteLogo !== ''): ?>
                 <img src="<?= htmlspecialchars($siteLogo) ?>" alt="<?= htmlspecialchars($siteName) ?>" style="height:36px;vertical-align:middle;">
                 <?php else: ?>
                 Clipa<span>za</span>
                 <?php endif; ?>
             </a>
             <div class="navbar-links d-none d-md-flex align-items-center gap-4">
-                <a href="contests" class="nav-text-link">Browse Contests</a>
+                <a href="/contests" class="nav-text-link">Browse Contests</a>
                 <a href="#features" class="nav-text-link">Features</a>
                 <a href="#how-it-works" class="nav-text-link">How It Works</a>
             </div>
             <div class="d-flex gap-2 align-items-center">
                 <?php if (file_exists($configFile) && !empty($_SESSION['user_id'])): ?>
-                    <a href="dashboard" class="btn btn-sm btn-outline-accent" style="padding:8px 16px;font-size:0.85rem">Dashboard</a>
+                    <a href="/dashboard" class="btn btn-sm btn-outline-accent" style="padding:8px 16px;font-size:0.85rem">Dashboard</a>
                 <?php else: ?>
-                    <a href="auth/login" class="btn btn-sm" style="padding:8px 16px;font-size:0.85rem;background:transparent;color:#ccc;border:1px solid #888">Login</a>
-                    <a href="auth/register" class="btn btn-accent" style="padding:10px 22px;font-size:0.875rem;">Sign Up Free</a>
+                    <a href="/auth/login" class="btn btn-sm" style="padding:8px 16px;font-size:0.85rem;background:transparent;color:#ccc;border:1px solid #555">Login</a>
+                    <a href="/auth/register" class="btn btn-accent" style="padding:10px 22px;font-size:0.875rem;">Sign Up Free</a>
                 <?php endif; ?>
             </div>
         </div>
@@ -213,7 +213,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['waitlist_email'])) {
 
             <form method="POST" class="lp-email-form">
                 <input type="email" name="waitlist_email" placeholder="Enter your email address" required
-                       value="<?= isset($_POST['waitlist_email']) && !$waitlistSuccess ? htmlspecialchars($_POST['waitlist_email']) : ' ?>">
+                       value="<?= isset($_POST['waitlist_email']) && !$waitlistSuccess ? htmlspecialchars($_POST['waitlist_email']) : '' ?>">
                 <button type="submit" class="btn btn-accent pulse-accent">Join Waitlist</button>
             </form>
             <p class="lp-form-note">No spam. Unsubscribe anytime. 🔒</p>
@@ -247,19 +247,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['waitlist_email'])) {
                 <div class="lp-section-eyebrow">Live Now</div>
                 <h2 class="lp-section-title" style="font-size:clamp(1.5rem,3vw,2rem);margin-bottom:0">Trending <span class="text-accent">Contests</span></h2>
             </div>
-            <a href="contests" class="btn btn-outline-accent" style="white-space:nowrap">View All →</a>
+            <a href="/contests" class="btn btn-outline-accent" style="white-space:nowrap">View All →</a>
         </div>
         <div class="row g-4">
         <?php if (!empty($trendingContests)): ?>
             <?php foreach ($trendingContests as $tc):
-                $tcPlatforms = array_filter(explode(',', $tc['platforms'] ?? '));
-                $platformIcons = implode(', array_map(fn($p) => match(trim($p)) {
+                $tcPlatforms = array_filter(explode(',', $tc['platforms'] ?? ''));
+                $platformIcons = implode('', array_map(fn($p) => match(trim($p)) {
                     'tiktok'=>'<span title="TikTok">🎵</span>',
                     'instagram'=>'<span title="Instagram">📸</span>',
                     'facebook'=>'<span title="Facebook">📘</span>',
-                    default=>'
+                    default=>''
                 }, $tcPlatforms));
-                $timeLeft = ';
+                $timeLeft = '';
                 if (!empty($tc['end_date'])) {
                     $secs = strtotime($tc['end_date']) - time();
                     if ($secs > 0) {
@@ -269,7 +269,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['waitlist_email'])) {
                 }
             ?>
             <div class="col-6 col-md-3">
-                <a href="contest?id=<?= (int)$tc['id'] ?>" class="text-decoration-none">
+                <a href="/contest?id=<?= (int)$tc['id'] ?>" class="text-decoration-none">
                     <div class="trend-card">
                         <?php if (!empty($tc['youtube_thumbnail'])): ?>
                             <img src="<?= htmlspecialchars($tc['youtube_thumbnail']) ?>" alt="" style="width:100%;height:110px;object-fit:cover">
@@ -297,14 +297,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['waitlist_email'])) {
                 <div class="trend-card" style="opacity:0.5">
                     <div style="width:100%;height:110px;background:#0d0d0d;display:flex;align-items:center;justify-content:center;font-size:2rem">🎬</div>
                     <div class="p-3">
-                        <div class="fw-700 mb-1" style="font-size:0.82rem;color:#ccc">Coming Soon</div>
+                        <div class="fw-700 mb-1" style="font-size:0.82rem;color:#888">Coming Soon</div>
                         <div style="color:var(--accent);font-weight:900;font-size:0.88rem">₦0</div>
                     </div>
                 </div>
             </div>
             <?php endfor; ?>
             <div class="col-12 text-center mt-2">
-                <p class="text-muted" style="font-size:0.85rem">No active contests yet. <a href="auth/register" class="text-accent text-decoration-none">Be the first creator →</a></p>
+                <p class="text-muted" style="font-size:0.85rem">No active contests yet. <a href="/auth/register" class="text-accent text-decoration-none">Be the first creator →</a></p>
             </div>
         <?php endif; ?>
         </div>
@@ -465,13 +465,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['waitlist_email'])) {
                 ['rank'=>1,  'emoji'=>'🥇', 'name'=>'ClipKing_NG',    'clips'=>24, 'views'=>'2.3M', 'prize'=>'₦80,000',  'color'=>'#CCFF00'],
                 ['rank'=>2,  'emoji'=>'🥈', 'name'=>'ViralVault',     'clips'=>19, 'views'=>'1.7M', 'prize'=>'₦45,000',  'color'=>'#aaaaaa'],
                 ['rank'=>3,  'emoji'=>'🥉', 'name'=>'QuickCutPro',    'clips'=>15, 'views'=>'980K',  'prize'=>'₦25,000',  'color'=>'#cd7f32'],
-                ['rank'=>4,  'emoji'=>',   'name'=>'NaijaClipper',   'clips'=>12, 'views'=>'610K',  'prize'=>'₦10,000',  'color'=>'#888'],
-                ['rank'=>5,  'emoji'=>',   'name'=>'ShortFormStar',  'clips'=>11, 'views'=>'540K',  'prize'=>'₦8,000',   'color'=>'#888'],
+                ['rank'=>4,  'emoji'=>'',   'name'=>'NaijaClipper',   'clips'=>12, 'views'=>'610K',  'prize'=>'₦10,000',  'color'=>'#888'],
+                ['rank'=>5,  'emoji'=>'',   'name'=>'ShortFormStar',  'clips'=>11, 'views'=>'540K',  'prize'=>'₦8,000',   'color'=>'#888'],
             ];
             foreach ($lbData as $row):
             ?>
             <div class="lp-lb-row">
-                <span class="lp-lb-rank" style="color:<?= $row['color'] ?>;"><?= $row['emoji'] !== ' ? $row['emoji'] : '#' . $row['rank'] ?></span>
+                <span class="lp-lb-rank" style="color:<?= $row['color'] ?>;"><?= $row['emoji'] !== '' ? $row['emoji'] : '#' . $row['rank'] ?></span>
                 <span class="lp-lb-name"><?= htmlspecialchars($row['name']) ?></span>
                 <span class="lp-lb-meta"><?= $row['clips'] ?> clips</span>
                 <span class="lp-lb-meta"><?= $row['views'] ?> views</span>
@@ -479,7 +479,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['waitlist_email'])) {
             </div>
             <?php endforeach; ?>
             <div class="lp-lb-footer">
-                <em style="color:#ccc;font-size:0.8rem;">* Sample data for illustration purposes</em>
+                <em style="color:#888;font-size:0.8rem;">* Sample data for illustration purposes</em>
             </div>
         </div>
     </div>
@@ -511,13 +511,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['waitlist_email'])) {
     <div class="container">
         <div class="d-flex flex-column flex-md-row align-items-center justify-content-between gap-3">
             <div class="lp-footer-logo">
-                <?php if ($siteLogo !== '): ?>
+                <?php if ($siteLogo !== ''): ?>
                 <img src="<?= htmlspecialchars($siteLogo) ?>" alt="<?= htmlspecialchars($siteName) ?>" style="height:28px;">
                 <?php else: ?>
                 Clipa<span>za</span>
                 <?php endif; ?>
             </div>
-            <p style="font-size:0.8rem;color:#ccc;margin:0;">© <?= date('Y') ?> <?= htmlspecialchars($siteName) ?>. All rights reserved.</p>
+            <p style="font-size:0.8rem;color:#888;margin:0;">© <?= date('Y') ?> <?= htmlspecialchars($siteName) ?>. All rights reserved.</p>
             <div class="d-flex gap-4 align-items-center flex-wrap justify-content-center">
                 <a href="#" class="lp-footer-link">Privacy</a>
                 <a href="#" class="lp-footer-link">Terms</a>
@@ -534,6 +534,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['waitlist_email'])) {
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="assets/js/main.js"></script>
+<script src="/assets/js/main.js"></script>
 </body>
 </html>

@@ -11,10 +11,10 @@ if (empty($dbConfig)) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admin_next'])) {
-    $username  = trim($_POST['admin_username'] ?? ');
-    $email     = trim($_POST['admin_email'] ?? ');
-    $password  = $_POST['admin_password'] ?? ';
-    $password2 = $_POST['admin_password2'] ?? ';
+    $username  = trim($_POST['admin_username'] ?? '');
+    $email     = trim($_POST['admin_email'] ?? '');
+    $password  = $_POST['admin_password'] ?? '';
+    $password2 = $_POST['admin_password2'] ?? '';
 
     if (strlen($username) < 3)  $errors[] = 'Username must be at least 3 characters.';
     if (!preg_match('/^[a-zA-Z0-9_]+$/', $username)) $errors[] = 'Username can only contain letters, numbers, and underscores.';
@@ -59,10 +59,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admin_next'])) {
     </svg>
     <h2 style="font-size:1.5rem;font-weight:800;color:#fff;margin-bottom:8px;">Installation Complete!</h2>
     <p style="color:#666;margin-bottom:32px;">Clipaza has been successfully installed and configured.</p>
-    <a href="../admin/login" class="btn btn-accent btn-lg pulse-accent">
+    <a href="../admin/login.php" class="btn btn-accent btn-lg pulse-accent">
         Go to Admin Panel →
     </a>
-    <p style="color:#ccc;font-size:0.8rem;margin-top:16px;">
+    <p style="color:#888;font-size:0.8rem;margin-top:16px;">
         ⚠️ For security, please delete the <code style="color:#CCFF00;">/install</code> directory from your server.
     </p>
 </div>
@@ -84,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admin_next'])) {
     <div class="mb-3">
         <label class="form-label-dark">Admin Email</label>
         <input type="email" name="admin_email" class="form-control form-control-dark"
-               value="<?= htmlspecialchars($_POST['admin_email'] ?? ($_SESSION['site_config']['adminEmail'] ?? ')) ?>" required>
+               value="<?= htmlspecialchars($_POST['admin_email'] ?? ($_SESSION['site_config']['adminEmail'] ?? '')) ?>" required>
     </div>
     <div class="mb-3">
         <label class="form-label-dark">Password</label>
@@ -101,7 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admin_next'])) {
     </div>
 
     <div class="d-flex justify-content-between align-items-center mt-4">
-        <a href="?step=3" class="btn" style="color:#ccc;background:rgba(255,255,255,0.05);border-radius:8px;padding:10px 20px;">← Back</a>
+        <a href="?step=3" class="btn" style="color:#888;background:rgba(255,255,255,0.05);border-radius:8px;padding:10px 20px;">← Back</a>
         <button type="submit" name="admin_next" value="1" class="btn btn-accent">Complete Installation →</button>
     </div>
 </form>

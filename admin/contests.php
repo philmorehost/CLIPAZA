@@ -14,7 +14,7 @@ requireAdmin();
 $csrf    = generateCsrfToken();
 $page    = max(1, (int)($_GET['page'] ?? 1));
 $perPage = 20;
-$filter  = sanitizeInput($_GET['status'] ?? ');
+$filter  = sanitizeInput($_GET['status'] ?? '');
 
 $contests = [];
 $total    = 0;
@@ -58,25 +58,23 @@ try {
     <div class="sidebar-brand">Clipa<span>za</span></div>
     <div class="sidebar-nav">
         <ul class="nav flex-column">
-            <li class="nav-item"><a href="index" class="nav-link"><span class="nav-icon">⊞</span> Dashboard</a></li>
-            <li class="nav-item"><a href="users" class="nav-link"><span class="nav-icon">👥</span> Users</a></li>
-            <li class="nav-item"><a href="contests" class="nav-link active"><span class="nav-icon">🏆</span> Contests</a></li>
-            <li class="nav-item"><a href="entries" class="nav-link"><span class="nav-icon">✂️</span> Entries</a></li>
-            <li class="nav-item"><a href="payouts" class="nav-link"><span class="nav-icon">💸</span> Payouts</a></li>
-            <li class="nav-item"><a href="security" class="nav-link"><span class="nav-icon">🛡</span> Security</a></li>
-            <li class="nav-item"><a href="settings" class="nav-link"><span class="nav-icon">⚙</span> Settings</a></li>
+            <li class="nav-item"><a href="index.php" class="nav-link"><span class="nav-icon">⊞</span> Dashboard</a></li>
+            <li class="nav-item"><a href="users.php" class="nav-link"><span class="nav-icon">👥</span> Users</a></li>
+            <li class="nav-item"><a href="/contests.php" class="nav-link active"><span class="nav-icon">🏆</span> Contests</a></li>
+            <li class="nav-item"><a href="security.php" class="nav-link"><span class="nav-icon">🛡</span> Security</a></li>
+            <li class="nav-item"><a href="settings.php" class="nav-link"><span class="nav-icon">⚙</span> Settings</a></li>
         </ul>
         <hr class="divider-dark mx-3">
         <ul class="nav flex-column">
-            <li class="nav-item"><a href="logout" class="nav-link" style="color:var(--danger)"><span class="nav-icon">⇤</span> Logout</a></li>
+            <li class="nav-item"><a href="logout.php" class="nav-link" style="color:var(--danger)"><span class="nav-icon">⇤</span> Logout</a></li>
         </ul>
     </div>
 </nav>
 <main class="admin-main">
     <div class="admin-topbar">
         <div class="d-flex align-items-center gap-3">
-            <button id="sidebarToggle" class="btn d-lg-none" style="color:#ccc;background:rgba(255,255,255,0.05);border-radius:8px;padding:6px 10px;">☰</button>
-            <span style="color:#ccc;font-size:0.9rem">Welcome, <strong style="color:#fff"><?= e($_SESSION['username'] ?? ') ?></strong></span>
+            <button id="sidebarToggle" class="btn d-lg-none" style="color:#888;background:rgba(255,255,255,0.05);border-radius:8px;padding:6px 10px;">☰</button>
+            <span style="color:#888;font-size:0.9rem">Welcome, <strong style="color:#fff"><?= e($_SESSION['username'] ?? '') ?></strong></span>
         </div>
     </div>
     <div class="p-4">
@@ -87,7 +85,7 @@ try {
 
         <!-- Filter tabs -->
         <div class="d-flex gap-2 mb-4 flex-wrap">
-            <?php foreach ([' => 'All', 'active' => 'Active', 'draft' => 'Draft', 'expired' => 'Expired', 'cancelled' => 'Cancelled'] as $val => $label): ?>
+            <?php foreach (['' => 'All', 'active' => 'Active', 'draft' => 'Draft', 'expired' => 'Expired', 'cancelled' => 'Cancelled'] as $val => $label): ?>
                 <a href="?status=<?= $val ?>" class="btn btn-sm <?= $filter===$val ? 'btn-accent' : 'btn-outline-accent' ?>"><?= $label ?></a>
             <?php endforeach; ?>
         </div>
@@ -124,10 +122,10 @@ try {
                             <span class="<?= $sc ?>" style="font-size:0.72rem"><?= e(ucfirst($c['status'])) ?></span>
                         </td>
                         <td style="font-size:0.85rem;text-align:center"><?= (int)$c['entry_count'] ?></td>
-                        <td style="font-size:0.8rem;color:#ccc"><?= !empty($c['end_date']) ? e(formatDate($c['end_date'],'M j, Y')) : '—' ?></td>
+                        <td style="font-size:0.8rem;color:#888"><?= !empty($c['end_date']) ? e(formatDate($c['end_date'],'M j, Y')) : '—' ?></td>
                         <td>
                             <div class="d-flex gap-1 flex-wrap">
-                                <a href="contest?id=<?= $c['id'] ?>" target="_blank" class="btn btn-xs btn-outline-accent">View</a>
+                                <a href="/contest?id=<?= $c['id'] ?>" target="_blank" class="btn btn-xs btn-outline-accent">View</a>
                                 <?php if ($c['status']==='draft'): ?>
                                     <button class="btn btn-xs cab" style="background:rgba(34,197,94,0.1);color:#4ade80;font-size:0.72rem;border:1px solid rgba(34,197,94,0.2)"
                                             data-id="<?= $c['id'] ?>" data-st="active" data-csrf="<?= e($csrf) ?>">Activate</button>
@@ -148,7 +146,7 @@ try {
         <?php if ($pag['pages'] > 1): ?>
         <nav class="mt-3"><ul class="pagination pagination-dark justify-content-center">
             <?php for ($i=1;$i<=$pag['pages'];$i++): ?>
-                <li class="page-item <?= $i===$page?'active':' ?>"><a class="page-link" href="?page=<?= $i ?>&status=<?= e($filter) ?>"><?= $i ?></a></li>
+                <li class="page-item <?= $i===$page?'active':'' ?>"><a class="page-link" href="?page=<?= $i ?>&status=<?= e($filter) ?>"><?= $i ?></a></li>
             <?php endfor; ?>
         </ul></nav>
         <?php endif; ?>
@@ -162,7 +160,7 @@ document.querySelectorAll('.cab').forEach(btn => {
         const label = this.dataset.st === 'cancelled' ? 'cancel' : 'activate';
         if (!confirm('Are you sure you want to ' + label + ' this contest?')) return;
         this.disabled = true;
-        const r = await fetch('ajax/admin_actions', {
+        const r = await fetch('/admin/ajax/admin_actions.php', {
             method:'POST', body: new URLSearchParams({action:'update_contest_status', contest_id:this.dataset.id, status:this.dataset.st, csrf_token:this.dataset.csrf})
         });
         const d = await r.json();

@@ -11,11 +11,11 @@ if (session_status() === PHP_SESSION_NONE) session_start();
 requireUser();
 
 $userId   = (int)$_SESSION['user_id'];
-$username = $_SESSION['username'] ?? ';
+$username = $_SESSION['username'] ?? '';
 $userMode = getUserMode();
 
 $errors  = [];
-$success = ';
+$success = '';
 
 // Load current profile
 $profile = [];
@@ -36,13 +36,13 @@ try {
 } catch (Throwable) {}
 
 // Handle password change form via POST action=change_password
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? ') === 'change_password') {
-    if (!verifyCsrfToken($_POST['csrf_token'] ?? ')) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'change_password') {
+    if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) {
         $errors[] = 'Invalid request.';
     } else {
-        $currentPw  = $_POST['current_password'] ?? ';
-        $newPw      = $_POST['new_password'] ?? ';
-        $confirmPw  = $_POST['confirm_password'] ?? ';
+        $currentPw  = $_POST['current_password'] ?? '';
+        $newPw      = $_POST['new_password'] ?? '';
+        $confirmPw  = $_POST['confirm_password'] ?? '';
 
         if (strlen($newPw) < 8)          $errors[] = 'New password must be at least 8 characters.';
         if ($newPw !== $confirmPw)        $errors[] = 'Passwords do not match.';
@@ -94,7 +94,7 @@ $ini = strtoupper(substr($dn, 0, 1));
             <div class="avatar-circle avatar-circle--lg"><?= e($ini) ?></div>
             <div>
               <h5 class="fw-700 mb-0"><?= e($dn) ?></h5>
-              <span class="text-muted" style="font-size:0.85rem">@<?= e($username) ?> · <?= e($user['email'] ?? ') ?></span>
+              <span class="text-muted" style="font-size:0.85rem">@<?= e($username) ?> · <?= e($user['email'] ?? '') ?></span>
             </div>
           </div>
 
@@ -104,11 +104,11 @@ $ini = strtoupper(substr($dn, 0, 1));
             <input type="hidden" name="csrf_token" value="<?= e($csrf) ?>">
             <div class="mb-3">
               <label class="form-label-dark">Display Name</label>
-              <input type="text" name="display_name" class="form-control-dark" value="<?= e($profile['display_name'] ?? ') ?>" maxlength="100">
+              <input type="text" name="display_name" class="form-control-dark" value="<?= e($profile['display_name'] ?? '') ?>" maxlength="100">
             </div>
             <div class="mb-3">
               <label class="form-label-dark">Bio</label>
-              <textarea name="bio" class="form-control-dark" rows="3" maxlength="500" placeholder="Tell us about yourself…"><?= e($profile['bio'] ?? ') ?></textarea>
+              <textarea name="bio" class="form-control-dark" rows="3" maxlength="500" placeholder="Tell us about yourself…"><?= e($profile['bio'] ?? '') ?></textarea>
             </div>
             <div id="profileFeedback" class="mb-2"></div>
             <button type="submit" class="btn btn-accent">Save Changes</button>
@@ -124,19 +124,19 @@ $ini = strtoupper(substr($dn, 0, 1));
             <div class="row g-3">
               <div class="col-md-6">
                 <label class="form-label-dark">YouTube Handle</label>
-                <input type="text" name="youtube_handle" class="form-control-dark" value="<?= e($profile['youtube_handle'] ?? ') ?>" placeholder="@channel">
+                <input type="text" name="youtube_handle" class="form-control-dark" value="<?= e($profile['youtube_handle'] ?? '') ?>" placeholder="@channel">
               </div>
               <div class="col-md-6">
                 <label class="form-label-dark">TikTok Handle</label>
-                <input type="text" name="tiktok_handle" class="form-control-dark" value="<?= e($profile['tiktok_handle'] ?? ') ?>" placeholder="@tiktok">
+                <input type="text" name="tiktok_handle" class="form-control-dark" value="<?= e($profile['tiktok_handle'] ?? '') ?>" placeholder="@tiktok">
               </div>
               <div class="col-md-6">
                 <label class="form-label-dark">Instagram Handle</label>
-                <input type="text" name="instagram_handle" class="form-control-dark" value="<?= e($profile['instagram_handle'] ?? ') ?>" placeholder="@instagram">
+                <input type="text" name="instagram_handle" class="form-control-dark" value="<?= e($profile['instagram_handle'] ?? '') ?>" placeholder="@instagram">
               </div>
               <div class="col-md-6">
                 <label class="form-label-dark">Facebook Handle</label>
-                <input type="text" name="facebook_handle" class="form-control-dark" value="<?= e($profile['facebook_handle'] ?? ') ?>" placeholder="@facebook">
+                <input type="text" name="facebook_handle" class="form-control-dark" value="<?= e($profile['facebook_handle'] ?? '') ?>" placeholder="@facebook">
               </div>
             </div>
             <div id="socialFeedback" class="mt-2 mb-2"></div>
@@ -204,10 +204,10 @@ async function submitAjaxForm(formId, feedbackId) {
   const fb   = document.getElementById(feedbackId);
   form.addEventListener('submit', async function(e) {
     e.preventDefault();
-    fb.innerHTML = ';
+    fb.innerHTML = '';
     const data = new FormData(this);
     try {
-      const r = await fetch('ajax/user_actions', { method:'POST', body: new URLSearchParams(data) });
+      const r = await fetch('/ajax/user_actions.php', { method:'POST', body: new URLSearchParams(data) });
       const d = await r.json();
       fb.innerHTML = d.success
         ? '<div class="alert-dark-success" style="font-size:0.82rem">✅ ' + d.message + '</div>'
@@ -220,7 +220,7 @@ submitAjaxForm('socialForm', 'socialFeedback');
 
 document.getElementById('modeSwitchBtn')?.addEventListener('click', async function() {
   this.disabled = true;
-  const r = await fetch('ajax/user_actions', {
+  const r = await fetch('/ajax/user_actions.php', {
     method:'POST',
     body: new URLSearchParams({ action:'switch_mode', csrf_token: csrf })
   });
@@ -231,7 +231,7 @@ document.getElementById('modeSwitchBtn')?.addEventListener('click', async functi
 
 document.getElementById('notifToggle')?.addEventListener('click', async function() {
   const newVal = this.dataset.value === '1' ? '0' : '1';
-  const r = await fetch('ajax/user_actions', {
+  const r = await fetch('/ajax/user_actions.php', {
     method:'POST',
     body: new URLSearchParams({ action:'toggle_notifications', csrf_token: csrf, value: newVal })
   });

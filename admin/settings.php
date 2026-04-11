@@ -24,7 +24,7 @@ try {
     }
 } catch (Throwable) {}
 
-function ss(array $settings, string $key, string $default = '): string {
+function ss(array $settings, string $key, string $default = ''): string {
     return htmlspecialchars($settings[$key] ?? $default, ENT_QUOTES, 'UTF-8');
 }
 ?>
@@ -45,18 +45,36 @@ function ss(array $settings, string $key, string $default = '): string {
     <div class="sidebar-brand">Clipa<span>za</span></div>
     <div class="sidebar-nav">
         <ul class="nav flex-column">
-            <li class="nav-item"><a href="index" class="nav-link"><span class="nav-icon">⊞</span> Dashboard</a></li>
-            <li class="nav-item"><a href="users" class="nav-link"><span class="nav-icon">👥</span> Users</a></li>
-            <li class="nav-item"><a href="contests" class="nav-link"><span class="nav-icon">🏆</span> Contests</a></li>
-            <li class="nav-item"><a href="entries" class="nav-link"><span class="nav-icon">✂️</span> Entries</a></li>
-            <li class="nav-item"><a href="payouts" class="nav-link"><span class="nav-icon">💸</span> Payouts</a></li>
-            <li class="nav-item"><a href="security" class="nav-link"><span class="nav-icon">🛡</span> Security</a></li>
-            <li class="nav-item"><a href="settings" class="nav-link active"><span class="nav-icon">⚙</span> Settings</a></li>
+            <li class="nav-item">
+                <a href="index.php" class="nav-link">
+                    <span class="nav-icon">⊞</span> Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="security.php" class="nav-link">
+                    <span class="nav-icon">🛡</span> Security
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link">
+                    <span class="nav-icon">👥</span> Users
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link">
+                    <span class="nav-icon">🏆</span> Contests
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="settings.php" class="nav-link active">
+                    <span class="nav-icon">⚙</span> Settings
+                </a>
+            </li>
         </ul>
         <hr class="divider-dark mx-3">
         <ul class="nav flex-column">
             <li class="nav-item">
-                <a href="logout" class="nav-link" style="color:var(--danger);">
+                <a href="logout.php" class="nav-link" style="color:var(--danger);">
                     <span class="nav-icon">⇤</span> Logout
                 </a>
             </li>
@@ -68,26 +86,25 @@ function ss(array $settings, string $key, string $default = '): string {
 <main class="admin-main">
     <div class="admin-topbar">
         <div class="d-flex align-items-center gap-3">
-            <button id="sidebarToggle" class="btn d-lg-none" style="color:#ccc;background:rgba(255,255,255,0.05);border-radius:8px;padding:6px 10px;">☰</button>
+            <button id="sidebarToggle" class="btn d-lg-none" style="color:#888;background:rgba(255,255,255,0.05);border-radius:8px;padding:6px 10px;">☰</button>
             <h1>Site Settings</h1>
         </div>
-        <a href="index" style="font-size:0.8rem;color:#ccc;">← Dashboard</a>
+        <a href="/" style="font-size:0.8rem;color:#888;">← Dashboard</a>
     </div>
 
     <!-- Tabs -->
     <ul class="nav nav-tabs-dark mb-4">
         <?php
         $tabs = [
-            'general'      => '🌐 General',
-            'seo'          => '🔍 SEO',
-            'integrations' => '🔌 Integrations',
-            'code'         => '💻 Code Injection',
-            'ads'          => '📢 Ads',
+            'general' => '🌐 General',
+            'seo'     => '🔍 SEO',
+            'code'    => '💻 Code Injection',
+            'ads'     => '📢 Ads',
         ];
         foreach ($tabs as $key => $label):
         ?>
         <li class="nav-item">
-            <a class="nav-link <?= $activeTab === $key ? 'active' : ' ?>"
+            <a class="nav-link <?= $activeTab === $key ? 'active' : '' ?>"
                href="?tab=<?= $key ?>">
                 <?= htmlspecialchars($label) ?>
             </a>
@@ -112,7 +129,7 @@ function ss(array $settings, string $key, string $default = '): string {
                             <label class="form-label-dark">Site Name</label>
                             <input type="text" name="site_name" class="form-control form-control-dark"
                                    value="<?= ss($siteSettings, 'site_name', 'Clipaza') ?>" required maxlength="100">
-                            <div style="font-size:0.78rem;color:#ccc;margin-top:6px;">Displayed in the browser tab and navbar.</div>
+                            <div style="font-size:0.78rem;color:#888;margin-top:6px;">Displayed in the browser tab and navbar.</div>
                         </div>
                     </div>
                 </div>
@@ -130,7 +147,7 @@ function ss(array $settings, string $key, string $default = '): string {
                         <?php endif; ?>
                         <label class="form-label-dark">Upload Logo (.png, .jpg, .jpeg)</label>
                         <input type="file" name="site_logo" class="form-control form-control-dark" accept=".png,.jpg,.jpeg">
-                        <div style="font-size:0.78rem;color:#ccc;margin-top:6px;">Max 2MB. Stored at /uploads/logo/</div>
+                        <div style="font-size:0.78rem;color:#888;margin-top:6px;">Max 2MB. Stored at /uploads/logo/</div>
                     </div>
                 </div>
 
@@ -145,7 +162,7 @@ function ss(array $settings, string $key, string $default = '): string {
                         <?php endif; ?>
                         <label class="form-label-dark">Upload Favicon (.png, .jpg, .ico)</label>
                         <input type="file" name="site_favicon" class="form-control form-control-dark" accept=".png,.jpg,.jpeg,.ico">
-                        <div style="font-size:0.78rem;color:#ccc;margin-top:6px;">Max 2MB. Stored at /uploads/favicon/</div>
+                        <div style="font-size:0.78rem;color:#888;margin-top:6px;">Max 2MB. Stored at /uploads/favicon/</div>
                     </div>
                 </div>
             </div>
@@ -153,83 +170,6 @@ function ss(array $settings, string $key, string $default = '): string {
 
         <div class="mt-4">
             <button type="submit" class="btn btn-accent">Save General Settings</button>
-        </div>
-    </form>
-
-    <!-- TAB: INTEGRATIONS -->
-    <?php elseif ($activeTab === 'integrations'): ?>
-    <form id="settingsForm">
-        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrf) ?>">
-        <input type="hidden" name="action" value="save_integrations">
-
-        <div class="row g-4">
-            <div class="col-md-6">
-                <div class="card-dark h-100">
-                    <div class="card-header">Paystack Settings</div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <label class="form-label-dark">Paystack Public Key</label>
-                            <input type="text" name="paystack_public_key" class="form-control form-control-dark"
-                                   value="<?= ss($siteSettings, 'paystack_public_key') ?>">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label-dark">Paystack Secret Key</label>
-                            <input type="password" name="paystack_secret_key" class="form-control form-control-dark"
-                                   value="<?= ss($siteSettings, 'paystack_secret_key') ?>">
-                        </div>
-                        <div class="mb-0">
-                            <label class="form-label-dark">Platform Fee (%)</label>
-                            <input type="number" name="platform_fee_percent" class="form-control form-control-dark"
-                                   value="<?= ss($siteSettings, 'platform_fee_percent', '10') ?>" min="0" max="100">
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-6">
-                <div class="card-dark h-100">
-                    <div class="card-header">Google & YouTube Settings</div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <label class="form-label-dark">YouTube API Key</label>
-                            <input type="password" name="youtube_api_key" class="form-control form-control-dark"
-                                   value="<?= ss($siteSettings, 'youtube_api_key') ?>">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label-dark">Google Client ID (OAuth)</label>
-                            <input type="text" name="google_client_id" class="form-control form-control-dark"
-                                   value="<?= ss($siteSettings, 'google_client_id') ?>">
-                        </div>
-                        <div class="mb-0">
-                            <label class="form-label-dark">Google Client Secret (OAuth)</label>
-                            <input type="password" name="google_client_secret" class="form-control form-control-dark"
-                                   value="<?= ss($siteSettings, 'google_client_secret') ?>">
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-6">
-                <div class="card-dark h-100">
-                    <div class="card-header">Contest Constraints</div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <label class="form-label-dark">Minimum Contest Prize (₦)</label>
-                            <input type="number" name="min_contest_prize" class="form-control form-control-dark"
-                                   value="<?= ss($siteSettings, 'min_contest_prize', '5000') ?>" min="0">
-                        </div>
-                        <div class="mb-0">
-                            <label class="form-label-dark">Max Contest Duration (Days)</label>
-                            <input type="number" name="max_contest_days" class="form-control form-control-dark"
-                                   value="<?= ss($siteSettings, 'max_contest_days', '30') ?>" min="1">
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="mt-4">
-            <button type="submit" class="btn btn-accent">Save Integration Settings</button>
         </div>
     </form>
 
@@ -247,27 +187,27 @@ function ss(array $settings, string $key, string $default = '): string {
                     <input type="text" name="seo_title" class="form-control form-control-dark"
                            value="<?= ss($siteSettings, 'seo_title') ?>" maxlength="200"
                            placeholder="Clipaza — Earn Money Clipping Videos">
-                    <div style="font-size:0.78rem;color:#ccc;margin-top:6px;">Overrides the default page title in search engines.</div>
+                    <div style="font-size:0.78rem;color:#888;margin-top:6px;">Overrides the default page title in search engines.</div>
                 </div>
                 <div class="mb-4">
                     <label class="form-label-dark">Meta Description</label>
                     <textarea name="seo_description" class="form-control form-control-dark" rows="3"
                               maxlength="500" placeholder="Turn viral moments into real income..."><?= ss($siteSettings, 'seo_description') ?></textarea>
-                    <div style="font-size:0.78rem;color:#ccc;margin-top:6px;">Shown as the snippet in search results. Recommended 150–160 characters.</div>
+                    <div style="font-size:0.78rem;color:#888;margin-top:6px;">Shown as the snippet in search results. Recommended 150–160 characters.</div>
                 </div>
                 <div class="mb-4">
                     <label class="form-label-dark">Meta Keywords</label>
                     <input type="text" name="seo_keywords" class="form-control form-control-dark"
                            value="<?= ss($siteSettings, 'seo_keywords') ?>" maxlength="500"
                            placeholder="clipaza, earn money, clipping videos, creators">
-                    <div style="font-size:0.78rem;color:#ccc;margin-top:6px;">Comma-separated keywords.</div>
+                    <div style="font-size:0.78rem;color:#888;margin-top:6px;">Comma-separated keywords.</div>
                 </div>
                 <div class="mb-4">
                     <label class="form-label-dark">Open Graph Image URL</label>
                     <input type="url" name="og_image_url" class="form-control form-control-dark"
                            value="<?= ss($siteSettings, 'og_image_url') ?>" maxlength="500"
                            placeholder="https://example.com/og-image.png">
-                    <div style="font-size:0.78rem;color:#ccc;margin-top:6px;">Image shown when sharing on social media. Recommended 1200×630px.</div>
+                    <div style="font-size:0.78rem;color:#888;margin-top:6px;">Image shown when sharing on social media. Recommended 1200×630px.</div>
                 </div>
             </div>
         </div>
@@ -296,15 +236,15 @@ function ss(array $settings, string $key, string $default = '): string {
                     <label class="form-label-dark">Custom Header Code</label>
                     <textarea name="custom_header_code" class="form-control form-control-dark"
                               rows="8" style="font-family:monospace;font-size:0.85rem;"
-                              placeholder="<!-- Paste scripts, tracking pixels, or styles here -->"><?= htmlspecialchars($siteSettings['custom_header_code'] ?? ', ENT_QUOTES, 'UTF-8') ?></textarea>
-                    <div style="font-size:0.78rem;color:#ccc;margin-top:6px;">Raw HTML/JS injected inside <code style="color:#ccc;">&lt;head&gt;</code>. Use with caution.</div>
+                              placeholder="<!-- Paste scripts, tracking pixels, or styles here -->"><?= htmlspecialchars($siteSettings['custom_header_code'] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
+                    <div style="font-size:0.78rem;color:#888;margin-top:6px;">Raw HTML/JS injected inside <code style="color:#ccc;">&lt;head&gt;</code>. Use with caution.</div>
                 </div>
                 <div class="mb-4">
                     <label class="form-label-dark">Google AdSense Code</label>
                     <textarea name="adsense_code" class="form-control form-control-dark"
                               rows="6" style="font-family:monospace;font-size:0.85rem;"
-                              placeholder="<!-- Paste your Google AdSense script here -->"><?= htmlspecialchars($siteSettings['adsense_code'] ?? ', ENT_QUOTES, 'UTF-8') ?></textarea>
-                    <div style="font-size:0.78rem;color:#ccc;margin-top:6px;">Injected immediately after <code style="color:#ccc;">&lt;body&gt;</code> on all public pages.</div>
+                              placeholder="<!-- Paste your Google AdSense script here -->"><?= htmlspecialchars($siteSettings['adsense_code'] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
+                    <div style="font-size:0.78rem;color:#888;margin-top:6px;">Injected immediately after <code style="color:#ccc;">&lt;body&gt;</code> on all public pages.</div>
                 </div>
             </div>
         </div>
@@ -325,9 +265,9 @@ function ss(array $settings, string $key, string $default = '): string {
                     <label class="form-label-dark">ads.txt Content</label>
                     <textarea name="ads_txt_content" class="form-control form-control-dark"
                               rows="10" style="font-family:monospace;font-size:0.85rem;"
-                              placeholder="google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0"><?= htmlspecialchars($siteSettings['ads_txt_content'] ?? ', ENT_QUOTES, 'UTF-8') ?></textarea>
-                    <div style="font-size:0.78rem;color:#ccc;margin-top:6px;">
-                        This content is served at <a href="../ads.txt" target="_blank" style="color:var(--accent);">/ads.txt</a>.
+                              placeholder="google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0"><?= htmlspecialchars($siteSettings['ads_txt_content'] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
+                    <div style="font-size:0.78rem;color:#888;margin-top:6px;">
+                        This content is served at <a href="/ads.txt" target="_blank" style="color:var(--accent);">/ads.txt</a>.
                         One entry per line.
                     </div>
                 </div>
@@ -337,7 +277,7 @@ function ss(array $settings, string $key, string $default = '): string {
                 <div class="mb-4">
                     <label class="form-label-dark">Upload ads.txt File</label>
                     <input type="file" name="ads_txt_file" class="form-control form-control-dark" accept=".txt">
-                    <div style="font-size:0.78rem;color:#ccc;margin-top:6px;">Upload a .txt file to replace the ads.txt content above. Max 2MB.</div>
+                    <div style="font-size:0.78rem;color:#888;margin-top:6px;">Upload a .txt file to replace the ads.txt content above. Max 2MB.</div>
                 </div>
             </div>
         </div>
@@ -366,7 +306,7 @@ function ss(array $settings, string $key, string $default = '): string {
 
         try {
             const data = new FormData(form);
-            const resp = await fetch('ajax/settings_actions', { method: 'POST', body: data });
+            const resp = await fetch('ajax/settings_actions.php', { method: 'POST', body: data });
             const json = await resp.json();
             alertBox.className = json.success ? 'alert-dark-success mb-3' : 'alert-dark-danger mb-3';
             alertBox.textContent = json.message || (json.success ? 'Settings saved.' : 'An error occurred.');

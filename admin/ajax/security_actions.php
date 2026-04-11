@@ -5,7 +5,7 @@ header('Content-Type: application/json; charset=utf-8');
 
 $root = dirname(__DIR__, 2);
 
-if (!file_exists($root . '/config/config')) {
+if (!file_exists($root . '/config/config.php')) {
     echo json_encode(['success' => false, 'message' => 'Application not configured.']);
     exit;
 }
@@ -17,21 +17,21 @@ require_once $root . '/includes/security.php';
 require_once $root . '/includes/auth.php';
 
 // Must be admin
-if (empty($_SESSION['user_id']) || ($_SESSION['user_role'] ?? ') !== 'admin') {
+if (empty($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'admin') {
     http_response_code(403);
     echo json_encode(['success' => false, 'message' => 'Unauthorized.']);
     exit;
 }
 
 // CSRF check
-$token = $_POST['csrf_token'] ?? ';
+$token = $_POST['csrf_token'] ?? '';
 if (!verifyCsrfToken($token)) {
     http_response_code(403);
     echo json_encode(['success' => false, 'message' => 'Invalid CSRF token.']);
     exit;
 }
 
-$action = $_POST['action'] ?? ';
+$action = $_POST['action'] ?? '';
 
 try {
     match ($action) {
@@ -71,7 +71,7 @@ function handleSaveSecuritySettings(): never {
             $raw   = trim($_POST[$key] ?? '1day');
             $value = in_array($raw, $validIpBlockOptions, true) ? $raw : '1day';
         } else {
-            $value = trim($_POST[$key] ?? ');
+            $value = trim($_POST[$key] ?? '');
         }
         if (saveSecuritySetting($key, $value)) $saved++;
     }
@@ -81,8 +81,8 @@ function handleSaveSecuritySettings(): never {
 }
 
 function handleSaveCountryRule(): never {
-    $code   = strtoupper(trim($_POST['country_code'] ?? '));
-    $status = $_POST['status'] ?? ';
+    $code   = strtoupper(trim($_POST['country_code'] ?? ''));
+    $status = $_POST['status'] ?? '';
 
     if (!preg_match('/^[A-Z]{2}$/', $code)) {
         jsonResponse(['success' => false, 'message' => 'Invalid country code.']);
@@ -112,7 +112,7 @@ function handleSaveCountryRule(): never {
 }
 
 function handleBlockIp(): never {
-    $ip       = trim($_POST['ip'] ?? ');
+    $ip       = trim($_POST['ip'] ?? '');
     $type     = $_POST['block_type'] ?? 'temporary';
     $duration = max(1, (int)($_POST['duration'] ?? 60));
     $reason   = trim($_POST['reason'] ?? 'Manual block by admin');
@@ -137,7 +137,7 @@ function handleBlockIp(): never {
 }
 
 function handleUnblockIp(): never {
-    $ip = trim($_POST['ip'] ?? ');
+    $ip = trim($_POST['ip'] ?? '');
 
     if (!filter_var($ip, FILTER_VALIDATE_IP)) {
         jsonResponse(['success' => false, 'message' => 'Invalid IP address.']);
@@ -154,7 +154,7 @@ function handleUnblockIp(): never {
 }
 
 function handleUnlockAccount(): never {
-    $username = trim($_POST['username'] ?? ');
+    $username = trim($_POST['username'] ?? '');
 
     if (empty($username)) {
         jsonResponse(['success' => false, 'message' => 'Username is required.']);
@@ -179,9 +179,9 @@ function logAdminAction(string $action, string $details): void {
         );
         $stmt->execute([
             $_SESSION['user_id'] ?? null,
-            $_SESSION['username'] ?? ',
+            $_SESSION['username'] ?? '',
             getClientIp(),
-            $_SERVER['HTTP_USER_AGENT'] ?? ',
+            $_SERVER['HTTP_USER_AGENT'] ?? '',
             'admin_' . $action,
             $details,
         ]);

@@ -11,7 +11,7 @@ if (session_status() === PHP_SESSION_NONE) session_start();
 requireCreatorMode();
 
 $userId    = (int)$_SESSION['user_id'];
-$username  = $_SESSION['username'] ?? ';
+$username  = $_SESSION['username'] ?? '';
 $contestId = (int)($_GET['contest_id'] ?? 0);
 
 if ($contestId <= 0) redirect('/dashboard');
@@ -99,7 +99,7 @@ renderNav(true, ['username' => $username], 'creator');
           Secured via Paystack. Your funds are held in escrow until the contest ends.
         </p>
         <div class="text-center mt-2">
-          <a href="dashboard" class="text-muted text-decoration-none" style="font-size:0.82rem">← Back to Dashboard</a>
+          <a href="/dashboard" class="text-muted text-decoration-none" style="font-size:0.82rem">← Back to Dashboard</a>
         </div>
       </div>
     </div>
@@ -112,10 +112,10 @@ document.getElementById('payBtn').addEventListener('click', async function() {
   const fb  = document.getElementById('payFeedback');
   btn.disabled = true;
   btn.textContent = 'Initializing payment…';
-  fb.innerHTML = ';
+  fb.innerHTML = '';
 
   try {
-    const r = await fetch('../ajax/payment_actions', {
+    const r = await fetch('/ajax/payment_actions.php', {
       method: 'POST',
       headers: {'Content-Type': 'application/x-www-form-urlencoded'},
       body: new URLSearchParams({

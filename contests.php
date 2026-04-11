@@ -11,7 +11,7 @@ if (session_status() === PHP_SESSION_NONE) session_start();
 
 $isLoggedIn = !empty($_SESSION['user_id']);
 $userMode   = getUserMode();
-$username   = $_SESSION['username'] ?? ';
+$username   = $_SESSION['username'] ?? '';
 
 // Filters
 $filter = sanitizeInput($_GET['platform'] ?? 'all');
@@ -63,13 +63,13 @@ renderNav($isLoggedIn, ['username' => $username], $userMode);
     <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3 mb-4">
       <div>
         <h2 class="fw-900 mb-1" style="letter-spacing:-0.5px">Browse Contests</h2>
-        <p class="text-muted mb-0" style="font-size:0.9rem"><?= $totalContests ?> active contest<?= $totalContests !== 1 ? 's' : ' ?></p>
+        <p class="text-muted mb-0" style="font-size:0.9rem"><?= $totalContests ?> active contest<?= $totalContests !== 1 ? 's' : '' ?></p>
       </div>
       <div class="d-flex gap-2 flex-wrap">
         <select class="form-control-dark" id="sortSelect" style="max-width:160px;font-size:0.85rem" onchange="applyFilters()">
-          <option value="latest"      <?= $sort==='latest'     ?'selected':' ?>>Latest</option>
-          <option value="popular"     <?= $sort==='popular'    ?'selected':' ?>>Most Popular</option>
-          <option value="ending_soon" <?= $sort==='ending_soon'?'selected':' ?>>Ending Soon</option>
+          <option value="latest"      <?= $sort==='latest'     ?'selected':'' ?>>Latest</option>
+          <option value="popular"     <?= $sort==='popular'    ?'selected':'' ?>>Most Popular</option>
+          <option value="ending_soon" <?= $sort==='ending_soon'?'selected':'' ?>>Ending Soon</option>
         </select>
       </div>
     </div>
@@ -95,8 +95,8 @@ renderNav($isLoggedIn, ['username' => $username], $userMode);
       <div class="row g-4">
         <?php foreach ($contests as $c): ?>
           <?php
-            $platformList = array_filter(explode(',', $c['platforms'] ?? '));
-            $timeLeft     = ';
+            $platformList = array_filter(explode(',', $c['platforms'] ?? ''));
+            $timeLeft     = '';
             $isExpiringSoon = false;
             if (!empty($c['end_date'])) {
                 $secs = strtotime($c['end_date']) - time();
@@ -111,13 +111,13 @@ renderNav($isLoggedIn, ['username' => $username], $userMode);
                     $timeLeft = 'Expired';
                 }
             }
-            $platformIcons = ';
+            $platformIcons = '';
             foreach ($platformList as $p) {
                 $platformIcons .= match(trim($p)) {
                     'tiktok'    => '<span class="platform-icon" title="TikTok">🎵</span>',
                     'instagram' => '<span class="platform-icon" title="Instagram">📸</span>',
                     'facebook'  => '<span class="platform-icon" title="Facebook">📘</span>',
-                    default     => ',
+                    default     => '',
                 };
             }
           ?>
@@ -141,12 +141,12 @@ renderNav($isLoggedIn, ['username' => $username], $userMode);
                 <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
                   <?= $platformIcons ?>
                   <?php if ($timeLeft): ?>
-                    <span class="countdown-timer <?= $isExpiringSoon ? 'countdown-urgent' : ' ?>" style="font-size:0.75rem"><?= e($timeLeft) ?></span>
+                    <span class="countdown-timer <?= $isExpiringSoon ? 'countdown-urgent' : '' ?>" style="font-size:0.75rem"><?= e($timeLeft) ?></span>
                   <?php endif; ?>
                 </div>
                 <div class="d-flex align-items-center justify-content-between">
-                  <span class="text-muted" style="font-size:0.78rem"><?= (int)$c['entry_count'] ?> participant<?= (int)$c['entry_count'] !== 1 ? 's' : ' ?></span>
-                  <a href="contest?id=<?= (int)$c['id'] ?>" class="btn btn-sm btn-accent">View Contest</a>
+                  <span class="text-muted" style="font-size:0.78rem"><?= (int)$c['entry_count'] ?> participant<?= (int)$c['entry_count'] !== 1 ? 's' : '' ?></span>
+                  <a href="/contest?id=<?= (int)$c['id'] ?>" class="btn btn-sm btn-accent">View Contest</a>
                 </div>
               </div>
             </div>
