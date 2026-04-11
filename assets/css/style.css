@@ -154,6 +154,8 @@ p { color: var(--text-secondary); }
 .coming-soon-badge { display: inline-flex; align-items: center; gap: 8px; background: var(--accent-dim); border: 1px solid rgba(204,255,0,0.3); color: var(--accent); font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; padding: 6px 16px; border-radius: 20px; margin-bottom: 24px; }
 .coming-soon-badge::before { content: ''; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; animation: pulse-dot 1.5s infinite; }
 @keyframes pulse-dot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.8); } }
+.live-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(0,204,102,0.1); border: 1px solid rgba(0,204,102,0.3); color: var(--success); font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; padding: 6px 16px; border-radius: 20px; margin-bottom: 24px; }
+.live-badge::before { content: ''; width: 6px; height: 6px; background: var(--success); border-radius: 50%; animation: pulse-dot 1.5s infinite; }
 .feature-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; transition: var(--transition); height: 100%; }
 .feature-card:hover { border-color: rgba(204,255,0,0.3); transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
 .feature-icon { font-size: 2rem; margin-bottom: 16px; }

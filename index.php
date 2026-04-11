@@ -99,28 +99,43 @@ if (file_exists($configFile)) {
     } catch (Throwable) {}
 }
 
-$waitlistSuccess = false;
-$waitlistError   = '';
+// Live platform stats
+$statUsers  = 0;
+$statPrizes = 0.0;
+$statClips  = 0;
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['waitlist_email'])) {
-    $email = filter_var(trim($_POST['waitlist_email'] ?? ''), FILTER_VALIDATE_EMAIL);
-    if ($email && file_exists($configFile)) {
-        try {
-            $db   = db();
-            $stmt = $db->prepare('SELECT id FROM waitlist WHERE email = ? LIMIT 1');
-            $stmt->execute([$email]);
-            if ($stmt->fetch()) {
-                $waitlistError = "You're already on the waitlist!";
-            } else {
-                $db->prepare('INSERT INTO waitlist (email) VALUES (?)')->execute([$email]);
-                $waitlistSuccess = true;
-            }
-        } catch (Throwable $e) {
-            $waitlistError = 'Something went wrong. Please try again.';
-        }
-    } elseif (!$email) {
-        $waitlistError = 'Please enter a valid email address.';
-    }
+// Live leaderboard data
+$lbLive = [];
+
+if (file_exists($configFile)) {
+    try {
+        $db         = db();
+        $statUsers  = (int)$db->query("SELECT COUNT(*) FROM users WHERE role != 'admin'")->fetchColumn();
+        $statPrizes = (float)$db->query("SELECT COALESCE(SUM(prize_pool),0) FROM contests")->fetchColumn();
+        $statClips  = (int)$db->query("SELECT COUNT(*) FROM contest_entries WHERE status = 'approved'")->fetchColumn();
+
+        $lbStmt = $db->query(
+            "SELECT u.username, COUNT(ce.id) AS clip_count,
+                    SUM(ce.view_count) AS total_views,
+                    COALESCE(SUM(pr.amount),0) AS total_earned
+             FROM contest_entries ce
+             INNER JOIN users u ON u.id = ce.user_id
+             LEFT JOIN payout_requests pr ON pr.user_id = ce.user_id AND pr.status = 'approved'
+             WHERE ce.status = 'approved' AND ce.disqualified = 0
+             GROUP BY ce.user_id
+             ORDER BY total_views DESC
+             LIMIT 5"
+        );
+        $lbLive = $lbStmt->fetchAll();
+    } catch (Throwable) {}
+}
+
+// Format stat figures; fall back to marketing-tier labels when platform is new
+function fmtStat(int|float $n, string $prefix = '', string $suffix = ''): string {
+    if ($n <= 0) return '—';
+    if ($n >= 1_000_000) return $prefix . number_format($n / 1_000_000, 1) . 'M+' . $suffix;
+    if ($n >= 1_000)     return $prefix . number_format($n / 1_000, 0)     . 'K+' . $suffix;
+    return $prefix . number_format((int)$n) . $suffix;
 }
 ?>
 <!DOCTYPE html>
@@ -186,11 +201,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['waitlist_email'])) {
 </nav>
 
 <!-- Hero Section -->
-<section class="lp-hero" id="waitlist">
+<section class="lp-hero" id="hero">
     <div class="lp-hero-glow"></div>
     <div class="container">
         <div class="text-center animate-in">
-            <div class="coming-soon-badge mb-4">🚀 Coming Soon — Join the Waitlist</div>
+            <div class="live-badge mb-4">🟢 Live Now — Start Earning Today</div>
             <h1 class="lp-hero-title">
                 The Smartest Way to<br>
                 Grow on YouTube<br>
@@ -201,37 +216,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['waitlist_email'])) {
                 Winners earn real money — paid directly to your bank.
             </p>
 
-            <?php if ($waitlistSuccess): ?>
-            <div class="alert-dark-success d-inline-block px-4 py-3 mb-4" style="border-radius:8px;">
-                🎉 You're on the waitlist! We'll notify you at launch.
+            <div class="d-flex gap-3 justify-content-center flex-wrap mb-5">
+                <a href="/auth/register" class="btn btn-accent pulse-accent" style="padding:14px 32px;font-size:1rem;border-radius:10px">Start Earning Free →</a>
+                <a href="/contests" class="btn btn-outline-accent" style="padding:14px 32px;font-size:1rem;border-radius:10px">Browse Contests</a>
             </div>
-            <?php elseif ($waitlistError): ?>
-            <div class="alert-dark-warning d-inline-block px-4 py-3 mb-4" style="border-radius:8px;">
-                <?= htmlspecialchars($waitlistError) ?>
-            </div>
-            <?php endif; ?>
 
-            <form method="POST" class="lp-email-form">
-                <input type="email" name="waitlist_email" placeholder="Enter your email address" required
-                       value="<?= isset($_POST['waitlist_email']) && !$waitlistSuccess ? htmlspecialchars($_POST['waitlist_email']) : '' ?>">
-                <button type="submit" class="btn btn-accent pulse-accent">Join Waitlist</button>
-            </form>
-            <p class="lp-form-note">No spam. Unsubscribe anytime. 🔒</p>
-
-            <!-- Stats Row — marketing figures, update via code or pull from DB as needed -->
+            <!-- Stats Row -->
             <div class="lp-stats-row">
                 <div class="lp-stat">
-                    <div class="lp-stat-val">₦50M+</div>
+                    <div class="lp-stat-val"><?= $statPrizes > 0 ? fmtStat($statPrizes, '₦') : '₦50M+' ?></div>
                     <div class="lp-stat-label">in Prizes</div>
                 </div>
                 <div class="lp-stat-divider"></div>
                 <div class="lp-stat">
-                    <div class="lp-stat-val">10K+</div>
+                    <div class="lp-stat-val"><?= $statUsers > 0 ? fmtStat($statUsers) : '10K+' ?></div>
                     <div class="lp-stat-label">Creators</div>
                 </div>
                 <div class="lp-stat-divider"></div>
                 <div class="lp-stat">
-                    <div class="lp-stat-val">500K+</div>
+                    <div class="lp-stat-val"><?= $statClips > 0 ? fmtStat($statClips) : '500K+' ?></div>
                     <div class="lp-stat-label">Clips</div>
                 </div>
             </div>
@@ -291,20 +294,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['waitlist_email'])) {
             </div>
             <?php endforeach; ?>
         <?php else: ?>
-            <!-- Placeholder cards when no contests -->
-            <?php for ($i = 0; $i < 4; $i++): ?>
-            <div class="col-6 col-md-3">
-                <div class="trend-card" style="opacity:0.5">
-                    <div style="width:100%;height:110px;background:#0d0d0d;display:flex;align-items:center;justify-content:center;font-size:2rem">🎬</div>
-                    <div class="p-3">
-                        <div class="fw-700 mb-1" style="font-size:0.82rem;color:#888">Coming Soon</div>
-                        <div style="color:var(--accent);font-weight:900;font-size:0.88rem">₦0</div>
-                    </div>
-                </div>
-            </div>
-            <?php endfor; ?>
-            <div class="col-12 text-center mt-2">
-                <p class="text-muted" style="font-size:0.85rem">No active contests yet. <a href="/auth/register" class="text-accent text-decoration-none">Be the first creator →</a></p>
+            <div class="col-12 text-center py-5">
+                <div style="font-size:2.5rem;margin-bottom:16px">🎬</div>
+                <p class="text-muted mb-3" style="font-size:0.95rem">No active contests right now — check back soon!</p>
+                <a href="/auth/register" class="btn btn-accent" style="font-size:0.88rem;padding:10px 28px">Create the First Contest →</a>
             </div>
         <?php endif; ?>
         </div>
@@ -422,7 +415,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['waitlist_email'])) {
                         <li>💡 Pay only for results you love</li>
                         <li>🔒 Full control over clip approval</li>
                     </ul>
-                    <a href="#waitlist" class="btn btn-accent mt-3">Start a Contest →</a>
+                    <a href="/auth/register" class="btn btn-accent mt-3">Start a Contest →</a>
                 </div>
             </div>
             <div class="col-md-6">
@@ -436,7 +429,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['waitlist_email'])) {
                         <li>⚡ Fast payouts to your local bank</li>
                         <li>📱 Work from anywhere, any device</li>
                     </ul>
-                    <a href="#waitlist" class="btn" style="background:#000;color:#CCFF00;border:1.5px solid #000;border-radius:8px;padding:10px 24px;font-weight:700;margin-top:12px;display:inline-block;">Join as Clipper →</a>
+                    <a href="/auth/register" class="btn" style="background:#000;color:#CCFF00;border:1.5px solid #000;border-radius:8px;padding:10px 24px;font-weight:700;margin-top:12px;display:inline-block;">Join as Clipper →</a>
                 </div>
             </div>
         </div>
@@ -460,27 +453,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['waitlist_email'])) {
                 <span>Prize</span>
             </div>
             <?php
-            // Sample leaderboard data for illustration — replace with real DB query when live
-            $lbData = [
-                ['rank'=>1,  'emoji'=>'🥇', 'name'=>'ClipKing_NG',    'clips'=>24, 'views'=>'2.3M', 'prize'=>'₦80,000',  'color'=>'#CCFF00'],
-                ['rank'=>2,  'emoji'=>'🥈', 'name'=>'ViralVault',     'clips'=>19, 'views'=>'1.7M', 'prize'=>'₦45,000',  'color'=>'#aaaaaa'],
-                ['rank'=>3,  'emoji'=>'🥉', 'name'=>'QuickCutPro',    'clips'=>15, 'views'=>'980K',  'prize'=>'₦25,000',  'color'=>'#cd7f32'],
-                ['rank'=>4,  'emoji'=>'',   'name'=>'NaijaClipper',   'clips'=>12, 'views'=>'610K',  'prize'=>'₦10,000',  'color'=>'#555'],
-                ['rank'=>5,  'emoji'=>'',   'name'=>'ShortFormStar',  'clips'=>11, 'views'=>'540K',  'prize'=>'₦8,000',   'color'=>'#555'],
-            ];
-            foreach ($lbData as $row):
+            $lbMedals = ['🥇','🥈','🥉','',''];
+            $lbColors = ['#CCFF00','#aaaaaa','#cd7f32','#555','#555'];
+            if (!empty($lbLive)):
+                foreach ($lbLive as $idx => $row):
+                    $medal = $lbMedals[$idx] ?? '';
+                    $color = $lbColors[$idx] ?? '#555';
+                    $views = (int)($row['total_views'] ?? 0);
+                    $viewsFmt = $views >= 1_000_000 ? number_format($views/1_000_000,1).'M'
+                              : ($views >= 1_000 ? number_format($views/1_000,0).'K' : (string)$views);
+                    $prize = (float)($row['total_earned'] ?? 0);
+                    $prizeFmt = $prize > 0 ? '₦'.number_format($prize, 0) : '—';
             ?>
             <div class="lp-lb-row">
-                <span class="lp-lb-rank" style="color:<?= $row['color'] ?>;"><?= $row['emoji'] !== '' ? $row['emoji'] : '#' . $row['rank'] ?></span>
-                <span class="lp-lb-name"><?= htmlspecialchars($row['name']) ?></span>
-                <span class="lp-lb-meta"><?= $row['clips'] ?> clips</span>
-                <span class="lp-lb-meta"><?= $row['views'] ?> views</span>
-                <span class="lp-lb-prize" style="color:var(--accent);"><?= $row['prize'] ?></span>
+                <span class="lp-lb-rank" style="color:<?= $color ?>;"><?= $medal !== '' ? $medal : '#'.($idx+1) ?></span>
+                <span class="lp-lb-name"><?= htmlspecialchars($row['username']) ?></span>
+                <span class="lp-lb-meta"><?= (int)$row['clip_count'] ?> clips</span>
+                <span class="lp-lb-meta"><?= $viewsFmt ?> views</span>
+                <span class="lp-lb-prize" style="color:var(--accent);"><?= $prizeFmt ?></span>
             </div>
             <?php endforeach; ?>
             <div class="lp-lb-footer">
-                <em style="color:#888;font-size:0.8rem;">* Sample data for illustration purposes</em>
+                <a href="/contests" class="text-accent text-decoration-none" style="font-size:0.82rem">See all contestants →</a>
             </div>
+            <?php else: ?>
+            <div class="lp-lb-footer" style="padding:32px 24px">
+                <div style="font-size:1.5rem;margin-bottom:12px">🏆</div>
+                <p style="color:#888;font-size:0.88rem;margin:0 0 12px">No ranked clippers yet — be the first to earn your spot!</p>
+                <a href="/auth/register" class="btn btn-accent" style="font-size:0.85rem;padding:10px 24px">Join Now →</a>
+            </div>
+            <?php endif; ?>
         </div>
     </div>
 </section>
@@ -489,20 +491,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['waitlist_email'])) {
 <section class="lp-cta-section">
     <div class="lp-cta-glow"></div>
     <div class="container text-center" style="position:relative;z-index:1;">
-        <h2 class="lp-cta-title">Join the <span class="text-accent">Movement</span></h2>
-        <p class="lp-cta-sub">Thousands of creators and clippers are already on the waitlist.<br>Don't miss your spot at launch.</p>
+        <h2 class="lp-cta-title">Ready to Start <span class="text-accent">Earning?</span></h2>
+        <p class="lp-cta-sub">Join creators and clippers already building real income on Clipaza.<br>Free to sign up — no credit card required.</p>
 
-        <?php if ($waitlistSuccess): ?>
-        <div class="alert-dark-success d-inline-block px-4 py-3 mb-4" style="border-radius:8px;">
-            🎉 You're on the waitlist!
+        <div class="d-flex gap-3 justify-content-center flex-wrap mb-4">
+            <a href="/auth/register" class="btn btn-accent pulse-accent" style="padding:15px 40px;font-size:1.05rem;border-radius:10px">Sign Up Free →</a>
+            <a href="/contests" class="btn btn-outline-accent" style="padding:15px 36px;font-size:1.05rem;border-radius:10px">Browse Active Contests</a>
         </div>
-        <?php endif; ?>
-
-        <form method="POST" class="lp-email-form justify-content-center">
-            <input type="email" name="waitlist_email" placeholder="Your email address" required>
-            <button type="submit" class="btn btn-accent">Get Early Access</button>
-        </form>
-        <p class="lp-form-note">Free forever for clippers. No credit card required.</p>
+        <p class="lp-form-note">Already have an account? <a href="/auth/login" class="text-accent text-decoration-none">Log in here</a></p>
     </div>
 </section>
 
