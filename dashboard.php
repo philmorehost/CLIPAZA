@@ -145,7 +145,7 @@ renderNav(true, ['username' => $username], $mode);
 
       <div class="d-flex align-items-center justify-content-between mb-3">
         <h6 class="fw-700 mb-0">Your Contests</h6>
-        <a href="create-contest" class="btn btn-accent btn-sm">+ Create Contest</a>
+        <a href="/create-contest" class="btn btn-accent btn-sm">+ Create Contest</a>
       </div>
 
       <?php if (empty($recentContests)): ?>
@@ -153,7 +153,7 @@ renderNav(true, ['username' => $username], $mode);
           <div style="font-size:2.5rem;margin-bottom:12px">🎬</div>
           <h6 class="fw-700 mb-2">No contests yet</h6>
           <p class="text-muted mb-3" style="font-size:0.85rem">Create your first contest to start getting clips.</p>
-          <a href="create-contest" class="btn btn-accent">Create Contest</a>
+          <a href="/create-contest" class="btn btn-accent">Create Contest</a>
         </div>
       <?php else: ?>
         <div class="row g-3">

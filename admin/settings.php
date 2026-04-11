@@ -89,7 +89,7 @@ function ss(array $settings, string $key, string $default = ''): string {
             <button id="sidebarToggle" class="btn d-lg-none" style="color:#888;background:rgba(255,255,255,0.05);border-radius:8px;padding:6px 10px;">☰</button>
             <h1>Site Settings</h1>
         </div>
-        <a href="/" style="font-size:0.8rem;color:#888;">← Dashboard</a>
+        <a href="index.php" style="font-size:0.8rem;color:#888;">← Dashboard</a>
     </div>
 
     <!-- Tabs -->

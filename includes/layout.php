@@ -39,7 +39,7 @@ function renderNav(bool $isLoggedIn, array $user = [], string $activeMode = ''):
     echo '<div class="collapse navbar-collapse" id="mainNav">';
     echo '<ul class="navbar-nav me-auto">';
     echo '<li class="nav-item"><a class="nav-link text-muted" href="/contests" style="font-size:0.9rem">Browse Contests</a></li>';
-    echo '<li class="nav-item"><a class="nav-link text-muted" href="#how-it-works" style="font-size:0.9rem">How It Works</a></li>';
+    echo '<li class="nav-item"><a class="nav-link text-muted" href="/#how-it-works" style="font-size:0.9rem">How It Works</a></li>';
     echo '</ul>';
     echo '<div class="d-flex align-items-center gap-2">';
     if ($isLoggedIn) {
@@ -73,7 +73,7 @@ function renderFooter(): void {
       <div class="lp-footer-logo">{$siteName}<span>.</span></div>
       <div class="d-flex gap-4">
         <a href="/contests" class="lp-footer-link text-decoration-none">Browse</a>
-        <a href="#how-it-works" class="lp-footer-link text-decoration-none">How It Works</a>
+        <a href="/#how-it-works" class="lp-footer-link text-decoration-none">How It Works</a>
         <a href="/auth/register" class="lp-footer-link text-decoration-none">Sign Up</a>
       </div>
       <div style="font-size:0.8rem;color:#888">&copy; {$year} {$siteName}. All rights reserved.</div>

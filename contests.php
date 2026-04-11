@@ -88,7 +88,7 @@ renderNav($isLoggedIn, ['username' => $username], $userMode);
         <h5 class="fw-700 mb-2">No contests found</h5>
         <p class="text-muted" style="font-size:0.9rem">Check back soon or try a different filter.</p>
         <?php if ($isLoggedIn && $userMode === 'creator'): ?>
-          <a href="create-contest" class="btn btn-accent mt-2">Create First Contest</a>
+          <a href="/create-contest" class="btn btn-accent mt-2">Create First Contest</a>
         <?php endif; ?>
       </div>
     <?php else: ?>

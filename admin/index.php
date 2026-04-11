@@ -51,7 +51,7 @@ try {
     <div class="sidebar-nav">
         <ul class="nav flex-column">
             <li class="nav-item">
-                <a href="/" class="nav-link active">
+                <a href="index.php" class="nav-link active">
                     <span class="nav-icon">⊞</span> Dashboard
                 </a>
             </li>
@@ -66,7 +66,7 @@ try {
                 </a>
             </li>
             <li class="nav-item">
-                <a href="/contests.php" class="nav-link">
+                <a href="contests.php" class="nav-link">
                     <span class="nav-icon">🏆</span> Contests
                 </a>
             </li>

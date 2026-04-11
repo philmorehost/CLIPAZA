@@ -111,7 +111,7 @@ function checked(array $settings, string $key, string $trueVal = '1'): string {
             <li class="nav-item"><a href="index.php" class="nav-link"><span class="nav-icon">⊞</span> Dashboard</a></li>
             <li class="nav-item"><a href="security.php" class="nav-link active"><span class="nav-icon">🛡</span> Security</a></li>
             <li class="nav-item"><a href="users.php" class="nav-link"><span class="nav-icon">👥</span> Users</a></li>
-            <li class="nav-item"><a href="/contests.php" class="nav-link"><span class="nav-icon">🏆</span> Contests</a></li>
+            <li class="nav-item"><a href="contests.php" class="nav-link"><span class="nav-icon">🏆</span> Contests</a></li>
             <li class="nav-item"><a href="settings.php" class="nav-link"><span class="nav-icon">⚙</span> Settings</a></li>
         </ul>
         <hr class="divider-dark mx-3">
@@ -128,7 +128,7 @@ function checked(array $settings, string $key, string $trueVal = '1'): string {
             <button id="sidebarToggle" class="btn d-lg-none" style="color:#888;background:rgba(255,255,255,0.05);border-radius:8px;padding:6px 10px;">☰</button>
             <h1>Security Management</h1>
         </div>
-        <a href="/" style="font-size:0.8rem;color:#888;">← Dashboard</a>
+        <a href="index.php" style="font-size:0.8rem;color:#888;">← Dashboard</a>
     </div>
 
     <!-- Tabs -->
