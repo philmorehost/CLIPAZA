@@ -141,3 +141,73 @@ function paginate(int $total, int $perPage, int $current): array {
         'hasNext'  => $current < $pages,
     ];
 }
+
+function sendNotification(int $userId, string $type, string $title, string $message, string $link = ''): void {
+    try {
+        $db = db();
+        $db->prepare(
+            'INSERT INTO notifications (user_id, type, title, message, link) VALUES (?, ?, ?, ?, ?)'
+        )->execute([$userId, $type, $title, $message, $link ?: null]);
+    } catch (Throwable) {}
+}
+
+function getUnreadNotificationCount(int $userId): int {
+    try {
+        $db   = db();
+        $stmt = $db->prepare('SELECT COUNT(*) FROM notifications WHERE user_id = ? AND is_read = 0');
+        $stmt->execute([$userId]);
+        return (int)$stmt->fetchColumn();
+    } catch (Throwable) {
+        return 0;
+    }
+}
+
+function paystackPost(string $endpoint, array $data): array {
+    $secretKey = getSetting('paystack_secret_key', '');
+    if (defined('PAYSTACK_SECRET_KEY') && PAYSTACK_SECRET_KEY) {
+        $secretKey = PAYSTACK_SECRET_KEY;
+    }
+    if (empty($secretKey)) {
+        return ['error' => 'Paystack not configured.'];
+    }
+    $ch = curl_init('https://api.paystack.co' . $endpoint);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT        => 30,
+        CURLOPT_POST           => true,
+        CURLOPT_POSTFIELDS     => json_encode($data),
+        CURLOPT_HTTPHEADER     => [
+            'Authorization: Bearer ' . $secretKey,
+            'Content-Type: application/json',
+            'Cache-Control: no-cache',
+        ],
+        CURLOPT_SSL_VERIFYPEER => true,
+    ]);
+    $response = curl_exec($ch);
+    $err = curl_error($ch);
+    curl_close($ch);
+    if ($err) return ['error' => $err];
+    return json_decode($response, true) ?: ['error' => 'Invalid response.'];
+}
+
+function paystackGet(string $endpoint): array {
+    $secretKey = getSetting('paystack_secret_key', '');
+    if (defined('PAYSTACK_SECRET_KEY') && PAYSTACK_SECRET_KEY) {
+        $secretKey = PAYSTACK_SECRET_KEY;
+    }
+    if (empty($secretKey)) {
+        return ['error' => 'Paystack not configured.'];
+    }
+    $ch = curl_init('https://api.paystack.co' . $endpoint);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT        => 15,
+        CURLOPT_HTTPHEADER     => ['Authorization: Bearer ' . $secretKey],
+        CURLOPT_SSL_VERIFYPEER => true,
+    ]);
+    $response = curl_exec($ch);
+    $err = curl_error($ch);
+    curl_close($ch);
+    if ($err) return ['error' => $err];
+    return json_decode($response, true) ?: ['error' => 'Invalid response.'];
+}

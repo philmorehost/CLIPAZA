@@ -383,4 +383,56 @@ INSERT INTO `site_settings` (`setting_key`, `setting_value`) VALUES
 ('cron_key', 'default_cron_key_123')
 ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value);
 
+-- Notifications
+CREATE TABLE IF NOT EXISTS `notifications` (
+  `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) UNSIGNED NOT NULL,
+  `type` varchar(50) NOT NULL DEFAULT 'info',
+  `title` varchar(255) NOT NULL,
+  `message` text NOT NULL,
+  `link` varchar(500) DEFAULT NULL,
+  `is_read` tinyint(1) NOT NULL DEFAULT 0,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_notif_user` (`user_id`),
+  KEY `idx_notif_read` (`is_read`),
+  KEY `idx_notif_created` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Payout requests (wallet withdrawals)
+CREATE TABLE IF NOT EXISTS `payout_requests` (
+  `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) UNSIGNED NOT NULL,
+  `amount` decimal(12,2) NOT NULL,
+  `status` enum('pending','approved','rejected','cancelled','on_hold') NOT NULL DEFAULT 'pending',
+  `bank_name` varchar(200) DEFAULT NULL,
+  `bank_code` varchar(20) DEFAULT NULL,
+  `account_number` varchar(20) DEFAULT NULL,
+  `account_name` varchar(200) DEFAULT NULL,
+  `rejection_reason` text DEFAULT NULL,
+  `cancel_reason` text DEFAULT NULL,
+  `appeal_message` text DEFAULT NULL,
+  `admin_note` text DEFAULT NULL,
+  `paystack_reference` varchar(255) DEFAULT NULL,
+  `paystack_transfer_code` varchar(255) DEFAULT NULL,
+  `processed_by` int(11) UNSIGNED DEFAULT NULL,
+  `processed_at` datetime DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_pr_user` (`user_id`),
+  KEY `idx_pr_status` (`status`),
+  KEY `idx_pr_created` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Additional site settings for new features
+INSERT INTO `site_settings` (`setting_key`, `setting_value`) VALUES
+('paystack_fee_percent', '0'),
+('paystack_fee_flat', '0'),
+('min_withdrawal_amount', '1000'),
+('max_withdrawal_amount', '500000'),
+('withdrawal_fee_percent', '0'),
+('withdrawal_fee_flat', '0')
+ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value);
+
 SET foreign_key_checks = 1;

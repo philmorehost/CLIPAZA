@@ -64,6 +64,8 @@ try {
             <li class="nav-item"><a href="index.php" class="nav-link"><span class="nav-icon">⊞</span> Dashboard</a></li>
             <li class="nav-item"><a href="users.php" class="nav-link active"><span class="nav-icon">👥</span> Users</a></li>
             <li class="nav-item"><a href="contests.php" class="nav-link"><span class="nav-icon">🏆</span> Contests</a></li>
+            <li class="nav-item"><a href="payouts.php" class="nav-link"><span class="nav-icon">💸</span> Payouts</a></li>
+            <li class="nav-item"><a href="kyc.php" class="nav-link"><span class="nav-icon">🪪</span> KYC</a></li>
             <li class="nav-item"><a href="security.php" class="nav-link"><span class="nav-icon">🛡</span> Security</a></li>
             <li class="nav-item"><a href="settings.php" class="nav-link"><span class="nav-icon">⚙</span> Settings</a></li>
         </ul>
@@ -123,6 +125,13 @@ try {
                             <?php if ($u['status']!=='active'): ?><button class="btn btn-xs btn-outline-accent uab" data-id="<?= $u['id'] ?>" data-st="active" data-csrf="<?= e($csrf) ?>">Activate</button><?php endif; ?>
                             <?php if ($u['status']!=='inactive'): ?><button class="btn btn-xs uab" style="background:#1a1a1a;color:#ccc;font-size:0.72rem;border:1px solid #2a2a2a" data-id="<?= $u['id'] ?>" data-st="inactive" data-csrf="<?= e($csrf) ?>">Suspend</button><?php endif; ?>
                             <?php if ($u['status']!=='banned'): ?><button class="btn btn-xs uab" style="background:rgba(220,38,38,0.1);color:#f87171;font-size:0.72rem;border:1px solid rgba(220,38,38,0.2)" data-id="<?= $u['id'] ?>" data-st="banned" data-csrf="<?= e($csrf) ?>">Ban</button><?php endif; ?>
+                            <a href="edit-user.php?id=<?= $u['id'] ?>" class="btn btn-xs" style="background:rgba(0,153,255,0.1);color:var(--info);font-size:0.72rem;border:1px solid rgba(0,153,255,0.2)">Edit</a>
+                            <?php if ($u['role'] !== 'admin'): ?>
+                            <button class="btn btn-xs login-as-btn" data-id="<?= $u['id'] ?>"
+                                    style="background:rgba(204,255,0,0.05);color:var(--accent);font-size:0.68rem;border:1px solid rgba(204,255,0,0.15)">
+                                👤 Login
+                            </button>
+                            <?php endif; ?>
                             </div>
                         </td>
                     </tr>
@@ -153,6 +162,30 @@ document.querySelectorAll('.uab').forEach(btn => {
         const d = await r.json();
         if (d.success) location.reload();
         else { alert(d.message||'Error'); this.disabled=false; }
+    });
+});
+
+document.querySelectorAll('.login-as-btn').forEach(btn => {
+    btn.addEventListener('click', async function() {
+        if (!confirm('Login as this user? You will be redirected to their dashboard.')) return;
+        this.disabled = true; this.textContent = '…';
+        const csrf = document.querySelector('meta[name="csrf"]').content;
+        try {
+            const r = await fetch('/admin/ajax/admin_actions.php', {
+                method:'POST',
+                body: new URLSearchParams({ action:'login_as_user', target_user_id: this.dataset.id, csrf_token: csrf })
+            });
+            const d = await r.json();
+            if (d.success) {
+                window.location.href = d.redirect || '/dashboard';
+            } else {
+                alert(d.message || 'Failed to switch.');
+                this.disabled = false; this.textContent = '👤 Login';
+            }
+        } catch {
+            alert('Network error.');
+            this.disabled = false; this.textContent = '👤 Login';
+        }
     });
 });
 </script>

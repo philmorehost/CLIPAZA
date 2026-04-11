@@ -56,13 +56,23 @@ function ss(array $settings, string $key, string $default = ''): string {
                 </a>
             </li>
             <li class="nav-item">
-                <a href="#" class="nav-link">
+                <a href="users.php" class="nav-link">
                     <span class="nav-icon">👥</span> Users
                 </a>
             </li>
             <li class="nav-item">
-                <a href="#" class="nav-link">
+                <a href="contests.php" class="nav-link">
                     <span class="nav-icon">🏆</span> Contests
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="payouts.php" class="nav-link">
+                    <span class="nav-icon">💸</span> Payouts
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="kyc.php" class="nav-link">
+                    <span class="nav-icon">🪪</span> KYC
                 </a>
             </li>
             <li class="nav-item">
@@ -98,6 +108,7 @@ function ss(array $settings, string $key, string $default = ''): string {
         $tabs = [
             'general' => '🌐 General',
             'seo'     => '🔍 SEO',
+            'payment' => '💳 Payment',
             'code'    => '💻 Code Injection',
             'ads'     => '📢 Ads',
         ];
@@ -213,6 +224,89 @@ function ss(array $settings, string $key, string $default = ''): string {
         </div>
 
         <button type="submit" class="btn btn-accent">Save SEO Settings</button>
+    </form>
+
+    <!-- TAB: PAYMENT -->
+    <?php elseif ($activeTab === 'payment'): ?>
+    <form id="settingsForm">
+        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrf) ?>">
+        <input type="hidden" name="action" value="save_payment">
+
+        <div class="card-dark mb-4">
+            <div class="card-header">Paystack API Keys</div>
+            <div class="card-body">
+                <div class="mb-4">
+                    <label class="form-label-dark">Paystack Public Key</label>
+                    <input type="text" name="paystack_public_key" class="form-control form-control-dark"
+                           value="<?= ss($siteSettings, 'paystack_public_key') ?>"
+                           placeholder="pk_live_... or pk_test_...">
+                    <div style="font-size:0.78rem;color:#888;margin-top:6px;">Used on the frontend to initialize payment popups.</div>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label-dark">Paystack Secret Key</label>
+                    <input type="password" name="paystack_secret_key" class="form-control form-control-dark"
+                           value="<?= ss($siteSettings, 'paystack_secret_key') ?>"
+                           placeholder="sk_live_... or sk_test_...">
+                    <div style="font-size:0.78rem;color:#888;margin-top:6px;">Used server-side to verify payments and initiate transfers. Keep secret.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-dark mb-4">
+            <div class="card-header">Platform Fees</div>
+            <div class="card-body">
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label-dark">Platform Fee (%)</label>
+                        <input type="number" name="platform_fee_percent" class="form-control form-control-dark"
+                               value="<?= ss($siteSettings, 'platform_fee_percent', '10') ?>"
+                               min="0" max="100" step="0.1" placeholder="10">
+                        <div style="font-size:0.78rem;color:#888;margin-top:6px;">% added to contest prize pool as platform fee.</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label-dark">Minimum Contest Prize (₦)</label>
+                        <input type="number" name="min_contest_prize" class="form-control form-control-dark"
+                               value="<?= ss($siteSettings, 'min_contest_prize', '5000') ?>"
+                               min="0" placeholder="5000">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-dark mb-4">
+            <div class="card-header">Withdrawal Settings</div>
+            <div class="card-body">
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label-dark">Minimum Withdrawal (₦)</label>
+                        <input type="number" name="min_withdrawal_amount" class="form-control form-control-dark"
+                               value="<?= ss($siteSettings, 'min_withdrawal_amount', '1000') ?>"
+                               min="0" placeholder="1000">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label-dark">Maximum Withdrawal (₦)</label>
+                        <input type="number" name="max_withdrawal_amount" class="form-control form-control-dark"
+                               value="<?= ss($siteSettings, 'max_withdrawal_amount', '500000') ?>"
+                               min="0" placeholder="500000">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label-dark">Withdrawal Fee (%)</label>
+                        <input type="number" name="withdrawal_fee_percent" class="form-control form-control-dark"
+                               value="<?= ss($siteSettings, 'withdrawal_fee_percent', '0') ?>"
+                               min="0" max="100" step="0.01" placeholder="0">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label-dark">Withdrawal Fee Flat (₦)</label>
+                        <input type="number" name="withdrawal_fee_flat" class="form-control form-control-dark"
+                               value="<?= ss($siteSettings, 'withdrawal_fee_flat', '0') ?>"
+                               min="0" placeholder="0">
+                    </div>
+                </div>
+                <div style="font-size:0.78rem;color:#888">Fees are deducted from the withdrawal amount before transfer.</div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-accent">Save Payment Settings</button>
     </form>
 
     <!-- TAB: CODE INJECTION -->

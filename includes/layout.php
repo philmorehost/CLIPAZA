@@ -46,12 +46,27 @@ function renderNav(bool $isLoggedIn, array $user = [], string $activeMode = ''):
         $username = e($user['username'] ?? 'User');
         $mode     = e($activeMode ?: ($user['mode'] ?? 'clipper'));
         $modeLabel = ucfirst($mode);
+        // Impersonation banner
+        if (!empty($_SESSION['admin_impersonating'])) {
+            $origName = e($_SESSION['original_admin_name'] ?? 'Admin');
+            echo '<a href="/auth/return-admin" class="btn btn-sm" style="background:rgba(255,68,68,0.15);color:var(--danger);border:1px solid rgba(255,68,68,0.3);font-size:0.75rem">← Return to Admin (' . $origName . ')</a>';
+        }
         echo '<span class="badge" style="background:var(--accent-dim);color:var(--accent);font-size:0.72rem;border:1px solid rgba(204,255,0,0.3)">' . $modeLabel . ' Mode</span>';
         echo '<a href="/dashboard" class="btn btn-sm btn-outline-accent">Dashboard</a>';
         echo '<div class="dropdown">';
         echo '<button class="btn btn-sm" style="background:#111;color:#fff;border:1px solid #222" data-bs-toggle="dropdown">@' . $username . ' &#9660;</button>';
         echo '<ul class="dropdown-menu dropdown-menu-end" style="background:#111;border:1px solid #222">';
         echo '<li><a class="dropdown-item text-white" href="/profile" style="font-size:0.85rem">Profile</a></li>';
+        echo '<li><a class="dropdown-item text-white" href="/wallet" style="font-size:0.85rem">💳 Wallet</a></li>';
+        echo '<li><a class="dropdown-item text-white" href="/kyc" style="font-size:0.85rem">🪪 KYC</a></li>';
+        echo '<li><a class="dropdown-item text-white" href="/notifications" style="font-size:0.85rem">🔔 Notifications' . (function() {
+            if (session_status() === PHP_SESSION_NONE) session_start();
+            if (!empty($_SESSION['user_id'])) {
+                $cnt = getUnreadNotificationCount((int)$_SESSION['user_id']);
+                return $cnt > 0 ? ' <span style="background:var(--danger);color:#fff;font-size:0.65rem;padding:1px 5px;border-radius:10px">' . $cnt . '</span>' : '';
+            }
+            return '';
+        })() . '</a></li>';
         echo '<li><a class="dropdown-item text-white" href="/payout" style="font-size:0.85rem">Payouts</a></li>';
         echo '<li><hr class="dropdown-divider" style="border-color:#222"></li>';
         echo '<li><a class="dropdown-item text-danger" href="/auth/logout" style="font-size:0.85rem">Logout</a></li>';

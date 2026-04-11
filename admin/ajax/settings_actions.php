@@ -36,6 +36,7 @@ try {
     match ($action) {
         'save_general' => handleSaveGeneral(),
         'save_seo'     => handleSaveSeo(),
+        'save_payment' => handleSavePayment(),
         'save_code'    => handleSaveCode(),
         'save_ads'     => handleSaveAds(),
         default        => jsonResponse(['success' => false, 'message' => 'Unknown action.']),
@@ -168,6 +169,24 @@ function handleSaveGeneral(): never {
     }
 
     jsonResponse(['success' => true, 'message' => 'General settings saved.']);
+}
+
+function handleSavePayment(): never {
+    $fields = [
+        'paystack_public_key'    => 200,
+        'paystack_secret_key'    => 200,
+        'platform_fee_percent'   => 10,
+        'min_contest_prize'      => 20,
+        'min_withdrawal_amount'  => 20,
+        'max_withdrawal_amount'  => 20,
+        'withdrawal_fee_percent' => 10,
+        'withdrawal_fee_flat'    => 20,
+    ];
+    foreach ($fields as $key => $maxLen) {
+        $value = substr(trim($_POST[$key] ?? ''), 0, $maxLen);
+        saveSiteSetting($key, $value);
+    }
+    jsonResponse(['success' => true, 'message' => 'Payment settings saved.']);
 }
 
 function handleSaveSeo(): never {

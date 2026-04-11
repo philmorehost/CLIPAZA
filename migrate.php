@@ -95,6 +95,76 @@ try {
     }
     echo "Site settings updated.\n";
 
+    // 5. Create notifications table if not exists
+    try {
+        $db->exec("CREATE TABLE IF NOT EXISTS `notifications` (
+            `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+            `user_id` int(11) UNSIGNED NOT NULL,
+            `type` varchar(50) NOT NULL DEFAULT 'info',
+            `title` varchar(255) NOT NULL,
+            `message` text NOT NULL,
+            `link` varchar(500) DEFAULT NULL,
+            `is_read` tinyint(1) NOT NULL DEFAULT 0,
+            `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (`id`),
+            KEY `idx_notif_user` (`user_id`),
+            KEY `idx_notif_read` (`is_read`),
+            KEY `idx_notif_created` (`created_at`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+        echo "notifications table ensured.\n";
+    } catch (Throwable $e) {
+        echo "Error creating notifications table: " . $e->getMessage() . "\n";
+    }
+
+    // 6. Create payout_requests table if not exists
+    try {
+        $db->exec("CREATE TABLE IF NOT EXISTS `payout_requests` (
+            `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+            `user_id` int(11) UNSIGNED NOT NULL,
+            `amount` decimal(12,2) NOT NULL,
+            `status` enum('pending','approved','rejected','cancelled','on_hold') NOT NULL DEFAULT 'pending',
+            `bank_name` varchar(200) DEFAULT NULL,
+            `bank_code` varchar(20) DEFAULT NULL,
+            `account_number` varchar(20) DEFAULT NULL,
+            `account_name` varchar(200) DEFAULT NULL,
+            `rejection_reason` text DEFAULT NULL,
+            `cancel_reason` text DEFAULT NULL,
+            `appeal_message` text DEFAULT NULL,
+            `admin_note` text DEFAULT NULL,
+            `paystack_reference` varchar(255) DEFAULT NULL,
+            `paystack_transfer_code` varchar(255) DEFAULT NULL,
+            `processed_by` int(11) UNSIGNED DEFAULT NULL,
+            `processed_at` datetime DEFAULT NULL,
+            `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (`id`),
+            KEY `idx_pr_user` (`user_id`),
+            KEY `idx_pr_status` (`status`),
+            KEY `idx_pr_created` (`created_at`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+        echo "payout_requests table ensured.\n";
+    } catch (Throwable $e) {
+        echo "Error creating payout_requests table: " . $e->getMessage() . "\n";
+    }
+
+    // 7. Add new site settings for payment features
+    $paymentSettings = [
+        'paystack_fee_percent'   => '0',
+        'paystack_fee_flat'      => '0',
+        'min_withdrawal_amount'  => '1000',
+        'max_withdrawal_amount'  => '500000',
+        'withdrawal_fee_percent' => '0',
+        'withdrawal_fee_flat'    => '0',
+    ];
+    $stmt = $db->prepare("INSERT IGNORE INTO site_settings (setting_key, setting_value) VALUES (?, ?)");
+    foreach ($paymentSettings as $key => $val) {
+        $stmt->execute([$key, $val]);
+    }
+    echo "Payment settings ensured.\n";
+
+    // 8. Add admin_note column to payout_requests (in case table already existed without it)
+    addColumnIfNotExists($db, 'payout_requests', 'admin_note', 'TEXT DEFAULT NULL');
+
     echo "Database migrations completed successfully.\n";
 
 } catch (Throwable $e) {
