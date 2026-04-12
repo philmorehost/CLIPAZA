@@ -75,7 +75,18 @@ try {
     $totalContests = count($contests);
 } catch (Throwable) {}
 
-renderHead('Browse Contests');
+$siteUrl    = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'clipaza.com');
+$siteName   = getSetting('site_name', 'Clipaza');
+$metaDesc   = 'Browse active fan clipping contests on ' . $siteName . '. Pick a creator, clip their best moment, post it on TikTok, Reels, or Shorts, and win real cash prizes.';
+$extraHead  = '  <meta name="description" content="' . e($metaDesc) . '">' . "\n";
+$extraHead .= '  <link rel="canonical" href="' . e($siteUrl . '/contests') . '">' . "\n";
+$extraHead .= '  <meta property="og:type" content="website">' . "\n";
+$extraHead .= '  <meta property="og:title" content="Browse Contests — ' . e($siteName) . '">' . "\n";
+$extraHead .= '  <meta property="og:description" content="' . e($metaDesc) . '">' . "\n";
+$extraHead .= '  <meta property="og:url" content="' . e($siteUrl . '/contests') . '">' . "\n";
+$extraHead .= '  <meta name="twitter:card" content="summary">' . "\n";
+
+renderHead('Browse Contests', $extraHead);
 renderNav($isLoggedIn, ['username' => $username], $userMode);
 ?>
 

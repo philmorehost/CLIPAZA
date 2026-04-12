@@ -114,8 +114,46 @@ try {
     $sidebarFeatured = $stmt2->fetchAll();
 } catch (Throwable) {}
 
-$pageTitle = $contest['title'];
-renderHead($pageTitle, '<meta name="csrf" content="' . e($csrf) . '">');
+$pageTitle  = $contest['title'];
+$siteUrl    = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'clipaza.com');
+$siteName   = getSetting('site_name', 'Clipaza');
+$contestUrl = $siteUrl . '/contest?id=' . $contestId;
+$ogImage    = $contest['youtube_thumbnail'] ?? '';
+$prize      = number_format((float)($contest['prize_pool'] ?? 0), 0);
+$metaDesc   = 'Enter the "' . addslashes($contest['title']) . '" clipping contest on ' . $siteName . ' and compete for a ₦' . $prize . ' prize. Post your best clip on TikTok, Reels, or Shorts — most authentic views wins.';
+
+$extraHead  = '<meta name="csrf" content="' . e($csrf) . '">' . "\n";
+$extraHead .= '  <meta name="description" content="' . e($metaDesc) . '">' . "\n";
+$extraHead .= '  <link rel="canonical" href="' . e($contestUrl) . '">' . "\n";
+$extraHead .= '  <meta property="og:type" content="website">' . "\n";
+$extraHead .= '  <meta property="og:title" content="' . e($pageTitle . ' — ' . $siteName) . '">' . "\n";
+$extraHead .= '  <meta property="og:description" content="' . e($metaDesc) . '">' . "\n";
+$extraHead .= '  <meta property="og:url" content="' . e($contestUrl) . '">' . "\n";
+if ($ogImage !== '') {
+    $extraHead .= '  <meta property="og:image" content="' . e($ogImage) . '">' . "\n";
+}
+$extraHead .= '  <meta name="twitter:card" content="summary_large_image">' . "\n";
+$extraHead .= '  <meta name="twitter:title" content="' . e($pageTitle . ' — ' . $siteName) . '">' . "\n";
+$extraHead .= '  <meta name="twitter:description" content="' . e($metaDesc) . '">' . "\n";
+if ($ogImage !== '') {
+    $extraHead .= '  <meta name="twitter:image" content="' . e($ogImage) . '">' . "\n";
+}
+// JSON-LD Event schema for contest
+$schemaEndDate = !empty($contest['end_date']) ? date('c', strtotime($contest['end_date'])) : '';
+$schemaJson = json_encode([
+    '@context'    => 'https://schema.org',
+    '@type'       => 'Event',
+    'name'        => $contest['title'],
+    'description' => $metaDesc,
+    'url'         => $contestUrl,
+    'eventStatus' => $isActive ? 'https://schema.org/EventScheduled' : 'https://schema.org/EventCancelled',
+    'organizer'   => ['@type' => 'Organization', 'name' => $siteName, 'url' => $siteUrl],
+    'image'       => $ogImage ?: null,
+    'endDate'     => $schemaEndDate ?: null,
+], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+$extraHead .= '  <script type="application/ld+json">' . $schemaJson . '</script>' . "\n";
+
+renderHead($pageTitle, $extraHead);
 renderNav($isLoggedIn, ['username' => $username], $userMode);
 ?>
 

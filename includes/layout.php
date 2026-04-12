@@ -99,7 +99,10 @@ function renderFooter(): void {
       <div class="d-flex gap-4">
         <a href="/contests" class="lp-footer-link text-decoration-none">Browse</a>
         <a href="/#how-it-works" class="lp-footer-link text-decoration-none">How It Works</a>
-        <a href="/auth/register" class="lp-footer-link text-decoration-none">Sign Up</a>
+        <a href="/about" class="lp-footer-link text-decoration-none">About</a>
+        <a href="/privacy" class="lp-footer-link text-decoration-none">Privacy</a>
+        <a href="/terms" class="lp-footer-link text-decoration-none">Terms</a>
+        <a href="/contact" class="lp-footer-link text-decoration-none">Contact</a>
       </div>
       <div style="font-size:0.8rem;color:var(--text-muted)">&copy; {$year} {$siteName}. All rights reserved.</div>
     </div>

@@ -79,7 +79,8 @@ if (file_exists($configFile)) {
     $siteLogo       = getSetting('site_logo', '');
 }
 
-$pageTitle = $seoTitle !== '' ? $seoTitle : (htmlspecialchars($siteName) . ' — Earn Money Clipping Videos');
+$pageTitle = $seoTitle !== '' ? $seoTitle : (htmlspecialchars($siteName) . ' — Where Creators Reward Their Biggest Fans');
+$seoDescription = getSetting('seo_description', 'Clipaza lets YouTube creators run fan clipping contests with real cash prizes. Clip, share, compete to win — paid straight to your bank. Free to join.');
 
 // Load active contests for trending section
 $trendingContests = [];
@@ -148,13 +149,19 @@ function fmtStat(int|float $n, string $prefix = '', string $suffix = ''): string
     <?php if ($seoKeywords !== ''): ?>
     <meta name="keywords" content="<?= htmlspecialchars($seoKeywords) ?>">
     <?php endif; ?>
-    <?php if ($ogImageUrl !== ''): ?>
-    <meta property="og:image" content="<?= htmlspecialchars($ogImageUrl) ?>">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta property="og:type" content="website">
     <meta property="og:title" content="<?= htmlspecialchars($pageTitle) ?>">
     <meta property="og:description" content="<?= htmlspecialchars($seoDescription) ?>">
-    <meta property="og:type" content="website">
+    <?php
+    $lpSiteUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'clipaza.com');
+    ?>
+    <meta property="og:url" content="<?= htmlspecialchars($lpSiteUrl) ?>">
+    <link rel="canonical" href="<?= htmlspecialchars($lpSiteUrl) ?>">
+    <?php if ($ogImageUrl !== ''): ?>
+    <meta property="og:image" content="<?= htmlspecialchars($ogImageUrl) ?>">
+    <meta name="twitter:image" content="<?= htmlspecialchars($ogImageUrl) ?>">
     <?php endif; ?>
-    <meta name="twitter:card" content="summary_large_image">
     <?php if ($siteFavicon !== ''): ?>
     <link rel="icon" href="<?= htmlspecialchars($siteFavicon) ?>">
     <?php endif; ?>
@@ -187,6 +194,7 @@ function fmtStat(int|float $n, string $prefix = '', string $suffix = ''): string
                 <a href="/contests" class="nav-text-link">Browse Contests</a>
                 <a href="#features" class="nav-text-link">Features</a>
                 <a href="#how-it-works" class="nav-text-link">How It Works</a>
+                <a href="/about" class="nav-text-link">About</a>
             </div>
             <div class="d-flex gap-2 align-items-center">
                 <button class="btn-theme-toggle" id="themeToggleBtn" title="Toggle light/dark mode" aria-label="Toggle theme">🌙</button>
@@ -206,20 +214,19 @@ function fmtStat(int|float $n, string $prefix = '', string $suffix = ''): string
     <div class="lp-hero-glow"></div>
     <div class="container">
         <div class="text-center animate-in">
-            <div class="live-badge mb-4">🟢 Live Now — Start Earning Today</div>
+            <div class="live-badge mb-4">🟢 Live Now — Contests Open</div>
             <h1 class="lp-hero-title">
-                The Smartest Way to<br>
-                Grow on YouTube<br>
-                <span class="lp-hero-accent">While Getting Paid</span>
+                Where Creators Reward<br>
+                <span class="lp-hero-accent">Their Biggest Fans.</span>
             </h1>
             <p class="lp-hero-sub">
-                Creators fund contests. Clippers find viral moments.<br>
-                Winners earn real money — paid directly to your bank.
+                Pick a contest from your favourite YouTube creator. Clip their best moment,<br class="d-none d-md-block">
+                post it on TikTok, Reels or Shorts, and let the views decide who wins.
             </p>
 
             <div class="d-flex gap-3 justify-content-center flex-wrap mb-5">
-                <a href="/auth/register" class="btn btn-accent pulse-accent" style="padding:14px 32px;font-size:1rem;border-radius:10px">Start Earning Free →</a>
-                <a href="/contests" class="btn btn-outline-accent" style="padding:14px 32px;font-size:1rem;border-radius:10px">Browse Contests</a>
+                <a href="/auth/register?mode=creator" class="btn btn-accent pulse-accent" style="padding:14px 32px;font-size:1rem;border-radius:10px">Start a Contest →</a>
+                <a href="/auth/register" class="btn btn-outline-accent" style="padding:14px 32px;font-size:1rem;border-radius:10px">Join as a Fan →</a>
             </div>
 
             <!-- Stats Row -->
@@ -231,12 +238,12 @@ function fmtStat(int|float $n, string $prefix = '', string $suffix = ''): string
                 <div class="lp-stat-divider"></div>
                 <div class="lp-stat">
                     <div class="lp-stat-val"><?= $statUsers > 0 ? fmtStat($statUsers) : '10K+' ?></div>
-                    <div class="lp-stat-label">Creators</div>
+                    <div class="lp-stat-label">Creators &amp; Fans</div>
                 </div>
                 <div class="lp-stat-divider"></div>
                 <div class="lp-stat">
                     <div class="lp-stat-val"><?= $statClips > 0 ? fmtStat($statClips) : '500K+' ?></div>
-                    <div class="lp-stat-label">Clips</div>
+                    <div class="lp-stat-label">Clips Submitted</div>
                 </div>
             </div>
         </div>
@@ -310,32 +317,31 @@ function fmtStat(int|float $n, string $prefix = '', string $suffix = ''): string
     <div class="container">
         <div class="text-center mb-5">
             <div class="lp-section-eyebrow">Simple Process</div>
-            <h2 class="lp-section-title">How <span class="text-accent">Clipaza</span> Works</h2>
-            <p class="lp-section-sub">Three steps from signing up to getting paid</p>
+            <h2 class="lp-section-title">How It <span class="text-accent">Works</span></h2>
         </div>
         <div class="row g-4 justify-content-center">
             <div class="col-md-4">
                 <div class="lp-step-card">
                     <div class="lp-step-num">01</div>
-                    <div class="lp-step-icon">🏆</div>
-                    <h3 class="lp-step-title">Creators Fund Contests</h3>
-                    <p class="lp-step-desc">YouTube creators launch clipping contests with prize pools, defining what clips they want and how much they're willing to pay.</p>
+                    <div class="lp-step-icon">🎬</div>
+                    <h3 class="lp-step-title">Creator launches a contest</h3>
+                    <p class="lp-step-desc">They pick a video, set a prize, and open it to their fanbase. The contest goes live on <?= e($siteName) ?> and anyone can join.</p>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="lp-step-card lp-step-card--accent">
                     <div class="lp-step-num">02</div>
                     <div class="lp-step-icon">✂️</div>
-                    <h3 class="lp-step-title">Clippers Create &amp; Share</h3>
-                    <p class="lp-step-desc">Clippers find the best moments, edit them into viral short clips, and share them on social media to earn votes and views.</p>
+                    <h3 class="lp-step-title">Fans clip and post</h3>
+                    <p class="lp-step-desc">Find the moment that's going to stop people mid-scroll. Cut it, post it wherever you're strongest — TikTok, Reels, Shorts — then drop the link.</p>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="lp-step-card">
                     <div class="lp-step-num">03</div>
-                    <div class="lp-step-icon">💸</div>
-                    <h3 class="lp-step-title">Winners Get Paid</h3>
-                    <p class="lp-step-desc">Top clippers win their share of the prize pool — paid directly to their bank account via secure bank transfer.</p>
+                    <div class="lp-step-icon">🏆</div>
+                    <h3 class="lp-step-title">Views decide the winner</h3>
+                    <p class="lp-step-desc">Every clip sits on a live leaderboard. Watch your rank move in real time. When the contest closes, whoever has the most views takes the money home.</p>
                 </div>
             </div>
         </div>
@@ -347,90 +353,94 @@ function fmtStat(int|float $n, string $prefix = '', string $suffix = ''): string
     <div class="container">
         <div class="text-center mb-5">
             <div class="lp-section-eyebrow">Platform Features</div>
-            <h2 class="lp-section-title">Why <span class="text-accent">Clipaza</span>?</h2>
-            <p class="lp-section-sub">Everything you need to monetise your clipping skills</p>
+            <h2 class="lp-section-title">Why <span class="text-accent"><?= e($siteName) ?></span>?</h2>
+            <p class="lp-section-sub">Everything a creator or fan needs — nothing they don't</p>
         </div>
         <div class="row g-4">
             <div class="col-md-4">
                 <div class="feature-card">
                     <div class="feature-icon">🎬</div>
-                    <div class="feature-title">Clip &amp; Earn</div>
-                    <div class="feature-desc">Turn long-form videos into viral short clips. Every clip you create earns you real revenue from contest prize pools.</div>
+                    <div class="feature-title">Any budget works</div>
+                    <div class="feature-desc">You set the prize. Contests work at any prize level — from a quick boost to a serious campaign. You decide how much and how long.</div>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="feature-card">
-                    <div class="feature-icon">🏆</div>
-                    <div class="feature-title">Weekly Contests</div>
-                    <div class="feature-desc">Compete in weekly clipping contests with cash prize pools. The best clips win — judged by views, votes, and engagement.</div>
+                    <div class="feature-icon">📊</div>
+                    <div class="feature-title">Live dashboard</div>
+                    <div class="feature-desc">Every clip submitted sits on a live leaderboard. View counts update in real time so you — and your fans — always know where things stand.</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon">🚀</div>
+                    <div class="feature-title">Three platforms at once</div>
+                    <div class="feature-desc">Your video hits TikTok, Instagram Reels, and YouTube Shorts simultaneously — carried by people who genuinely like what you make.</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon">🛡</div>
+                    <div class="feature-title">Brand control</div>
+                    <div class="feature-desc">Flag any clip that doesn't fit your brand. You stay in control of what's associated with your channel throughout the contest.</div>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="feature-card">
                     <div class="feature-icon">💸</div>
-                    <div class="feature-title">Instant Payouts</div>
-                    <div class="feature-desc">Withdraw your earnings anytime directly to your local bank account. No delays, no middlemen.</div>
+                    <div class="feature-title">Cash to your bank</div>
+                    <div class="feature-desc">Winners get paid directly to their bank account. No gift cards, no vouchers, no waiting — just a bank transfer when the contest closes.</div>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="feature-card">
-                    <div class="feature-icon">📈</div>
-                    <div class="feature-title">Performance Analytics</div>
-                    <div class="feature-desc">Track your clips' views, engagement, and earnings in real time. Know exactly what content performs best.</div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="feature-card">
-                    <div class="feature-icon">🤝</div>
-                    <div class="feature-title">Referral Program</div>
-                    <div class="feature-desc">Invite friends and earn a percentage of their contest winnings forever. Build a passive income stream.</div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="feature-card">
-                    <div class="feature-icon">🌍</div>
-                    <div class="feature-title">Global Community</div>
-                    <div class="feature-desc">Join creators and clippers from 100+ countries. Our platform supports local payment methods worldwide.</div>
+                    <div class="feature-icon">✅</div>
+                    <div class="feature-title">Only real views win</div>
+                    <div class="feature-desc">No purchased traffic. No bot plays. No inflated numbers. If real people watched it, it counts. If they didn't, it doesn't.</div>
                 </div>
             </div>
         </div>
     </div>
 </section>
 
-<!-- For Creators / For Clippers Split -->
+<!-- For Creators / For Fans Split -->
 <section class="lp-section" id="creators">
     <div class="container">
         <div class="text-center mb-5">
             <div class="lp-section-eyebrow">Two Sides, One Platform</div>
-            <h2 class="lp-section-title">Built for <span class="text-accent">Everyone</span></h2>
+            <h2 class="lp-section-title">Creator or Fan —<br><span class="text-accent">there's a spot for you.</span></h2>
         </div>
         <div class="row g-4">
-            <div class="col-md-6" id="clippers">
+            <div class="col-md-6">
                 <div class="lp-split-card">
                     <div class="lp-split-badge">For Creators</div>
-                    <h3 class="lp-split-title">Grow Your Channel<br><span class="text-accent">On Autopilot</span></h3>
+                    <h3 class="lp-split-title">Your fans will promote you<br><span class="text-accent">better than any ad ever will.</span></h3>
+                    <p style="color:var(--text-muted);font-size:0.9rem;line-height:1.8;margin-bottom:20px">
+                        They already know your content. They already have opinions about it. <?= e($siteName) ?> gives them a contest to enter and a prize to chase — and the side effect is your video spreading across three platforms at once, carried by people who genuinely like what you make.
+                    </p>
                     <ul class="lp-split-list">
-                        <li>🎯 Fund contests starting at any budget</li>
-                        <li>📊 Get dozens of unique clips per video</li>
-                        <li>🚀 Viral short-form content without editing</li>
-                        <li>💡 Pay only for results you love</li>
-                        <li>🔒 Full control over clip approval</li>
+                        <li>🎯 Any budget works — you set the number</li>
+                        <li>📊 Live dashboard showing every clip submitted</li>
+                        <li>🚀 Your video hits TikTok, Reels, and Shorts simultaneously</li>
+                        <li>🛡 Flag any clip that doesn't fit your brand</li>
                     </ul>
-                    <a href="/auth/register" class="btn btn-accent mt-3">Start a Contest →</a>
+                    <a href="/auth/register?mode=creator" class="btn btn-accent mt-3">Start a Contest →</a>
                 </div>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-6" id="fans">
                 <div class="lp-split-card lp-split-card--accent">
-                    <div class="lp-split-badge lp-split-badge--dark">For Clippers</div>
-                    <h3 class="lp-split-title">Turn Your Skills<br><span style="color:#000;">Into Cash</span></h3>
+                    <div class="lp-split-badge lp-split-badge--dark">For Fans</div>
+                    <h3 class="lp-split-title">You were going to watch it.<br><span style="color:#000;">Might as well win something.</span></h3>
+                    <p style="color:rgba(0,0,0,0.65);font-size:0.9rem;line-height:1.8;margin-bottom:20px">
+                        Find a contest for a creator you follow. Watch the video. Pull out the clip that nobody else will think to cut. Post it. Then check the leaderboard obsessively for the next two weeks like the rest of us.
+                    </p>
                     <ul class="lp-split-list lp-split-list--dark">
-                        <li>✂️ Clip from top YouTube channels</li>
-                        <li>💰 Enter contests with real prize money</li>
-                        <li>🏅 Leaderboard rankings &amp; recognition</li>
-                        <li>⚡ Fast payouts to your local bank</li>
-                        <li>📱 Work from anywhere, any device</li>
+                        <li>📱 Runs on TikTok, Instagram Reels, and YouTube Shorts</li>
+                        <li>✂️ Submit as many clips as contests allow</li>
+                        <li>📊 Leaderboard updates in real time</li>
+                        <li>💸 Cash goes straight to your bank when you win</li>
                     </ul>
-                    <a href="/auth/register" class="btn btn-accent" style="margin-top:12px;display:inline-block;">Join as Clipper →</a>
+                    <a href="/auth/register" class="btn btn-accent" style="margin-top:12px;display:inline-block;">Join as a Fan →</a>
                 </div>
             </div>
         </div>
@@ -442,8 +452,8 @@ function fmtStat(int|float $n, string $prefix = '', string $suffix = ''): string
     <div class="container">
         <div class="text-center mb-5">
             <div class="lp-section-eyebrow">Live Rankings</div>
-            <h2 class="lp-section-title">Top Clippers <span class="text-accent">This Week</span></h2>
-            <p class="lp-section-sub">Join the competition and see your name on the leaderboard</p>
+            <h2 class="lp-section-title">Only Real Views <span class="text-accent">Win Here.</span></h2>
+            <p class="lp-section-sub" style="max-width:600px;margin:0 auto">Every submitted link gets tracked across TikTok, Reels, and Shorts — but only authentic views count. No purchased traffic. No bot plays. Contest closes, and the honest number at the top wins.</p>
         </div>
         <div class="lp-leaderboard">
             <div class="lp-lb-header">
@@ -492,12 +502,12 @@ function fmtStat(int|float $n, string $prefix = '', string $suffix = ''): string
 <section class="lp-cta-section">
     <div class="lp-cta-glow"></div>
     <div class="container text-center" style="position:relative;z-index:1;">
-        <h2 class="lp-cta-title">Ready to Start <span class="text-accent">Earning?</span></h2>
-        <p class="lp-cta-sub">Join creators and clippers already building real income on Clipaza.<br>Free to sign up — no credit card required.</p>
+        <h2 class="lp-cta-title">Creator or fan — <span class="text-accent">there's a spot for you.</span></h2>
+        <p class="lp-cta-sub">Contests are live right now. Sign up for free and see what's running.</p>
 
         <div class="d-flex gap-3 justify-content-center flex-wrap mb-4">
-            <a href="/auth/register" class="btn btn-accent pulse-accent" style="padding:15px 40px;font-size:1.05rem;border-radius:10px">Sign Up Free →</a>
-            <a href="/contests" class="btn btn-outline-accent" style="padding:15px 36px;font-size:1.05rem;border-radius:10px">Browse Active Contests</a>
+            <a href="/auth/register?mode=creator" class="btn btn-accent pulse-accent" style="padding:15px 40px;font-size:1.05rem;border-radius:10px">Start a Contest →</a>
+            <a href="/auth/register" class="btn btn-outline-accent" style="padding:15px 36px;font-size:1.05rem;border-radius:10px">Join as a Fan →</a>
         </div>
         <p class="lp-form-note">Already have an account? <a href="/auth/login" class="text-accent text-decoration-none">Log in here</a></p>
     </div>
@@ -516,10 +526,10 @@ function fmtStat(int|float $n, string $prefix = '', string $suffix = ''): string
             </div>
             <p style="font-size:0.8rem;color:var(--text-muted);margin:0;">© <?= date('Y') ?> <?= htmlspecialchars($siteName) ?>. All rights reserved.</p>
             <div class="d-flex gap-4 align-items-center flex-wrap justify-content-center">
-                <a href="#" class="lp-footer-link">Privacy</a>
-                <a href="#" class="lp-footer-link">Terms</a>
-                <a href="#" class="lp-footer-link">Contact</a>
-                <a href="#" class="lp-footer-link">About</a>
+                <a href="/privacy" class="lp-footer-link">Privacy</a>
+                <a href="/terms" class="lp-footer-link">Terms</a>
+                <a href="/contact" class="lp-footer-link">Contact</a>
+                <a href="/about" class="lp-footer-link">About</a>
                 <span class="lp-footer-socials">
                     <a href="#" title="Twitter/X" aria-label="Twitter">𝕏</a>
                     <a href="#" title="Instagram" aria-label="Instagram">📸</a>
