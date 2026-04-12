@@ -83,6 +83,17 @@ function getLeaderboard(PDO $db, int $contestId, string $platform, int $limit = 
 
 $csrf = generateCsrfToken();
 
+// Load disclaimer status for logged-in user
+$disclaimerAccepted = false;
+if ($isLoggedIn) {
+    try {
+        $stmtDisc = db()->prepare("SELECT disclaimer_accepted FROM user_profiles WHERE user_id = ? LIMIT 1");
+        $stmtDisc->execute([$userId]);
+        $rowDisc = $stmtDisc->fetch();
+        $disclaimerAccepted = !empty($rowDisc['disclaimer_accepted']);
+    } catch (Throwable) {}
+}
+
 // Load sidebar featured contests (excluding current)
 $sidebarFeatured = [];
 try {
@@ -104,7 +115,7 @@ try {
 } catch (Throwable) {}
 
 $pageTitle = $contest['title'];
-renderHead($pageTitle);
+renderHead($pageTitle, '<meta name="csrf" content="' . e($csrf) . '">');
 renderNav($isLoggedIn, ['username' => $username], $userMode);
 ?>
 
@@ -294,6 +305,29 @@ renderNav($isLoggedIn, ['username' => $username], $userMode);
             </div>
           <?php else: ?>
             <h6 class="fw-700 mb-3">Submit Your Clip</h6>
+            <?php if (!$disclaimerAccepted): ?>
+            <div class="disclaimer-join-box mb-3" id="joinDisclaimerBox">
+              <div class="d-flex align-items-start gap-2 mb-2">
+                <span style="font-size:1.1rem">⚠️</span>
+                <div>
+                  <div class="fw-600" style="font-size:0.82rem;color:var(--warning)">Read Before Joining</div>
+                </div>
+              </div>
+              <ol style="font-size:0.78rem;line-height:1.6;color:#aaa;margin:0;padding-left:18px">
+                <li style="margin-bottom:4px">You must submit a <strong style="color:#fff">2-min analytics video</strong> proof within 3 days of contest end to claim prizes.</li>
+                <li style="margin-bottom:4px"><strong style="color:#fff">Comment &amp; like screenshots</strong> required for prize collection.</li>
+                <li style="margin-bottom:4px">Bots = permanent ban.</li>
+              </ol>
+              <label style="display:flex;align-items:center;gap:8px;margin-top:10px;cursor:pointer;font-size:0.8rem">
+                <input type="checkbox" id="agreeToJoin" style="accent-color:var(--accent)">
+                <span style="color:#ccc">I understand and agree to the contest rules</span>
+              </label>
+              <button type="button" class="btn btn-accent btn-sm w-100 mt-2" id="proceedJoinBtn" disabled>Proceed to Submit</button>
+            </div>
+            <div id="clipFormWrapper" style="display:none">
+            <?php else: ?>
+            <div id="clipFormWrapper">
+            <?php endif; ?>
             <?php if (!empty($myEntries)): ?>
               <div class="alert-dark-success mb-3" style="font-size:0.82rem">
                 ✅ You've already submitted <?= count($myEntries) ?> clip<?= count($myEntries)!==1?'s':'' ?>.
@@ -384,8 +418,16 @@ renderNav($isLoggedIn, ['username' => $username], $userMode);
               <?php endif; ?>
 
               <div id="submitFeedback" class="mb-2"></div>
+              <div class="mb-3">
+                <label class="form-label-dark" style="font-size:0.85rem">📹 Analytics Video Proof <span style="color:var(--warning);font-size:0.75rem">(Required to claim prize)</span></label>
+                <input type="file" name="proof_video" class="form-control-dark" accept="video/mp4,video/webm,video/quicktime">
+                <small class="text-muted d-block mt-1" style="font-size:0.73rem">
+                  Record a 2-minute screen video showing your authentic video analytics (views, likes, comments). Max 50MB. MP4/WebM/MOV. You can submit without it now and upload later when claiming your prize.
+                </small>
+              </div>
               <button type="submit" class="btn btn-accent w-100" id="submitClipBtn">Submit Clip</button>
             </form>
+            </div><!-- end clipFormWrapper -->
           <?php endif; ?>
         </div>
       </div>
@@ -581,6 +623,24 @@ document.getElementById('contestVerifyBtn')?.addEventListener('click', async fun
     }
   }, {passive: true});
 })();
+</script>
+
+<script>
+// Join disclaimer logic
+document.getElementById('agreeToJoin')?.addEventListener('change', function() {
+  document.getElementById('proceedJoinBtn').disabled = !this.checked;
+});
+document.getElementById('proceedJoinBtn')?.addEventListener('click', async function() {
+  const csrf = document.querySelector('meta[name="csrf"]')?.content || '';
+  try {
+    await fetch('/ajax/disclaimer_actions.php', {
+      method: 'POST',
+      body: new URLSearchParams({action: 'accept_disclaimer', csrf_token: csrf})
+    });
+  } catch {}
+  document.getElementById('joinDisclaimerBox').style.display = 'none';
+  document.getElementById('clipFormWrapper').style.display = 'block';
+});
 </script>
 
 <?php renderFooter(); ?>

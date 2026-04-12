@@ -355,6 +355,15 @@ try {
     }
     echo "Feature plans ensured.\n";
 
+    // 22. Add proof_video_path to contest_entries
+    addColumnIfNotExists($db, 'contest_entries', 'proof_video_path', 'VARCHAR(500) DEFAULT NULL');
+    echo "proof_video_path column ensured.\n";
+
+    // 23. Add disclaimer columns to user_profiles
+    addColumnIfNotExists($db, 'user_profiles', 'disclaimer_accepted', 'TINYINT(1) NOT NULL DEFAULT 0');
+    addColumnIfNotExists($db, 'user_profiles', 'disclaimer_accepted_at', 'DATETIME DEFAULT NULL');
+    echo "disclaimer columns ensured.\n";
+
     echo "Database migrations completed successfully.\n";
 
 } catch (Throwable $e) {

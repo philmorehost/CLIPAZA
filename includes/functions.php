@@ -229,3 +229,13 @@ function autoArchiveContests(): int {
         return 0;
     }
 }
+
+function sendEmail(string $to, string $subject, string $html): bool
+{
+    try {
+        require_once __DIR__ . '/mailer.php';
+        return (new Mailer())->send($to, $subject, $html);
+    } catch (Throwable) {
+        return false;
+    }
+}

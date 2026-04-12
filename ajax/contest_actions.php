@@ -221,6 +221,24 @@ function saveProofFile(array $file, int $contestId, int $userId, string $platfor
     return 'uploads/proofs/' . $contestId . '/' . $filename;
 }
 
+function saveProofVideo(array $file, int $contestId, int $userId, string $platform): ?string
+{
+    if ($file['error'] !== UPLOAD_ERR_OK) return null;
+    if ($file['size'] > 50 * 1024 * 1024) return null;
+    $finfo    = new finfo(FILEINFO_MIME_TYPE);
+    $mimeType = $finfo->file($file['tmp_name']);
+    $allowed  = ['video/mp4' => 'mp4', 'video/webm' => 'webm', 'video/quicktime' => 'mov', 'video/x-msvideo' => 'avi'];
+    if (!isset($allowed[$mimeType])) return null;
+    $ext  = $allowed[$mimeType];
+    $root = dirname(__DIR__);
+    $dir  = $root . '/uploads/proofs/' . $contestId;
+    if (!is_dir($dir)) mkdir($dir, 0755, true);
+    $filename = $userId . '_' . $platform . '_analytics.' . $ext;
+    $dest     = $dir . '/' . $filename;
+    if (!move_uploaded_file($file['tmp_name'], $dest)) return null;
+    return 'uploads/proofs/' . $contestId . '/' . $filename;
+}
+
 function handleSubmitClip(): never {
     if (empty($_SESSION['user_id'])) {
         jsonResponse(['success' => false, 'message' => 'You must be logged in to submit a clip.'], 401);
@@ -324,11 +342,59 @@ function handleSubmitClip(): never {
             }
         }
 
+        // Analytics video proof upload (optional at submission; required to claim prize)
+        $proofVideoPath = null;
+        if (!empty($_FILES['proof_video']['name'])) {
+            $proofVideoPath = saveProofVideo($_FILES['proof_video'], $contestId, $userId, $platform);
+        }
+
         // Determine entry status
         if ($botResult['auto_reject']) {
             $entryStatus  = 'rejected';
             $disqualified = 1;
             $disqualReason = 'Automated/bot activity detected';
+
+            // Auto-ban user
+            $db->prepare("UPDATE users SET status = 'banned' WHERE id = ?")->execute([$userId]);
+
+            // Block IP permanently
+            try {
+                require_once dirname(__DIR__) . '/includes/security.php';
+                BruteForceProtection::blockIp($submissionIp, 'permanent', null, 'Bot/artificial activity detected');
+            } catch (Throwable) {}
+
+            // Notify user
+            sendNotification($userId, 'bot_ban', '🚫 Account Suspended', 'Your account has been permanently suspended for bot/artificial activity in a contest submission. Please contact support if you believe this is an error.', '/dashboard');
+
+            // Notify all admins
+            try {
+                $adminStmt = $db->query("SELECT id FROM users WHERE role = 'admin'");
+                foreach ($adminStmt->fetchAll() as $adm) {
+                    sendNotification((int)$adm['id'], 'bot_alert', '⚠️ Bot Activity Detected', "User ID {$userId} was auto-banned for bot activity submitting to contest #{$contestId}.", '/admin/contests.php');
+                }
+            } catch (Throwable) {}
+
+            // Send ban email to user + admin alert
+            try {
+                $userRow = $db->prepare("SELECT email, username FROM users WHERE id = ? LIMIT 1");
+                $userRow->execute([$userId]);
+                $userInfo = $userRow->fetch();
+                if ($userInfo) {
+                    require_once dirname(__DIR__) . '/includes/email_templates.php';
+                    sendEmail($userInfo['email'], 'Your Clipaza account has been suspended', emailBotBanned($userInfo['username']));
+                    $adminEmail = defined('ADMIN_EMAIL') ? ADMIN_EMAIL : getSetting('admin_email', '');
+                    if ($adminEmail) {
+                        $contestRow = $db->prepare("SELECT title FROM contests WHERE id = ? LIMIT 1");
+                        $contestRow->execute([$contestId]);
+                        $contestInfo = $contestRow->fetch();
+                        sendEmail(
+                            $adminEmail,
+                            '⚠️ Bot Activity Detected — ' . ($contestInfo['title'] ?? 'Contest'),
+                            emailAdminBotAlert($userInfo['username'], $userInfo['email'], $contestInfo['title'] ?? "Contest #{$contestId}", $clipUrl, $botResult['flags'])
+                        );
+                    }
+                }
+            } catch (Throwable) {}
         } elseif ($botScore > 0 || !$hasRequiredProofs) {
             $entryStatus  = 'pending';
             $disqualified = 0;
@@ -343,13 +409,13 @@ function handleSubmitClip(): never {
             "INSERT INTO contest_entries
                 (contest_id, user_id, clip_url, platform, status, disqualified, disqualify_reason,
                  bot_score, bot_flags, submission_ip, submission_ua,
-                 proof_subscribe_path, proof_like_path, proof_comment_path)
-             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+                 proof_subscribe_path, proof_like_path, proof_comment_path, proof_video_path)
+             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
         )->execute([
             $contestId, $userId, $clipUrl, $platform,
             $entryStatus, $disqualified, $disqualReason,
             $botScore, $botFlags, $submissionIp, $submissionUa,
-            $proofSubscribePath, $proofLikePath, $proofCommentPath,
+            $proofSubscribePath, $proofLikePath, $proofCommentPath, $proofVideoPath,
         ]);
 
         $entryId = (int)$db->lastInsertId();
@@ -366,6 +432,19 @@ function handleSubmitClip(): never {
         $message = $botResult['auto_reject']
             ? 'Clip submitted but flagged for review.'
             : 'Clip submitted successfully! Good luck!';
+
+        // Send submission confirmation email (only for non-rejected entries)
+        if (!$botResult['auto_reject']) {
+            try {
+                $userEmailRow = $db->prepare("SELECT email, username FROM users WHERE id = ? LIMIT 1");
+                $userEmailRow->execute([$userId]);
+                $uInfo = $userEmailRow->fetch();
+                if ($uInfo) {
+                    require_once dirname(__DIR__) . '/includes/email_templates.php';
+                    sendEmail($uInfo['email'], "Clip Submitted — {$contest['title']}", emailContestSubmitted($uInfo['username'], $contest['title'], $platform, $clipUrl));
+                }
+            } catch (Throwable) {}
+        }
 
         jsonResponse(['success' => true, 'message' => $message, 'entry_id' => $entryId]);
     } catch (Throwable $e) {

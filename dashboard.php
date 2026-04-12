@@ -102,8 +102,9 @@ if ($mode === 'creator') {
 $displayName = $profile['display_name'] ?? $username;
 $initials    = strtoupper(substr($displayName, 0, 1));
 $csrf        = generateCsrfToken();
+$disclaimerAccepted = !empty($profile['disclaimer_accepted']);
 
-renderHead('Dashboard');
+renderHead('Dashboard', '<meta name="csrf" content="' . e($csrf) . '">');
 renderNav(true, ['username' => $username], $mode);
 ?>
 
@@ -118,6 +119,32 @@ renderNav(true, ['username' => $username], $mode);
     <?php endif; ?>
     <?php if ($successMsg === 'contest_featured'): ?>
       <div class="alert-dark-success mb-3">⭐ Your contest is now featured! It will appear at the top of the contests page.</div>
+    <?php endif; ?>
+
+    <?php if (!$disclaimerAccepted): ?>
+    <div class="disclaimer-banner card-dark mb-4" id="disclaimerBanner">
+      <div class="d-flex align-items-start justify-content-between gap-3">
+        <div class="d-flex align-items-center gap-2">
+          <span style="font-size:1.3rem">⚠️</span>
+          <div>
+            <div class="fw-700" style="font-size:0.9rem">Important: Contest Participation Disclaimer</div>
+            <div class="text-muted" style="font-size:0.78rem">You must acknowledge these rules before participating in any contest.</div>
+          </div>
+        </div>
+        <button type="button" class="btn btn-xs btn-outline-accent" id="toggleDisclaimerBtn">Read &amp; Acknowledge</button>
+      </div>
+      <div id="disclaimerFullContent" style="display:none;margin-top:16px;padding-top:16px;border-top:1px solid #1a1a1a">
+        <ol style="font-size:0.82rem;line-height:1.7;color:#aaa;margin:0;padding-left:20px">
+          <li style="margin-bottom:8px">Winners must submit a <strong style="color:#fff">2-minute screen-recorded video</strong> of authentic analytics within <strong style="color:#fff">3 days</strong> of contest end.</li>
+          <li style="margin-bottom:8px"><strong style="color:#fff">Screenshot proof</strong> of your comment and like on the creator's video is mandatory.</li>
+          <li style="margin-bottom:8px">Failure to provide proof within 3 days → prize goes to the next runner-up with valid proof.</li>
+          <li style="margin-bottom:8px"><strong style="color:var(--danger)">Zero tolerance for bots:</strong> Artificial engagement = immediate permanent ban and prize forfeiture.</li>
+          <li>All entries must represent genuine organic engagement. Purchased views/likes are prohibited.</li>
+        </ol>
+        <button type="button" class="btn btn-accent btn-sm mt-3" id="acceptDisclaimerBtn">✓ I Understand &amp; Agree</button>
+        <div id="disclaimerFeedback" class="mt-2"></div>
+      </div>
+    </div>
     <?php endif; ?>
 
     <!-- Top bar -->
@@ -459,6 +486,40 @@ document.getElementById('featurePayBtn')?.addEventListener('click', async functi
   } catch {
     document.getElementById('featureFeedback').innerHTML = '<div class="alert-dark-danger">Network error.</div>';
     this.disabled = false; this.textContent = 'Retry';
+  }
+});
+</script>
+
+<script>
+// Disclaimer banner
+document.getElementById('toggleDisclaimerBtn')?.addEventListener('click', function() {
+  const content = document.getElementById('disclaimerFullContent');
+  const visible = content.style.display !== 'none';
+  content.style.display = visible ? 'none' : 'block';
+  this.textContent = visible ? 'Read & Acknowledge' : 'Collapse';
+});
+
+document.getElementById('acceptDisclaimerBtn')?.addEventListener('click', async function() {
+  const csrf = document.querySelector('meta[name="csrf"]')?.content || '';
+  this.disabled = true; this.textContent = 'Saving…';
+  try {
+    const r = await fetch('/ajax/disclaimer_actions.php', {
+      method: 'POST',
+      body: new URLSearchParams({action: 'accept_disclaimer', csrf_token: csrf})
+    });
+    const d = await r.json();
+    if (d.success) {
+      const banner = document.getElementById('disclaimerBanner');
+      banner.style.transition = 'opacity 0.4s';
+      banner.style.opacity = '0';
+      setTimeout(() => banner?.remove(), 400);
+    } else {
+      document.getElementById('disclaimerFeedback').innerHTML = '<span style="color:var(--danger);font-size:0.8rem">' + (d.message || 'Error') + '</span>';
+      this.disabled = false; this.textContent = '✓ I Understand & Agree';
+    }
+  } catch {
+    document.getElementById('disclaimerFeedback').innerHTML = '<span style="color:var(--danger);font-size:0.8rem">Network error.</span>';
+    this.disabled = false; this.textContent = '✓ I Understand & Agree';
   }
 });
 </script>
