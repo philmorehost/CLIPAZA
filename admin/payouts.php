@@ -189,8 +189,20 @@ try {
                                 <?php if ($r['status'] === 'pending'): ?>
                                 <button class="btn btn-xs payout-action-btn"
                                         data-id="<?= (int)$r['id'] ?>" data-action="approve"
+                                        data-bank="<?= e($r['bank_name'] ?? '') ?>"
+                                        data-acct="<?= e($r['account_number'] ?? '') ?>"
+                                        data-acctname="<?= e($r['account_name'] ?? '') ?>"
                                         style="background:rgba(0,204,102,0.1);color:#4ade80;font-size:0.72rem;border:1px solid rgba(0,204,102,0.2);border-radius:6px;padding:3px 8px">
                                     ✓ Approve
+                                </button>
+                                <button class="btn btn-xs mark-paid-btn"
+                                        data-id="<?= (int)$r['id'] ?>"
+                                        data-bank="<?= e($r['bank_name'] ?? '') ?>"
+                                        data-acct="<?= e($r['account_number'] ?? '') ?>"
+                                        data-acctname="<?= e($r['account_name'] ?? '') ?>"
+                                        data-amount="₦<?= number_format((float)$r['amount'], 0) ?>"
+                                        style="background:rgba(100,100,255,0.1);color:#a5b4fc;font-size:0.72rem;border:1px solid rgba(100,100,255,0.2);border-radius:6px;padding:3px 8px">
+                                    ✓ Mark Paid
                                 </button>
                                 <button class="btn btn-xs payout-action-btn"
                                         data-id="<?= (int)$r['id'] ?>" data-action="reject"
@@ -207,6 +219,15 @@ try {
                                         data-id="<?= (int)$r['id'] ?>" data-action="restore"
                                         style="background:rgba(0,153,255,0.1);color:var(--info);font-size:0.72rem;border:1px solid rgba(0,153,255,0.2);border-radius:6px;padding:3px 8px">
                                     ↺ Restore
+                                </button>
+                                <button class="btn btn-xs mark-paid-btn"
+                                        data-id="<?= (int)$r['id'] ?>"
+                                        data-bank="<?= e($r['bank_name'] ?? '') ?>"
+                                        data-acct="<?= e($r['account_number'] ?? '') ?>"
+                                        data-acctname="<?= e($r['account_name'] ?? '') ?>"
+                                        data-amount="₦<?= number_format((float)$r['amount'], 0) ?>"
+                                        style="background:rgba(100,100,255,0.1);color:#a5b4fc;font-size:0.72rem;border:1px solid rgba(100,100,255,0.2);border-radius:6px;padding:3px 8px">
+                                    ✓ Mark Paid
                                 </button>
                                 <?php endif; ?>
                             </div>
@@ -266,6 +287,11 @@ try {
             <textarea name="admin_note" class="form-control-dark" rows="2"
                       placeholder="Internal note…"></textarea>
           </div>
+          <div class="mb-3" id="pinGroup" style="display:none">
+            <label class="form-label-dark">Approval PIN</label>
+            <input type="password" name="payout_pin" id="actionPinInput" class="form-control-dark"
+                   maxlength="6" placeholder="••••" inputmode="numeric" autocomplete="off">
+          </div>
           <div id="actionFeedback" class="mb-2"></div>
           <div class="d-flex gap-2">
             <button type="submit" class="btn btn-accent" id="actionConfirmBtn">Confirm</button>
@@ -278,12 +304,68 @@ try {
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Mark as Paid Modal -->
+<div class="modal fade modal-dark" id="markPaidModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h6 class="modal-title fw-700">✓ Mark as Paid (Manual Transfer)</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3 p-3" style="background:#0d0d0d;border:1px solid #222;border-radius:8px">
+          <div class="fw-700 mb-1" style="color:var(--accent)" id="markPaidAmount"></div>
+          <div style="font-size:0.85rem;color:#ccc">Bank: <span id="markPaidBank"></span></div>
+          <div style="font-size:0.85rem;color:#ccc">Account: <span id="markPaidAcct"></span></div>
+          <div style="font-size:0.85rem;color:#aaa">Name: <span id="markPaidAcctName"></span></div>
+        </div>
+        <p class="text-muted mb-3" style="font-size:0.82rem">Confirm you have manually transferred the funds to the above bank account.</p>
+        <form id="markPaidForm">
+          <input type="hidden" name="csrf_token" value="<?= e($csrf) ?>">
+          <input type="hidden" name="action" value="mark_paid">
+          <input type="hidden" name="payout_request_id" id="markPaidId">
+          <div class="mb-3">
+            <label class="form-label-dark">Admin Note (optional)</label>
+            <textarea name="admin_note" id="markPaidNote" class="form-control-dark" rows="2"
+                      placeholder="e.g. Transferred via bank app at 2:30pm"></textarea>
+          </div>
+          <div class="mb-3" id="markPaidPinWrap" style="display:none">
+            <label class="form-label-dark">Approval PIN</label>
+            <input type="password" name="payout_pin" id="markPaidPin" class="form-control-dark"
+                   maxlength="6" placeholder="••••" inputmode="numeric" autocomplete="off">
+          </div>
+          <div id="markPaidFeedback" class="mb-2"></div>
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-accent" id="markPaidConfirmBtn">Confirm Payment</button>
+            <button type="button" class="btn btn-outline-accent" data-bs-dismiss="modal">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script src="../assets/js/main.js"></script>
 <script>
 const csrf = document.querySelector('meta[name="csrf"]').content;
 
 // Store full request data
 const requestData = <?= json_encode(array_column($requests, null, 'id')) ?>;
+
+// Check if payout PIN is configured
+let pinRequired = false;
+(async () => {
+    try {
+        const fd = new FormData();
+        fd.append('csrf_token', csrf);
+        fd.append('action', 'verify_payout_pin');
+        fd.append('payout_pin', '');
+        const r = await fetch('ajax/admin_actions.php', { method: 'POST', body: fd });
+        const d = await r.json();
+        pinRequired = !!(d.pin_required);
+    } catch {}
+})();
 
 // View detail
 document.querySelectorAll('.view-detail-btn').forEach(btn => {
@@ -325,10 +407,10 @@ document.querySelectorAll('.view-detail-btn').forEach(btn => {
     });
 });
 
-// Payout action
+// Payout action (approve/reject/cancel/restore)
 document.querySelectorAll('.payout-action-btn').forEach(btn => {
     btn.addEventListener('click', function() {
-        const id = this.dataset.id;
+        const id     = this.dataset.id;
         const action = this.dataset.action;
         document.getElementById('actionPayoutId').value = id;
         document.getElementById('actionType').value = action;
@@ -336,10 +418,15 @@ document.querySelectorAll('.payout-action-btn').forEach(btn => {
         const titles = { approve:'Approve Payout', reject:'Reject Payout', cancel:'Cancel Payout', restore:'Restore to Pending' };
         document.getElementById('actionModalTitle').textContent = titles[action] || 'Confirm Action';
 
-        const reasonGroup = document.getElementById('reasonGroup');
+        const reasonGroup    = document.getElementById('reasonGroup');
         const reasonTextarea = document.getElementById('reasonTextarea');
-        const reasonLabel = document.getElementById('reasonLabel');
+        const reasonLabel    = document.getElementById('reasonLabel');
         const adminNoteGroup = document.getElementById('adminNoteGroup');
+        const pinGroup       = document.getElementById('pinGroup');
+        const pinInput       = document.getElementById('actionPinInput');
+
+        pinGroup.style.display = (action === 'approve' && pinRequired) ? 'block' : 'none';
+        if (pinInput) { pinInput.value = ''; pinInput.required = (action === 'approve' && pinRequired); }
 
         if (action === 'approve') {
             reasonGroup.style.display = 'none';
@@ -369,10 +456,60 @@ document.querySelectorAll('.payout-action-btn').forEach(btn => {
 
 document.getElementById('actionForm').addEventListener('submit', async function(e) {
     e.preventDefault();
-    const fb = document.getElementById('actionFeedback');
+    const fb  = document.getElementById('actionFeedback');
     const btn = document.getElementById('actionConfirmBtn');
     btn.disabled = true; btn.textContent = 'Processing…'; fb.innerHTML = '';
 
+    try {
+        const r = await fetch('ajax/admin_actions.php', {
+            method: 'POST',
+            body: new URLSearchParams(new FormData(this))
+        });
+        const d = await r.json();
+        if (d.success) {
+            fb.innerHTML = '<div class="alert-dark-success" style="font-size:0.82rem">✅ ' + d.message + '</div>';
+            btn.textContent = 'Done ✅';
+            setTimeout(() => location.reload(), 1200);
+        } else {
+            fb.innerHTML = '<div class="alert-dark-danger" style="font-size:0.82rem">' + (d.message||'Error') + '</div>';
+            btn.disabled = false; btn.textContent = 'Confirm';
+        }
+    } catch {
+        fb.innerHTML = '<div class="alert-dark-danger" style="font-size:0.82rem">Network error.</div>';
+        btn.disabled = false; btn.textContent = 'Confirm';
+    }
+});
+
+// Mark as Paid (manual transfer)
+document.querySelectorAll('.mark-paid-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const id      = this.dataset.id;
+        const bank    = this.dataset.bank;
+        const acct    = this.dataset.acct;
+        const acctName = this.dataset.acctname;
+        const amount  = this.dataset.amount;
+
+        document.getElementById('markPaidId').value = id;
+        document.getElementById('markPaidAmount').textContent = amount;
+        document.getElementById('markPaidBank').textContent = bank || '—';
+        document.getElementById('markPaidAcct').textContent = acct || '—';
+        document.getElementById('markPaidAcctName').textContent = acctName || '—';
+        document.getElementById('markPaidPinWrap').style.display = pinRequired ? 'block' : 'none';
+        const pinInput = document.getElementById('markPaidPin');
+        if (pinInput) { pinInput.value = ''; pinInput.required = pinRequired; }
+        document.getElementById('markPaidNote').value = '';
+        document.getElementById('markPaidFeedback').innerHTML = '';
+
+        const modal = new bootstrap.Modal(document.getElementById('markPaidModal'));
+        modal.show();
+    });
+});
+
+document.getElementById('markPaidForm')?.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const fb  = document.getElementById('markPaidFeedback');
+    const btn = document.getElementById('markPaidConfirmBtn');
+    btn.disabled = true; btn.textContent = 'Processing…'; fb.innerHTML = '';
     try {
         const r = await fetch('ajax/admin_actions.php', {
             method: 'POST',

@@ -9,6 +9,8 @@ require_once $root . '/includes/layout.php';
 
 if (session_status() === PHP_SESSION_NONE) session_start();
 
+autoArchiveContests();
+
 $isLoggedIn = !empty($_SESSION['user_id']);
 $userMode   = getUserMode();
 $username   = $_SESSION['username'] ?? '';

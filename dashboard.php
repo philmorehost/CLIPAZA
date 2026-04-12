@@ -10,6 +10,8 @@ require_once $root . '/includes/layout.php';
 if (session_status() === PHP_SESSION_NONE) session_start();
 requireUser();
 
+autoArchiveContests();
+
 $userId   = (int)$_SESSION['user_id'];
 $mode     = getUserMode();
 $username = $_SESSION['username'] ?? '';
@@ -27,10 +29,11 @@ $errorMsg   = $_GET['error'] ?? '';
 $successMsg = $_GET['success'] ?? '';
 
 // --- CREATOR stats ---
-$activeContests = 0;
-$totalSpent     = '0.00';
-$totalEntries   = 0;
-$recentContests = [];
+$activeContests     = 0;
+$totalSpent         = '0.00';
+$totalEntries       = 0;
+$totalViewsReceived = 0;
+$recentContests     = [];
 
 // --- CLIPPER stats ---
 $activeSubmissions = 0;
@@ -53,6 +56,14 @@ if ($mode === 'creator') {
         );
         $stmt->execute([$userId]);
         $totalEntries = (int)$stmt->fetchColumn();
+
+        $stmt = $db->prepare(
+            "SELECT COALESCE(SUM(ce.view_count), 0) FROM contest_entries ce
+             INNER JOIN contests c ON c.id = ce.contest_id
+             WHERE c.creator_id = ?"
+        );
+        $stmt->execute([$userId]);
+        $totalViewsReceived = (int)$stmt->fetchColumn();
 
         $stmt = $db->prepare(
             "SELECT c.*, 
@@ -142,6 +153,14 @@ renderNav(true, ['username' => $username], $mode);
           </div>
         </div>
       </div>
+      <div class="row g-3 mb-4">
+        <div class="col-12">
+          <div class="stat-card">
+            <div class="stat-value"><?= number_format($totalViewsReceived) ?></div>
+            <div class="stat-label">Total Views Received</div>
+          </div>
+        </div>
+      </div>
 
       <div class="d-flex align-items-center justify-content-between mb-3">
         <h6 class="fw-700 mb-0">Your Contests</h6>
@@ -180,6 +199,7 @@ renderNav(true, ['username' => $username], $mode);
                 </div>
                 <div class="d-flex gap-2">
                   <a href="/contest?id=<?= (int)$c['id'] ?>" class="btn btn-sm btn-outline-accent">View</a>
+                  <a href="/contest-stats?id=<?= (int)$c['id'] ?>" class="btn btn-sm btn-outline-accent">Stats</a>
                   <?php if ($c['escrow_status'] === 'unfunded' && $c['status'] === 'draft'): ?>
                     <a href="/payment/fund-contest?contest_id=<?= (int)$c['id'] ?>" class="btn btn-sm btn-accent">Fund &amp; Activate</a>
                   <?php endif; ?>

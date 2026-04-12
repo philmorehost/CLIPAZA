@@ -35,6 +35,15 @@ switch ($action) {
     case 'restore':
         handlePayoutRequestAction($action);
         break;
+    case 'mark_paid':
+        handleMarkPaid();
+        break;
+    case 'set_payout_pin':
+        handleSetPayoutPin();
+        break;
+    case 'verify_payout_pin':
+        handleVerifyPayoutPin();
+        break;
     case 'login_as_user':
         handleLoginAsUser();
         break;
@@ -151,6 +160,15 @@ function handlePayoutRequestAction(string $action): never {
         if ($action === 'approve') {
             if (!in_array($req['status'], ['pending', 'on_hold'], true)) {
                 jsonResponse(['success' => false, 'message' => 'Only pending or on-hold requests can be approved.']);
+            }
+
+            // PIN check
+            $storedPin = getSecuritySetting('payout_approval_pin', '');
+            if (!empty($storedPin)) {
+                $submittedPin = $_POST['payout_pin'] ?? '';
+                if (empty($submittedPin) || !password_verify($submittedPin, $storedPin)) {
+                    jsonResponse(['success' => false, 'message' => 'Invalid payout approval PIN.']);
+                }
             }
 
             // Attempt Paystack transfer
@@ -523,5 +541,77 @@ function handleUpdateAdminProfile(): never {
         }
     } catch (Throwable) {
         jsonResponse(['success' => false, 'message' => 'Profile update failed.']);
+    }
+}
+
+function handleSetPayoutPin(): never {
+    $pin = $_POST['payout_pin'] ?? '';
+    if (!preg_match('/^\d{4,6}$/', $pin)) {
+        jsonResponse(['success' => false, 'message' => 'PIN must be 4–6 digits.']);
+    }
+    $hash = password_hash($pin, PASSWORD_BCRYPT, ['cost' => 12]);
+    if (saveSecuritySetting('payout_approval_pin', $hash)) {
+        jsonResponse(['success' => true, 'message' => 'Payout approval PIN updated.']);
+    }
+    jsonResponse(['success' => false, 'message' => 'Failed to save PIN.']);
+}
+
+function handleVerifyPayoutPin(): never {
+    $pin       = $_POST['payout_pin'] ?? '';
+    $storedPin = getSecuritySetting('payout_approval_pin', '');
+    if (empty($storedPin)) {
+        jsonResponse(['success' => true, 'pin_required' => false]);
+    }
+    if (empty($pin) || !password_verify($pin, $storedPin)) {
+        jsonResponse(['success' => false, 'message' => 'Invalid PIN.']);
+    }
+    jsonResponse(['success' => true, 'pin_required' => true]);
+}
+
+function handleMarkPaid(): never {
+    $requestId = (int)($_POST['payout_request_id'] ?? 0);
+    $adminNote = sanitizeInput($_POST['admin_note'] ?? '');
+    $adminId   = (int)($_SESSION['user_id'] ?? 0);
+
+    if (!$requestId) {
+        jsonResponse(['success' => false, 'message' => 'Invalid request ID.']);
+    }
+
+    // PIN check
+    $storedPin = getSecuritySetting('payout_approval_pin', '');
+    if (!empty($storedPin)) {
+        $submittedPin = $_POST['payout_pin'] ?? '';
+        if (empty($submittedPin) || !password_verify($submittedPin, $storedPin)) {
+            jsonResponse(['success' => false, 'message' => 'Invalid payout approval PIN.']);
+        }
+    }
+
+    try {
+        $db   = db();
+        $stmt = $db->prepare("SELECT * FROM payout_requests WHERE id = ? LIMIT 1");
+        $stmt->execute([$requestId]);
+        $req = $stmt->fetch();
+        if (!$req) {
+            jsonResponse(['success' => false, 'message' => 'Payout request not found.']);
+        }
+        if (!in_array($req['status'], ['pending', 'on_hold'], true)) {
+            jsonResponse(['success' => false, 'message' => 'Only pending or on-hold requests can be marked as paid.']);
+        }
+
+        $userId = (int)$req['user_id'];
+        $amount = (float)$req['amount'];
+
+        $db->prepare(
+            "UPDATE payout_requests
+             SET status = 'approved', admin_note = ?, processed_by = ?, processed_at = NOW(), updated_at = NOW()
+             WHERE id = ?"
+        )->execute([$adminNote ?: null, $adminId, $requestId]);
+
+        sendNotification($userId, 'payout_approved', 'Payment Processed 🎉',
+            '₦' . number_format($amount, 0) . ' has been manually processed to your bank account.', '/wallet');
+
+        jsonResponse(['success' => true, 'message' => 'Payout marked as paid (manual transfer). User notified.']);
+    } catch (Throwable $e) {
+        jsonResponse(['success' => false, 'message' => 'Action failed: ' . $e->getMessage()]);
     }
 }

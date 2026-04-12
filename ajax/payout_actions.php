@@ -184,7 +184,9 @@ function handleClaimPrize(): never {
             jsonResponse(['success' => false, 'message' => 'Prize already claimed.']);
         }
 
-        $prizeAmount = round((float)$cp['prize_amount'] / (int)$cp['winner_count'], 2);
+        $prizeAmount = (int)$cp['winner_count'] === 1
+            ? round((float)$cp['prize_amount'], 2)
+            : round((float)$cp['prize_amount'] / (int)$cp['winner_count'], 2);
 
         $db->prepare(
             "INSERT INTO payouts (contest_id, user_id, entry_id, amount, platform, rank_position,

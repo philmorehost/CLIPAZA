@@ -352,6 +352,55 @@ function checked(array $settings, string $key, string $trueVal = '1'): string {
         </div>
     </form>
 
+    <!-- Payout Approval PIN -->
+    <div class="card-dark mt-4" id="payoutPinCard">
+        <div class="card-header">🔐 Payout Approval PIN</div>
+        <div class="card-body">
+            <?php
+            $pinSet = !empty(getSecuritySetting('payout_approval_pin', ''));
+            ?>
+            <?php if ($pinSet): ?>
+            <div class="mb-3">
+                <span class="badge-success">PIN is set ✓</span>
+                <span class="text-muted ms-2" style="font-size:0.82rem">Admin must enter this PIN to approve payouts.</span>
+            </div>
+            <?php else: ?>
+            <p class="text-muted mb-3" style="font-size:0.85rem">No PIN is configured. Set a 4–6 digit PIN to require confirmation when approving payouts.</p>
+            <?php endif; ?>
+            <form id="payoutPinForm" class="d-flex gap-2 align-items-end flex-wrap">
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrf) ?>">
+                <input type="hidden" name="action" value="set_payout_pin">
+                <div>
+                    <label class="form-label-dark" style="font-size:0.82rem"><?= $pinSet ? 'Change PIN' : 'Set PIN' ?> (4–6 digits)</label>
+                    <input type="password" name="payout_pin" id="payoutPinInput" class="form-control form-control-dark"
+                           maxlength="6" pattern="\d{4,6}" placeholder="••••" inputmode="numeric" autocomplete="new-password"
+                           style="max-width:160px">
+                </div>
+                <button type="submit" class="btn btn-accent"><?= $pinSet ? 'Update PIN' : 'Set PIN' ?></button>
+            </form>
+            <div id="payoutPinFeedback" class="mt-2"></div>
+        </div>
+    </div>
+
+    <script>
+    document.getElementById('payoutPinForm')?.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const fb  = document.getElementById('payoutPinFeedback');
+        const btn = this.querySelector('[type="submit"]');
+        btn.disabled = true;
+        fb.innerHTML = '';
+        try {
+            const r = await fetch('ajax/admin_actions.php', { method: 'POST', body: new FormData(this) });
+            const d = await r.json();
+            fb.innerHTML = d.success
+                ? '<span class="badge-success">' + d.message + '</span>'
+                : '<span class="badge-danger">' + (d.message || 'Error') + '</span>';
+            if (d.success) setTimeout(() => location.reload(), 1500);
+        } catch { fb.innerHTML = '<span class="badge-danger">Request failed.</span>'; }
+        btn.disabled = false;
+    });
+    </script>
+
     <!-- TAB: BLOCKED IPs -->
     <?php elseif ($activeTab === 'blocked'): ?>
     <div class="row g-4">

@@ -38,10 +38,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $totalPrize   = 0.0;
         foreach (['tiktok', 'instagram', 'facebook'] as $p) {
             if (!empty($_POST['enable_' . $p])) {
-                $amt    = (float)($_POST[$p . '_prize'] ?? 0);
-                $count  = min(10, max(1, (int)($_POST[$p . '_winners'] ?? 3)));
+                $amt          = (float)($_POST[$p . '_prize'] ?? 0);
+                $winnerTakesAll = !empty($_POST[$p . '_winner_takes_all']) ? 1 : 0;
+                $count        = $winnerTakesAll ? 1 : min(10, max(1, (int)($_POST[$p . '_winners'] ?? 3)));
                 if ($amt > 0) {
-                    $platformData[$p] = ['amount' => $amt, 'winners' => $count];
+                    $platformData[$p] = ['amount' => $amt, 'winners' => $count, 'winner_takes_all' => $winnerTakesAll];
                     $totalPrize += $amt;
                 }
             }
@@ -70,19 +71,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $platformFee = round($totalPrize * $feePercent / 100, 2);
                 $totalAmount = round($totalPrize + $platformFee, 2);
 
+                $contestWinnerTakesAll = 0;
+                foreach ($platformData as $pd) {
+                    if ($pd['winner_takes_all']) { $contestWinnerTakesAll = 1; break; }
+                }
+
                 $stmt = $db->prepare(
                     "INSERT INTO contests
                         (creator_id, title, description, youtube_url, youtube_video_id, youtube_title,
                          youtube_thumbnail, must_subscribe, must_like, must_comment,
                          clip_start_time, clip_end_time, clip_instructions,
-                         prize_pool, platform_fee, total_amount, status, escrow_status, end_date)
-                     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'draft','unfunded',?)"
+                         prize_pool, platform_fee, total_amount, winner_takes_all, status, escrow_status, end_date)
+                     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'draft','unfunded',?)"
                 );
                 $stmt->execute([
                     $userId, $title, '', $youtubeUrl, $youtubeVideoId, $youtubeTitle,
                     $youtubeThumbnail, $mustSubscribe, $mustLike, $mustComment,
                     $clipStart ?: null, $clipEnd ?: null, $clipInstructions ?: null,
-                    $totalPrize, $platformFee, $totalAmount,
+                    $totalPrize, $platformFee, $totalAmount, $contestWinnerTakesAll,
                     $endDate,
                 ]);
                 $contestId = (int)$db->lastInsertId();
@@ -211,8 +217,18 @@ renderNav(true, ['username' => $username], 'creator');
                   </div>
                   <div class="col-md-6">
                     <label class="form-label-dark" style="font-size:0.8rem">Number of Winners</label>
-                    <input type="number" name="<?= $pKey ?>_winners" class="form-control-dark"
+                    <input type="number" name="<?= $pKey ?>_winners" class="form-control-dark <?= $pKey ?>-winners-input"
                            min="1" max="10" value="3">
+                  </div>
+                  <div class="col-12 mt-1">
+                    <div class="form-check d-flex align-items-center gap-2">
+                      <input type="checkbox" name="<?= $pKey ?>_winner_takes_all" id="wta_<?= $pKey ?>"
+                             class="form-check-input winner-takes-all-toggle" data-platform="<?= $pKey ?>"
+                             style="background:#111;border-color:#555;width:16px;height:16px">
+                      <label for="wta_<?= $pKey ?>" class="text-muted" style="cursor:pointer;font-size:0.8rem">
+                        Winner Takes All (1 winner gets full platform prize)
+                      </label>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -283,6 +299,18 @@ function recalcPrize() {
   document.getElementById('platformFee').textContent = '₦' + fee.toLocaleString();
   document.getElementById('totalToPay').textContent  = '₦' + grand.toLocaleString();
 }
+
+// Winner takes all toggle
+document.querySelectorAll('.winner-takes-all-toggle').forEach(cb => {
+  cb.addEventListener('change', function() {
+    const platform = this.dataset.platform;
+    const winnersInput = document.querySelector('.' + platform + '-winners-input');
+    if (winnersInput) {
+      winnersInput.value = this.checked ? 1 : 3;
+      winnersInput.disabled = this.checked;
+    }
+  });
+});
 
 // YouTube fetch
 document.getElementById('fetchYtBtn').addEventListener('click', async function() {

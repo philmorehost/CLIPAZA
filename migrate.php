@@ -165,6 +165,47 @@ try {
     // 8. Add admin_note column to payout_requests (in case table already existed without it)
     addColumnIfNotExists($db, 'payout_requests', 'admin_note', 'TEXT DEFAULT NULL');
 
+    // 9. New contest_entries columns
+    $entryColumns = [
+        'proof_subscribe_path' => 'VARCHAR(500) DEFAULT NULL',
+        'proof_comment_path'   => 'VARCHAR(500) DEFAULT NULL',
+        'proof_like_path'      => 'VARCHAR(500) DEFAULT NULL',
+        'bot_score'            => 'TINYINT UNSIGNED NOT NULL DEFAULT 0',
+        'bot_flags'            => 'VARCHAR(1000) DEFAULT NULL',
+        'submission_ip'        => 'VARCHAR(45) DEFAULT NULL',
+        'submission_ua'        => 'VARCHAR(500) DEFAULT NULL',
+    ];
+    foreach ($entryColumns as $col => $def) {
+        if (addColumnIfNotExists($db, 'contest_entries', $col, $def)) {
+            echo "Added $col to contest_entries.\n";
+        }
+    }
+
+    // 10. winner_takes_all column for contests
+    if (addColumnIfNotExists($db, 'contests', 'winner_takes_all', 'TINYINT(1) NOT NULL DEFAULT 0')) {
+        echo "Added winner_takes_all to contests.\n";
+    }
+
+    // 11. Insert payout_approval_pin security setting if not exists
+    try {
+        $db->prepare(
+            "INSERT IGNORE INTO security_settings (setting_key, setting_value) VALUES ('payout_approval_pin', '')"
+        )->execute();
+        echo "Ensured payout_approval_pin security setting.\n";
+    } catch (Throwable $e) {
+        echo "Error inserting payout_approval_pin: " . $e->getMessage() . "\n";
+    }
+
+    // 12. Create uploads/proofs directory
+    $proofsDir = __DIR__ . '/uploads/proofs';
+    if (!is_dir($proofsDir)) {
+        if (mkdir($proofsDir, 0755, true)) {
+            echo "Created uploads/proofs directory.\n";
+        } else {
+            echo "Warning: Could not create uploads/proofs directory.\n";
+        }
+    }
+
     echo "Database migrations completed successfully.\n";
 
 } catch (Throwable $e) {

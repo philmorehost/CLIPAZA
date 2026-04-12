@@ -9,6 +9,8 @@ require_once $root . '/includes/layout.php';
 
 if (session_status() === PHP_SESSION_NONE) session_start();
 
+autoArchiveContests();
+
 $isLoggedIn = !empty($_SESSION['user_id']);
 $userId     = $isLoggedIn ? (int)$_SESSION['user_id'] : 0;
 $username   = $_SESSION['username'] ?? '';
@@ -20,6 +22,7 @@ if ($contestId <= 0) redirect('/contests');
 $contest   = null;
 $platforms = [];
 $myEntries = []; // keyed by platform
+$hasBankDetails = false;
 
 try {
     $db   = db();
@@ -38,6 +41,11 @@ try {
         foreach ($stmt->fetchAll() as $e) {
             $myEntries[$e['platform'] ?? 'all'] = $e;
         }
+
+        $stmt = $db->prepare('SELECT account_number FROM user_profiles WHERE user_id = ? LIMIT 1');
+        $stmt->execute([$userId]);
+        $profileRow = $stmt->fetch();
+        $hasBankDetails = !empty($profileRow['account_number']);
     }
 } catch (Throwable) {
     redirect('/contests');
@@ -268,7 +276,7 @@ renderNav($isLoggedIn, ['username' => $username], $userMode);
                 ✅ You've already submitted <?= count($myEntries) ?> clip<?= count($myEntries)!==1?'s':'' ?>.
               </div>
             <?php endif; ?>
-            <form id="clipForm">
+            <form id="clipForm" enctype="multipart/form-data">
               <input type="hidden" name="csrf_token" value="<?= e($csrf) ?>">
               <input type="hidden" name="contest_id" value="<?= $contestId ?>">
               <div class="mb-3">
@@ -291,10 +299,67 @@ renderNav($isLoggedIn, ['username' => $username], $userMode);
                 <input type="url" name="clip_url" class="form-control-dark" placeholder="https://www.tiktok.com/..." id="clipUrl">
                 <small class="text-muted" style="font-size:0.75rem">Must be a direct link to your clip on the selected platform</small>
               </div>
-              <div class="mb-4">
+              <div class="mb-3">
                 <label class="form-label-dark">Your YouTube Handle <span class="text-muted">(for verification)</span></label>
                 <input type="text" name="youtube_handle" class="form-control-dark" placeholder="@yourhandle">
               </div>
+
+              <?php if ($contest['must_subscribe'] || $contest['must_like'] || $contest['must_comment']): ?>
+              <div class="mb-3">
+                <div class="fw-600 mb-2" style="font-size:0.85rem">📎 Proof Screenshots</div>
+                <small class="text-muted d-block mb-2" style="font-size:0.75rem">Max 5MB per image. Uploading all proofs may speed up approval.</small>
+                <?php if ($contest['must_subscribe']): ?>
+                <div class="mb-2">
+                  <label class="form-label-dark" style="font-size:0.8rem">Screenshot proof of subscription</label>
+                  <input type="file" name="proof_subscribe" class="form-control-dark" accept="image/*">
+                </div>
+                <?php endif; ?>
+                <?php if ($contest['must_like']): ?>
+                <div class="mb-2">
+                  <label class="form-label-dark" style="font-size:0.8rem">Screenshot proof of like</label>
+                  <input type="file" name="proof_like" class="form-control-dark" accept="image/*">
+                </div>
+                <?php endif; ?>
+                <?php if ($contest['must_comment']): ?>
+                <div class="mb-2">
+                  <label class="form-label-dark" style="font-size:0.8rem">Screenshot proof of comment</label>
+                  <input type="file" name="proof_comment" class="form-control-dark" accept="image/*">
+                </div>
+                <?php endif; ?>
+              </div>
+              <?php endif; ?>
+
+              <?php if (!$hasBankDetails): ?>
+              <div class="mb-3">
+                <button type="button" class="btn btn-sm btn-outline-accent w-100 mb-2" id="toggleBankDetails"
+                        style="font-size:0.8rem">
+                  💳 Add Payment Details (optional)
+                </button>
+                <div id="bankDetailsSection" style="display:none">
+                  <p class="text-muted mb-2" style="font-size:0.75rem">These details will be used to pay you if you win.</p>
+                  <div class="mb-2">
+                    <label class="form-label-dark" style="font-size:0.8rem">Bank</label>
+                    <select name="bank_code" id="bankSelectContest" class="form-control-dark">
+                      <option value="">Loading banks…</option>
+                    </select>
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label-dark" style="font-size:0.8rem">Account Number</label>
+                    <div class="d-flex gap-2">
+                      <input type="text" name="account_number" id="contestAcctNum" class="form-control-dark flex-grow-1"
+                             maxlength="10" placeholder="0000000000" inputmode="numeric">
+                      <button type="button" class="btn btn-outline-accent btn-sm" id="contestVerifyBtn" style="white-space:nowrap;font-size:0.8rem">Verify</button>
+                    </div>
+                  </div>
+                  <div class="mb-2" id="contestAcctNameWrap" style="display:none">
+                    <label class="form-label-dark" style="font-size:0.8rem">Account Name</label>
+                    <input type="text" name="account_name" id="contestAcctName" class="form-control-dark" readonly>
+                    <input type="hidden" name="bank_name" id="contestBankName">
+                  </div>
+                </div>
+              </div>
+              <?php endif; ?>
+
               <div id="submitFeedback" class="mb-2"></div>
               <button type="submit" class="btn btn-accent w-100" id="submitClipBtn">Submit Clip</button>
             </form>
@@ -318,7 +383,7 @@ document.getElementById('clipForm')?.addEventListener('submit', async function(e
   data.set('action', 'submit_clip');
 
   try {
-    const r = await fetch('/ajax/contest_actions.php', { method: 'POST', body: new URLSearchParams(data) });
+    const r = await fetch('/ajax/contest_actions.php', { method: 'POST', body: data });
     const d = await r.json();
     if (d.success) {
       fb.innerHTML = '<div class="alert-dark-success" style="font-size:0.82rem">✅ ' + d.message + '</div>';
@@ -344,6 +409,59 @@ document.getElementById('platformSelect')?.addEventListener('change', function()
     instagram: 'https://www.instagram.com/...',
     facebook: 'https://www.facebook.com/...',
   }[this.value] || 'https://...';
+});
+
+// Toggle bank details section
+document.getElementById('toggleBankDetails')?.addEventListener('click', function() {
+  const sec = document.getElementById('bankDetailsSection');
+  sec.style.display = sec.style.display === 'none' ? 'block' : 'none';
+  this.textContent = sec.style.display === 'none' ? '💳 Add Payment Details (optional)' : '💳 Hide Payment Details';
+  if (sec.style.display !== 'none' && document.getElementById('bankSelectContest').options.length <= 1) {
+    loadBanksForContest();
+  }
+});
+
+async function loadBanksForContest() {
+  try {
+    const r = await fetch('/ajax/payout_actions.php?action=get_banks');
+    const d = await r.json();
+    const sel = document.getElementById('bankSelectContest');
+    sel.innerHTML = '<option value="">Select bank</option>';
+    if (d.success && d.banks) {
+      d.banks.forEach(b => {
+        const o = document.createElement('option');
+        o.value = b.code; o.textContent = b.name;
+        sel.appendChild(o);
+      });
+    }
+  } catch {}
+}
+
+document.getElementById('contestVerifyBtn')?.addEventListener('click', async function() {
+  const acctNum  = document.getElementById('contestAcctNum').value.trim();
+  const bankCode = document.getElementById('bankSelectContest').value;
+  const csrf     = document.querySelector('[name="csrf_token"]').value;
+  if (!/^\d{10}$/.test(acctNum)) { alert('Account number must be 10 digits.'); return; }
+  if (!bankCode) { alert('Please select a bank.'); return; }
+  this.disabled = true; this.textContent = 'Verifying…';
+  try {
+    const fd = new FormData();
+    fd.append('action', 'verify_account');
+    fd.append('account_number', acctNum);
+    fd.append('bank_code', bankCode);
+    fd.append('csrf_token', csrf);
+    const r = await fetch('/ajax/payout_actions.php', { method: 'POST', body: fd });
+    const d = await r.json();
+    if (d.success) {
+      document.getElementById('contestAcctName').value = d.account_name;
+      const sel = document.getElementById('bankSelectContest');
+      document.getElementById('contestBankName').value = sel.options[sel.selectedIndex]?.textContent || '';
+      document.getElementById('contestAcctNameWrap').style.display = 'block';
+    } else {
+      alert(d.message || 'Verification failed.');
+    }
+  } catch { alert('Network error.'); }
+  this.disabled = false; this.textContent = 'Verify';
 });
 </script>
 

@@ -211,3 +211,17 @@ function paystackGet(string $endpoint): array {
     if ($err) return ['error' => $err];
     return json_decode($response, true) ?: ['error' => 'Invalid response.'];
 }
+
+function autoArchiveContests(): int {
+    try {
+        $db   = db();
+        $stmt = $db->prepare(
+            "UPDATE contests SET status = 'ended'
+             WHERE status = 'active' AND end_date IS NOT NULL AND end_date <= NOW()"
+        );
+        $stmt->execute();
+        return $stmt->rowCount();
+    } catch (Throwable) {
+        return 0;
+    }
+}
