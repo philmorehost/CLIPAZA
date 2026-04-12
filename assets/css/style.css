@@ -202,6 +202,7 @@ p { color: var(--text-secondary); }
 .text-accent { color: var(--accent) !important; }
 .text-danger-custom { color: var(--danger) !important; }
 .text-success-custom { color: var(--success) !important; }
+.text-muted { color: var(--text-muted) !important; }
 .text-muted-custom { color: var(--text-muted) !important; }
 .bg-card { background: var(--card-bg) !important; }
 .border-dark-custom { border-color: var(--border) !important; }
