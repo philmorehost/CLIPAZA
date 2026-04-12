@@ -12,9 +12,9 @@
   --accent-hover: #b8e600;
   --accent-dim: rgba(204, 255, 0, 0.15);
   --text: #ffffff;
-  --text-muted: #aaaaaa;
-  --text-secondary: #cccccc;
-  --text-placeholder: #888888;
+  --text-muted: #e0e0e0;
+  --text-secondary: #f5f5f5;
+  --text-placeholder: #bbbbbb;
   --danger: #ff4444;
   --success: #00cc66;
   --warning: #ffaa00;
@@ -552,8 +552,8 @@ select.form-control-dark option { background: var(--dropdown-bg); color: var(--t
   .contest-thumb { height: 130px; }
 }
 :root {
-  --text-muted: #aaaaaa;
-  --text-secondary: #cccccc;
+  --text-muted: #e0e0e0;
+  --text-secondary: #f5f5f5;
 }
 
 /* ===== Featured Contests ===== */
