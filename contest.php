@@ -310,13 +310,14 @@ renderNav($isLoggedIn, ['username' => $username], $userMode);
               <div class="d-flex align-items-start gap-2 mb-2">
                 <span style="font-size:1.1rem">⚠️</span>
                 <div>
-                  <div class="fw-600" style="font-size:0.82rem;color:var(--warning)">Read Before Joining</div>
+                  <div class="fw-600" style="font-size:0.82rem;color:var(--warning)">Reward Eligibility Notice</div>
                 </div>
               </div>
               <ol style="font-size:0.78rem;line-height:1.6;color:#aaa;margin:0;padding-left:18px">
-                <li style="margin-bottom:4px">You must submit a <strong style="color:#fff">2-min analytics video</strong> proof within 3 days of contest end to claim prizes.</li>
-                <li style="margin-bottom:4px"><strong style="color:#fff">Comment &amp; like screenshots</strong> required for prize collection.</li>
-                <li style="margin-bottom:4px">Bots = permanent ban.</li>
+                <li style="margin-bottom:4px">Submit a <strong style="color:#fff">2-min analytics screen-recording</strong> within 72 hours of contest end to claim your prize. Late submissions forfeit the reward to the next eligible runner-up.</li>
+                <li style="margin-bottom:4px"><strong style="color:#fff">Comment &amp; like screenshot proof</strong> on the creator's video is mandatory for prize collection.</li>
+                <li style="margin-bottom:4px"><strong style="color:#fff">No paid promotions</strong> or sponsored boosts on your submitted video — entries with paid reach are ineligible.</li>
+                <li style="margin-bottom:4px" style="color:var(--danger)"><strong style="color:var(--danger)">Bot/artificial engagement is strictly prohibited</strong> and results in immediate permanent account suspension with full prize forfeiture.</li>
               </ol>
               <label style="display:flex;align-items:center;gap:8px;margin-top:10px;cursor:pointer;font-size:0.8rem">
                 <input type="checkbox" id="agreeToJoin" style="accent-color:var(--accent)">

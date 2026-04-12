@@ -127,19 +127,23 @@ renderNav(true, ['username' => $username], $mode);
         <div class="d-flex align-items-center gap-2">
           <span style="font-size:1.3rem">⚠️</span>
           <div>
-            <div class="fw-700" style="font-size:0.9rem">Important: Contest Participation Disclaimer</div>
-            <div class="text-muted" style="font-size:0.78rem">You must acknowledge these rules before participating in any contest.</div>
+            <div class="fw-700" style="font-size:0.9rem">Reward Eligibility Notice</div>
+            <div class="text-muted" style="font-size:0.78rem">Please review and acknowledge these rules before participating in any contest.</div>
           </div>
         </div>
         <button type="button" class="btn btn-xs btn-outline-accent" id="toggleDisclaimerBtn">Read &amp; Acknowledge</button>
       </div>
       <div id="disclaimerFullContent" style="display:none;margin-top:16px;padding-top:16px;border-top:1px solid #1a1a1a">
+        <div style="font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--accent);margin-bottom:10px">Reward Eligibility Notice</div>
+        <p style="font-size:0.82rem;color:#aaa;line-height:1.6;margin-bottom:12px">
+          To be considered eligible for prize collection on Clipaza, participants must comply with the following conditions. Non-compliance will result in disqualification and forfeiture of any earned rewards.
+        </p>
         <ol style="font-size:0.82rem;line-height:1.7;color:#aaa;margin:0;padding-left:20px">
-          <li style="margin-bottom:8px">Winners must submit a <strong style="color:#fff">2-minute screen-recorded video</strong> of authentic analytics within <strong style="color:#fff">3 days</strong> of contest end.</li>
-          <li style="margin-bottom:8px"><strong style="color:#fff">Screenshot proof</strong> of your comment and like on the creator's video is mandatory.</li>
-          <li style="margin-bottom:8px">Failure to provide proof within 3 days → prize goes to the next runner-up with valid proof.</li>
-          <li style="margin-bottom:8px"><strong style="color:var(--danger)">Zero tolerance for bots:</strong> Artificial engagement = immediate permanent ban and prize forfeiture.</li>
-          <li>All entries must represent genuine organic engagement. Purchased views/likes are prohibited.</li>
+          <li style="margin-bottom:8px"><strong style="color:#fff">Analytics Video Proof:</strong> Prize claimants must submit a minimum 2-minute screen-recorded video demonstrating authentic video analytics (views, likes, and comments) within <strong style="color:#fff">72 hours</strong> of the contest closing date. Failure to provide this within the stipulated timeframe will result in the prize being transferred to the next eligible runner-up who can furnish valid proof.</li>
+          <li style="margin-bottom:8px"><strong style="color:#fff">Engagement Verification:</strong> Screenshot proof confirming your comment and like on the contest creator's original video is required as part of the prize collection process.</li>
+          <li style="margin-bottom:8px"><strong style="color:#fff">No Paid Promotions:</strong> Participants must not run any paid promotion, sponsored boost, or advertising campaign on their submitted video. Entries backed by paid reach are ineligible for rewards and will be disqualified upon detection.</li>
+          <li style="margin-bottom:8px"><strong style="color:var(--danger)">Strict Prohibition on Artificial Engagement:</strong> The use of bots, automation tools, view-purchasing services, or any mechanism designed to artificially inflate video metrics is strictly prohibited. Any account found engaging in such practices will be <strong style="color:var(--danger)">immediately and permanently suspended</strong> from the platform, and all associated prize claims will be voided without recourse.</li>
+          <li>All submissions must reflect genuine, organic audience engagement. Clipaza employs automated detection systems that continuously monitor for fraudulent activity. Confirmed violations are non-appealable and subject to permanent account termination.</li>
         </ol>
         <button type="button" class="btn btn-accent btn-sm mt-3" id="acceptDisclaimerBtn">✓ I Understand &amp; Agree</button>
         <div id="disclaimerFeedback" class="mt-2"></div>

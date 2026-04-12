@@ -136,21 +136,22 @@ renderHead('Create Account');
         </div>
         <div class="mb-3">
           <button type="button" class="btn btn-outline-accent w-100 mb-2" id="toggleDisclaimer" style="font-size:0.82rem;text-align:left">
-            ⚠️ Read Participation Disclaimer <span id="disclaimerArrow">▼</span>
+            ⚠️ Read Reward Eligibility Notice <span id="disclaimerArrow">▼</span>
           </button>
           <div id="disclaimerText" style="display:none;background:#0a0a0a;border:1px solid rgba(255,170,0,0.3);border-radius:8px;padding:16px;font-size:0.8rem;line-height:1.6;color:#aaa;margin-bottom:12px">
-            <strong style="color:var(--warning)">Contest Participation Rules:</strong>
+            <strong style="color:var(--warning);text-transform:uppercase;letter-spacing:0.06em;font-size:0.79rem">Reward Eligibility Notice</strong>
+            <p style="margin:8px 0 10px;color:#aaa;line-height:1.5">To qualify for prize collection, you must comply with all of the following conditions. Non-compliance will result in disqualification and forfeiture of any earned rewards.</p>
             <ol style="margin:10px 0 0 16px;padding:0">
-              <li style="margin-bottom:6px">Winners must submit a <strong style="color:#fff">2-minute screen-recorded video</strong> showing authentic video analytics within 3 days of contest end.</li>
-              <li style="margin-bottom:6px"><strong style="color:#fff">Screenshot proof</strong> of your comment and like on the creator's video is mandatory for prize collection.</li>
-              <li style="margin-bottom:6px">Failure to provide required proof within 3 days → prize awarded to the runner-up with valid proof.</li>
-              <li style="margin-bottom:6px"><strong style="color:var(--danger)">Zero tolerance for bots</strong>: Any artificial engagement = immediate permanent ban and prize forfeiture.</li>
-              <li>All entries must represent genuine, organic engagement. Purchased views/likes/comments are prohibited.</li>
+              <li style="margin-bottom:6px"><strong style="color:#fff">Analytics Video Proof:</strong> Submit a minimum 2-minute screen-recorded video showing authentic analytics (views, likes, comments) within <strong style="color:#fff">72 hours</strong> of the contest closing. Failure to do so transfers the prize to the next eligible runner-up with valid proof.</li>
+              <li style="margin-bottom:6px"><strong style="color:#fff">Engagement Verification:</strong> Screenshot proof of your comment and like on the contest creator's original video is required for prize collection.</li>
+              <li style="margin-bottom:6px"><strong style="color:#fff">No Paid Promotions:</strong> Running any paid advertisement, sponsored boost, or promotion on your submitted video renders your entry ineligible. Entries backed by paid reach will be disqualified upon detection.</li>
+              <li style="margin-bottom:6px"><strong style="color:var(--danger)">No Artificial Engagement:</strong> The use of bots, automation tools, view-purchasing services, or any means of artificially inflating metrics is strictly forbidden. Violations will result in <strong style="color:var(--danger)">immediate permanent account suspension</strong> and full prize forfeiture, with no right of appeal.</li>
+              <li>All submissions must represent genuine, organic engagement. Clipaza employs automated monitoring systems to detect fraudulent activity. Confirmed violations are subject to permanent account termination.</li>
             </ol>
           </div>
           <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:0.85rem;color:#ccc">
             <input type="checkbox" name="agree_disclaimer" required style="margin-top:2px;accent-color:var(--accent)">
-            <span>I have read and agree to the Participation Disclaimer and Contest Rules</span>
+            <span>I have read and agree to the Reward Eligibility Notice and Contest Rules</span>
           </label>
         </div>
         <button type="submit" class="btn btn-accent w-100">Create Account</button>
