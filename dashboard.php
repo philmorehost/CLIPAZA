@@ -133,15 +133,15 @@ renderNav(true, ['username' => $username], $mode);
         </div>
         <button type="button" class="btn btn-xs btn-outline-accent" id="toggleDisclaimerBtn">Read &amp; Acknowledge</button>
       </div>
-      <div id="disclaimerFullContent" style="display:none;margin-top:16px;padding-top:16px;border-top:1px solid #1a1a1a">
+      <div id="disclaimerFullContent" style="display:none;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
         <div style="font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--accent);margin-bottom:10px">Reward Eligibility Notice</div>
-        <p style="font-size:0.82rem;color:#aaa;line-height:1.6;margin-bottom:12px">
+        <p style="font-size:0.82rem;color:var(--text-secondary);line-height:1.6;margin-bottom:12px">
           To be considered eligible for prize collection on Clipaza, participants must comply with the following conditions. Non-compliance will result in disqualification and forfeiture of any earned rewards.
         </p>
-        <ol style="font-size:0.82rem;line-height:1.7;color:#aaa;margin:0;padding-left:20px">
-          <li style="margin-bottom:8px"><strong style="color:#fff">Analytics Video Proof:</strong> Prize claimants must submit a minimum 2-minute screen-recorded video demonstrating authentic video analytics (views, likes, and comments) within <strong style="color:#fff">72 hours</strong> of the contest closing date. Failure to provide this within the stipulated timeframe will result in the prize being transferred to the next eligible runner-up who can furnish valid proof.</li>
-          <li style="margin-bottom:8px"><strong style="color:#fff">Engagement Verification:</strong> Screenshot proof confirming your comment and like on the contest creator's original video is required as part of the prize collection process.</li>
-          <li style="margin-bottom:8px"><strong style="color:#fff">No Paid Promotions:</strong> Participants must not run any paid promotion, sponsored boost, or advertising campaign on their submitted video. Entries backed by paid reach are ineligible for rewards and will be disqualified upon detection.</li>
+        <ol style="font-size:0.82rem;line-height:1.7;color:var(--text-secondary);margin:0;padding-left:20px">
+          <li style="margin-bottom:8px"><strong style="color:var(--text)">Analytics Video Proof:</strong> Prize claimants must submit a minimum 2-minute screen-recorded video demonstrating authentic video analytics (views, likes, and comments) within <strong style="color:var(--text)">72 hours</strong> of the contest closing date. Failure to provide this within the stipulated timeframe will result in the prize being transferred to the next eligible runner-up who can furnish valid proof.</li>
+          <li style="margin-bottom:8px"><strong style="color:var(--text)">Engagement Verification:</strong> Screenshot proof confirming your comment and like on the contest creator's original video is required as part of the prize collection process.</li>
+          <li style="margin-bottom:8px"><strong style="color:var(--text)">No Paid Promotions:</strong> Participants must not run any paid promotion, sponsored boost, or advertising campaign on their submitted video. Entries backed by paid reach are ineligible for rewards and will be disqualified upon detection.</li>
           <li style="margin-bottom:8px"><strong style="color:var(--danger)">Strict Prohibition on Artificial Engagement:</strong> The use of bots, automation tools, view-purchasing services, or any mechanism designed to artificially inflate video metrics is strictly prohibited. Any account found engaging in such practices will be <strong style="color:var(--danger)">immediately and permanently suspended</strong> from the platform, and all associated prize claims will be voided without recourse.</li>
           <li>All submissions must reflect genuine, organic audience engagement. Clipaza employs automated detection systems that continuously monitor for fraudulent activity. Confirmed violations are non-appealable and subject to permanent account termination.</li>
         </ol>
@@ -379,7 +379,7 @@ document.getElementById('modeSwitchBtn')?.addEventListener('click', function() {
 <div class="modal fade modal-dark" id="featureModal" tabindex="-1">
   <div class="modal-dialog modal-dark">
     <div class="modal-content modal-dark">
-      <div class="modal-header" style="border-bottom:1px solid #1a1a1a">
+      <div class="modal-header" style="border-bottom:1px solid var(--border)">
         <h5 class="modal-title fw-700">⭐ Feature Contest</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
@@ -405,7 +405,7 @@ document.getElementById('modeSwitchBtn')?.addEventListener('click', function() {
         </div>
         <div id="featureFeedback" class="mt-3"></div>
       </div>
-      <div class="modal-footer" style="border-top:1px solid #1a1a1a">
+      <div class="modal-footer" style="border-top:1px solid var(--border)">
         <button type="button" class="btn btn-outline-accent btn-sm" data-bs-dismiss="modal">Cancel</button>
         <button type="button" class="btn btn-accent btn-sm" id="featurePayBtn" disabled>Select a Plan</button>
       </div>

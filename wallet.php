@@ -130,7 +130,7 @@ renderNav(true, ['username' => $username], $userMode);
           <h6 class="fw-700 mb-3">🏦 Virtual Bank Account</h6>
           <p class="text-muted mb-3" style="font-size:0.88rem">Get a dedicated bank account for instant deposits — transfer directly and your wallet is credited automatically.</p>
           <?php if ($virtualAccount): ?>
-            <div style="background:#0d0d0d;border-radius:8px;padding:16px">
+            <div style="background:var(--input-bg);border-radius:8px;padding:16px">
               <div class="mb-2" style="font-size:0.85rem"><span class="text-muted">Bank:</span> <strong><?= e($virtualAccount['bank_name']) ?></strong></div>
               <div class="mb-2" style="font-size:0.85rem"><span class="text-muted">Account Number:</span> <strong style="letter-spacing:2px"><?= e($virtualAccount['account_number']) ?></strong></div>
               <div style="font-size:0.85rem"><span class="text-muted">Account Name:</span> <strong><?= e($virtualAccount['account_name']) ?></strong></div>
@@ -160,7 +160,7 @@ renderNav(true, ['username' => $username], $userMode);
                      min="<?= $minWithdrawal ?>" max="<?= $walletBalance ?>" step="1"
                      placeholder="Min ₦<?= number_format($minWithdrawal, 0) ?>" required>
               <?php if ($withdrawalFeePercent > 0 || $withdrawalFeeFlat > 0): ?>
-              <div style="font-size:0.78rem;color:#888;margin-top:4px">
+              <div style="font-size:0.78rem;color:var(--text-muted);margin-top:4px">
                 Fee: <?= $withdrawalFeePercent > 0 ? $withdrawalFeePercent . '% + ' : '' ?>₦<?= number_format($withdrawalFeeFlat, 0) ?>
                 <span id="feeCalc"></span>
               </div>
@@ -219,10 +219,10 @@ renderNav(true, ['username' => $username], $userMode);
                   };
                 ?>
                 <tr>
-                  <td><strong style="color:#fff">₦<?= number_format((float)$pr['amount'], 0) ?></strong></td>
-                  <td style="font-size:0.82rem;color:#aaa"><?= e($pr['bank_name'] ?? '—') ?></td>
+                  <td><strong style="color:var(--text)">₦<?= number_format((float)$pr['amount'], 0) ?></strong></td>
+                  <td style="font-size:0.82rem;color:var(--text-secondary)"><?= e($pr['bank_name'] ?? '—') ?></td>
                   <td><span class="<?= $prClass ?>" style="font-size:0.72rem"><?= e(ucfirst($pr['status'])) ?></span></td>
-                  <td style="font-size:0.78rem;color:#888"><?= e(formatDate($pr['created_at'], 'M j, Y')) ?></td>
+                  <td style="font-size:0.78rem;color:var(--text-muted)"><?= e(formatDate($pr['created_at'], 'M j, Y')) ?></td>
                   <td style="font-size:0.78rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
                     <?php if ($pr['status'] === 'rejected' && $pr['rejection_reason']): ?>
                       <span style="color:var(--danger)"><?= e($pr['rejection_reason']) ?></span>
@@ -252,7 +252,7 @@ renderNav(true, ['username' => $username], $userMode);
           <div class="card-header">Transaction History</div>
           <div class="card-body p-0">
             <?php if (empty($txHistory)): ?>
-            <div class="text-center py-5" style="color:#888">
+            <div class="text-center py-5" style="color:var(--text-muted)">
               <div style="font-size:2.5rem;margin-bottom:12px">📋</div>
               <p>No transactions yet.</p>
             </div>
@@ -282,7 +282,7 @@ renderNav(true, ['username' => $username], $userMode);
                     <?php $sc = $tx['status']==='completed'?'badge-success':($tx['status']==='failed'?'badge-danger':'badge-muted'); ?>
                     <span class="<?= $sc ?>" style="font-size:0.72rem"><?= e(ucfirst($tx['status'])) ?></span>
                   </td>
-                  <td style="font-size:0.8rem;color:#888;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><?= e($tx['description'] ?? '') ?></td>
+                  <td style="font-size:0.8rem;color:var(--text-muted);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><?= e($tx['description'] ?? '') ?></td>
                   <td style="white-space:nowrap;font-size:0.78rem;color:#888"><?= e(formatDate($tx['created_at'], 'M j, Y')) ?></td>
                 </tr>
                 <?php endforeach; ?>
@@ -482,7 +482,7 @@ document.getElementById('generateVirtualAcctBtn')?.addEventListener('click', asy
     });
     const d = await r.json();
     if (d.success) {
-      resultEl.innerHTML = '<div style="background:#0d0d0d;border-radius:8px;padding:16px;margin-bottom:12px">'
+      resultEl.innerHTML = '<div style="background:var(--input-bg);border-radius:8px;padding:16px;margin-bottom:12px">'
         + '<div class="mb-2" style="font-size:0.85rem"><span class="text-muted">Bank:</span> <strong>' + d.bank_name + '</strong></div>'
         + '<div class="mb-2" style="font-size:0.85rem"><span class="text-muted">Account Number:</span> <strong style="letter-spacing:2px">' + d.account_number + '</strong></div>'
         + '<div style="font-size:0.85rem"><span class="text-muted">Account Name:</span> <strong>' + d.account_name + '</strong></div>'

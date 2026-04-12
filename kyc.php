@@ -64,7 +64,7 @@ renderNav(true, ['username' => $username], $userMode);
             <input type="hidden" name="csrf_token" value="<?= e($csrf) ?>">
 
             <!-- Step 1: Bank Account -->
-            <div class="mb-4 pb-4" style="border-bottom:1px solid #222">
+            <div class="mb-4 pb-4" style="border-bottom:1px solid var(--border)">
               <div class="d-flex align-items-center gap-2 mb-3">
                 <span class="badge-accent" style="width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.75rem;flex-shrink:0">1</span>
                 <strong style="font-size:0.95rem">Bank Account (NUBAN)</strong>
@@ -97,7 +97,7 @@ renderNav(true, ['username' => $username], $userMode);
             </div>
 
             <!-- Step 2: Government ID -->
-            <div class="mb-4 pb-4" style="border-bottom:1px solid #222">
+            <div class="mb-4 pb-4" style="border-bottom:1px solid var(--border)">
               <div class="d-flex align-items-center gap-2 mb-3">
                 <span class="badge-accent" style="width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.75rem;flex-shrink:0">2</span>
                 <strong style="font-size:0.95rem">Government-Issued ID</strong>
@@ -116,13 +116,13 @@ renderNav(true, ['username' => $username], $userMode);
                 <input type="date" name="id_expiry" id="idExpiry" class="form-control-dark"
                        min="<?= date('Y-m-d', strtotime('+1 day')) ?>"
                        value="<?= e($profile['kyc_id_expiry'] ?? '') ?>">
-                <div style="font-size:0.78rem;color:#888;margin-top:4px">Required for Driver's License and Passport. Must not be expired.</div>
+                <div style="font-size:0.78rem;color:var(--text-muted);margin-top:4px">Required for Driver's License and Passport. Must not be expired.</div>
               </div>
               <div class="mb-3">
                 <label class="form-label-dark">Upload ID Document</label>
                 <input type="file" name="id_document" id="idDocInput" class="form-control-dark"
                        accept=".jpg,.jpeg,.png,.pdf" required>
-                <div style="font-size:0.78rem;color:#888;margin-top:4px">Accepted: JPG, PNG, PDF. Max 5MB. Document must be clear and legible.</div>
+                <div style="font-size:0.78rem;color:var(--text-muted);margin-top:4px">Accepted: JPG, PNG, PDF. Max 5MB. Document must be clear and legible.</div>
                 <div id="idPreview" class="mt-2"></div>
               </div>
             </div>
@@ -133,10 +133,10 @@ renderNav(true, ['username' => $username], $userMode);
                 <span class="badge-accent" style="width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.75rem;flex-shrink:0">3</span>
                 <strong style="font-size:0.95rem">Live Selfie (Camera Required)</strong>
               </div>
-              <p style="font-size:0.85rem;color:#888">Take a live photo of yourself holding your ID. Ensure your face and the ID are clearly visible.</p>
+              <p style="font-size:0.85rem;color:var(--text-muted)">Take a live photo of yourself holding your ID. Ensure your face and the ID are clearly visible.</p>
 
               <div id="cameraContainer" style="display:none;margin-bottom:16px">
-                <video id="cameraVideo" style="width:100%;max-width:340px;border-radius:8px;border:1px solid #333" autoplay playsinline></video>
+                <video id="cameraVideo" style="width:100%;max-width:340px;border-radius:8px;border:1px solid var(--border)" autoplay playsinline></video>
                 <div class="d-flex gap-2 mt-2">
                   <button type="button" class="btn btn-accent" id="captureBtn">📸 Take Photo</button>
                   <button type="button" class="btn btn-outline-accent" id="retakeBtn" style="display:none">↺ Retake</button>
@@ -149,15 +149,15 @@ renderNav(true, ['username' => $username], $userMode);
 
               <div class="d-flex gap-2 mt-3">
                 <button type="button" class="btn btn-outline-accent" id="openCameraBtn">📷 Open Camera</button>
-                <span style="color:#888;font-size:0.82rem;align-self:center">or</span>
+                <span style="color:var(--text-muted);font-size:0.82rem;align-self:center">or</span>
                 <div>
-                  <label class="btn btn-sm" style="background:rgba(255,255,255,0.05);color:#ccc;border:1px solid #333;border-radius:8px;padding:6px 14px;cursor:pointer">
+                  <label class="btn btn-sm" style="background:var(--subtle-bg);color:var(--text-secondary);border:1px solid var(--border);border-radius:8px;padding:6px 14px;cursor:pointer">
                     📁 Upload Selfie
                     <input type="file" name="snapshot_upload" id="snapshotUpload" accept=".jpg,.jpeg,.png" style="display:none">
                   </label>
                 </div>
               </div>
-              <div id="snapshotStatus" class="mt-2" style="font-size:0.82rem;color:#888"></div>
+              <div id="snapshotStatus" class="mt-2" style="font-size:0.82rem;color:var(--text-muted)"></div>
             </div>
 
             <div id="kycFeedback" class="mb-3"></div>
@@ -172,8 +172,8 @@ renderNav(true, ['username' => $username], $userMode);
         <!-- Info Card -->
         <div class="card-dark p-4">
           <h6 class="fw-700 mb-3">📋 KYC Requirements</h6>
-          <ul style="list-style:none;padding:0;margin:0;font-size:0.875rem;color:#aaa">
-            <li class="mb-2">✅ Bank account name <strong style="color:#ccc">must match</strong> your registered name</li>
+          <ul style="list-style:none;padding:0;margin:0;font-size:0.875rem;color:var(--text-secondary)">
+            <li class="mb-2">✅ Bank account name <strong style="color:var(--text-secondary)">must match</strong> your registered name</li>
             <li class="mb-2">✅ Accepted IDs: Driver's License, International Passport, NIN Slip</li>
             <li class="mb-2">✅ Driver's License and Passport require a valid expiry date</li>
             <li class="mb-2">✅ Live selfie must clearly show your face</li>
@@ -266,7 +266,7 @@ document.getElementById('idDocInput').addEventListener('change', function() {
         const f = this.files[0];
         if (f.name.match(/\.(jpg|jpeg|png)$/i)) {
             const url = URL.createObjectURL(f);
-            preview.innerHTML = `<img src="${url}" style="max-width:200px;max-height:200px;border-radius:8px;border:1px solid #333;margin-top:8px;object-fit:cover">`;
+            preview.innerHTML = `<img src="${url}" style="max-width:200px;max-height:200px;border-radius:8px;border:1px solid var(--border);margin-top:8px;object-fit:cover">`;
         } else {
             preview.innerHTML = `<div style="font-size:0.82rem;color:var(--accent);margin-top:8px">📄 ${f.name}</div>`;
         }

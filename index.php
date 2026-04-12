@@ -189,10 +189,11 @@ function fmtStat(int|float $n, string $prefix = '', string $suffix = ''): string
                 <a href="#how-it-works" class="nav-text-link">How It Works</a>
             </div>
             <div class="d-flex gap-2 align-items-center">
+                <button class="btn-theme-toggle" id="themeToggleBtn" title="Toggle light/dark mode" aria-label="Toggle theme">🌙</button>
                 <?php if (file_exists($configFile) && !empty($_SESSION['user_id'])): ?>
                     <a href="/dashboard" class="btn btn-sm btn-outline-accent" style="padding:8px 16px;font-size:0.85rem">Dashboard</a>
                 <?php else: ?>
-                    <a href="/auth/login" class="btn btn-sm" style="padding:8px 16px;font-size:0.85rem;background:transparent;color:#ccc;border:1px solid #333">Login</a>
+                    <a href="/auth/login" class="btn btn-sm" style="padding:8px 16px;font-size:0.85rem;background:transparent;color:var(--text-secondary);border:1px solid var(--border)">Login</a>
                     <a href="/auth/register" class="btn btn-accent" style="padding:10px 22px;font-size:0.875rem;">Sign Up Free</a>
                 <?php endif; ?>
             </div>
@@ -277,10 +278,10 @@ function fmtStat(int|float $n, string $prefix = '', string $suffix = ''): string
                         <?php if (!empty($tc['youtube_thumbnail'])): ?>
                             <img src="<?= htmlspecialchars($tc['youtube_thumbnail']) ?>" alt="" style="width:100%;height:110px;object-fit:cover">
                         <?php else: ?>
-                            <div style="width:100%;height:110px;background:#0d0d0d;display:flex;align-items:center;justify-content:center;font-size:2rem">🎬</div>
+                            <div style="width:100%;height:110px;background:var(--input-bg);display:flex;align-items:center;justify-content:center;font-size:2rem">🎬</div>
                         <?php endif; ?>
                         <div class="p-3">
-                            <div class="fw-700 mb-1" style="font-size:0.82rem;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><?= htmlspecialchars($tc['title']) ?></div>
+                            <div class="fw-700 mb-1" style="font-size:0.82rem;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><?= htmlspecialchars($tc['title']) ?></div>
                             <div class="d-flex align-items-center justify-content-between">
                                 <span style="color:var(--accent);font-weight:900;font-size:0.88rem">₦<?= number_format((float)$tc['prize_pool'], 0) ?></span>
                                 <span style="font-size:0.85rem"><?= $platformIcons ?></span>
@@ -429,7 +430,7 @@ function fmtStat(int|float $n, string $prefix = '', string $suffix = ''): string
                         <li>⚡ Fast payouts to your local bank</li>
                         <li>📱 Work from anywhere, any device</li>
                     </ul>
-                    <a href="/auth/register" class="btn" style="background:#000;color:#CCFF00;border:1.5px solid #000;border-radius:8px;padding:10px 24px;font-weight:700;margin-top:12px;display:inline-block;">Join as Clipper →</a>
+                    <a href="/auth/register" class="btn btn-accent" style="margin-top:12px;display:inline-block;">Join as Clipper →</a>
                 </div>
             </div>
         </div>
@@ -479,7 +480,7 @@ function fmtStat(int|float $n, string $prefix = '', string $suffix = ''): string
             <?php else: ?>
             <div class="lp-lb-footer" style="padding:32px 24px">
                 <div style="font-size:1.5rem;margin-bottom:12px">🏆</div>
-                <p style="color:#888;font-size:0.88rem;margin:0 0 12px">No ranked clippers yet — be the first to earn your spot!</p>
+                <p style="color:var(--text-muted);font-size:0.88rem;margin:0 0 12px">No ranked clippers yet — be the first to earn your spot!</p>
                 <a href="/auth/register" class="btn btn-accent" style="font-size:0.85rem;padding:10px 24px">Join Now →</a>
             </div>
             <?php endif; ?>
@@ -513,7 +514,7 @@ function fmtStat(int|float $n, string $prefix = '', string $suffix = ''): string
                 Clipa<span>za</span>
                 <?php endif; ?>
             </div>
-            <p style="font-size:0.8rem;color:#888;margin:0;">© <?= date('Y') ?> <?= htmlspecialchars($siteName) ?>. All rights reserved.</p>
+            <p style="font-size:0.8rem;color:var(--text-muted);margin:0;">© <?= date('Y') ?> <?= htmlspecialchars($siteName) ?>. All rights reserved.</p>
             <div class="d-flex gap-4 align-items-center flex-wrap justify-content-center">
                 <a href="#" class="lp-footer-link">Privacy</a>
                 <a href="#" class="lp-footer-link">Terms</a>

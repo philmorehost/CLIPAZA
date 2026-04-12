@@ -217,7 +217,7 @@ renderNav($isLoggedIn, ['username' => $username], $userMode);
                       : '0';
                 ?>
                 <div class="col-md-4">
-                  <div style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:8px;padding:12px;text-align:center">
+                  <div style="background:var(--input-bg);border:1px solid var(--card-border);border-radius:8px;padding:12px;text-align:center">
                     <div style="font-size:1.5rem"><?= $pIcon ?></div>
                     <div class="fw-700" style="font-size:0.85rem"><?= ucfirst(e($p['platform'])) ?></div>
                     <div style="color:var(--accent);font-weight:700">₦<?= number_format((float)$p['prize_amount'], 0) ?></div>
@@ -233,7 +233,7 @@ renderNav($isLoggedIn, ['username' => $username], $userMode);
         <?php if (!empty($platforms)): ?>
           <div class="card-dark p-3">
             <h6 class="fw-700 mb-3">📊 Leaderboard</h6>
-            <ul class="nav nav-tabs mb-3" id="lbTabs" style="border-bottom:1px solid #222">
+            <ul class="nav nav-tabs mb-3" id="lbTabs" style="border-bottom:1px solid var(--border)">
               <?php foreach ($platforms as $idx => $p): ?>
                 <?php
                   $pIcon = match($p['platform']) { 'tiktok'=>'🎵','instagram'=>'📸','facebook'=>'📘',default=>'' };
@@ -313,15 +313,15 @@ renderNav($isLoggedIn, ['username' => $username], $userMode);
                   <div class="fw-600" style="font-size:0.82rem;color:var(--warning)">Reward Eligibility Notice</div>
                 </div>
               </div>
-              <ol style="font-size:0.78rem;line-height:1.6;color:#aaa;margin:0;padding-left:18px">
-                <li style="margin-bottom:4px">Submit a <strong style="color:#fff">2-min analytics screen-recording</strong> within 72 hours of contest end to claim your prize. Late submissions forfeit the reward to the next eligible runner-up.</li>
-                <li style="margin-bottom:4px"><strong style="color:#fff">Comment &amp; like screenshot proof</strong> on the creator's video is mandatory for prize collection.</li>
-                <li style="margin-bottom:4px"><strong style="color:#fff">No paid promotions</strong> or sponsored boosts on your submitted video — entries with paid reach are ineligible.</li>
+              <ol style="font-size:0.78rem;line-height:1.6;color:var(--text-secondary);margin:0;padding-left:18px">
+                <li style="margin-bottom:4px">Submit a <strong style="color:var(--text)">2-min analytics screen-recording</strong> within 72 hours of contest end to claim your prize. Late submissions forfeit the reward to the next eligible runner-up.</li>
+                <li style="margin-bottom:4px"><strong style="color:var(--text)">Comment &amp; like screenshot proof</strong> on the creator's video is mandatory for prize collection.</li>
+                <li style="margin-bottom:4px"><strong style="color:var(--text)">No paid promotions</strong> or sponsored boosts on your submitted video — entries with paid reach are ineligible.</li>
                 <li style="margin-bottom:4px" style="color:var(--danger)"><strong style="color:var(--danger)">Bot/artificial engagement is strictly prohibited</strong> and results in immediate permanent account suspension with full prize forfeiture.</li>
               </ol>
               <label style="display:flex;align-items:center;gap:8px;margin-top:10px;cursor:pointer;font-size:0.8rem">
                 <input type="checkbox" id="agreeToJoin" style="accent-color:var(--accent)">
-                <span style="color:#ccc">I understand and agree to the contest rules</span>
+                <span style="color:var(--text-secondary)">I understand and agree to the contest rules</span>
               </label>
               <button type="button" class="btn btn-accent btn-sm w-100 mt-2" id="proceedJoinBtn" disabled>Proceed to Submit</button>
             </div>

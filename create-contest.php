@@ -152,7 +152,7 @@ renderNav(true, ['username' => $username], 'creator');
               </div>
             </div>
             <div id="ytPreview" class="d-none">
-              <div class="d-flex gap-3 align-items-center p-3" style="background:#0d0d0d;border:1px solid #222;border-radius:8px">
+              <div class="d-flex gap-3 align-items-center p-3" style="background:var(--input-bg);border:1px solid var(--border);border-radius:8px">
                 <img id="ytThumb" src="" alt="" style="width:80px;height:56px;object-fit:cover;border-radius:6px">
                 <div>
                   <div id="ytTitleText" class="fw-600" style="font-size:0.9rem"></div>
@@ -170,7 +170,7 @@ renderNav(true, ['username' => $username], 'creator');
             <div class="d-flex flex-wrap gap-3">
               <?php foreach (['must_subscribe' => 'Must Subscribe', 'must_like' => 'Must Like', 'must_comment' => 'Must Comment'] as $name => $label): ?>
                 <label class="d-flex align-items-center gap-2 cursor-pointer">
-                  <input type="checkbox" name="<?= $name ?>" class="form-check-input" style="background:#111;border-color:#555;width:18px;height:18px">
+                  <input type="checkbox" name="<?= $name ?>" class="form-check-input" style="background:var(--input-bg);border-color:var(--text-placeholder);width:18px;height:18px">
                   <span style="font-size:0.9rem"><?= $label ?></span>
                 </label>
               <?php endforeach; ?>
@@ -202,11 +202,11 @@ renderNav(true, ['username' => $username], 'creator');
             <p class="text-muted mb-3" style="font-size:0.85rem">Enable platforms and set prize amounts. Minimum total: ₦<?= number_format($minPrize, 0) ?>.</p>
 
             <?php foreach (['tiktok' => ['🎵','TikTok'], 'instagram' => ['📸','Instagram'], 'facebook' => ['📘','Facebook']] as $pKey => [$icon, $label]): ?>
-              <div class="mb-3 p-3" style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:8px" id="block_<?= $pKey ?>">
+              <div class="mb-3 p-3" style="background:var(--input-bg);border:1px solid var(--card-border);border-radius:8px" id="block_<?= $pKey ?>">
                 <div class="d-flex align-items-center gap-2 mb-2">
                   <input type="checkbox" name="enable_<?= $pKey ?>" id="enable_<?= $pKey ?>"
                          class="form-check-input platform-toggle" data-platform="<?= $pKey ?>"
-                         style="background:#111;border-color:#555;width:18px;height:18px">
+                         style="background:var(--input-bg);border-color:var(--text-placeholder);width:18px;height:18px">
                   <label for="enable_<?= $pKey ?>" class="fw-600" style="cursor:pointer"><?= $icon ?> <?= $label ?></label>
                 </div>
                 <div class="row g-2 platform-fields" id="fields_<?= $pKey ?>" style="display:none">
@@ -224,7 +224,7 @@ renderNav(true, ['username' => $username], 'creator');
                     <div class="form-check d-flex align-items-center gap-2">
                       <input type="checkbox" name="<?= $pKey ?>_winner_takes_all" id="wta_<?= $pKey ?>"
                              class="form-check-input winner-takes-all-toggle" data-platform="<?= $pKey ?>"
-                             style="background:#111;border-color:#555;width:16px;height:16px">
+                             style="background:var(--input-bg);border-color:var(--text-placeholder);width:16px;height:16px">
                       <label for="wta_<?= $pKey ?>" class="text-muted" style="cursor:pointer;font-size:0.8rem">
                         Winner Takes All (1 winner gets full platform prize)
                       </label>

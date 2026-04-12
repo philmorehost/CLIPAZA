@@ -94,11 +94,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $csrf = generateCsrfToken();
 renderHead('Create Account');
 ?>
-<div class="public-page d-flex align-items-center justify-content-center" style="min-height:100vh;background:#000;padding:40px 16px">
+<div class="public-page d-flex align-items-center justify-content-center" style="min-height:100vh;background:var(--bg);padding:40px 16px">
   <div class="w-100" style="max-width:420px">
     <div class="text-center mb-4">
       <a href="/" class="text-decoration-none">
-        <span style="font-size:1.5rem;font-weight:900;color:#fff;letter-spacing:-0.5px">Clipaza<span style="color:var(--accent)">.</span></span>
+        <span style="font-size:1.5rem;font-weight:900;color:var(--text);letter-spacing:-0.5px">Clipaza<span style="color:var(--accent)">.</span></span>
       </a>
       <p class="text-muted mt-2 mb-0" style="font-size:0.9rem">Join as a creator or clipper</p>
     </div>
@@ -138,18 +138,18 @@ renderHead('Create Account');
           <button type="button" class="btn btn-outline-accent w-100 mb-2" id="toggleDisclaimer" style="font-size:0.82rem;text-align:left">
             ⚠️ Read Reward Eligibility Notice <span id="disclaimerArrow">▼</span>
           </button>
-          <div id="disclaimerText" style="display:none;background:#0a0a0a;border:1px solid rgba(255,170,0,0.3);border-radius:8px;padding:16px;font-size:0.8rem;line-height:1.6;color:#aaa;margin-bottom:12px">
+          <div id="disclaimerText" style="display:none;background:var(--bg-secondary);border:1px solid rgba(255,170,0,0.3);border-radius:8px;padding:16px;font-size:0.8rem;line-height:1.6;color:var(--text-secondary);margin-bottom:12px">
             <strong style="color:var(--warning);text-transform:uppercase;letter-spacing:0.06em;font-size:0.79rem">Reward Eligibility Notice</strong>
-            <p style="margin:8px 0 10px;color:#aaa;line-height:1.5">To qualify for prize collection, you must comply with all of the following conditions. Non-compliance will result in disqualification and forfeiture of any earned rewards.</p>
+            <p style="margin:8px 0 10px;color:var(--text-secondary);line-height:1.5">To qualify for prize collection, you must comply with all of the following conditions. Non-compliance will result in disqualification and forfeiture of any earned rewards.</p>
             <ol style="margin:10px 0 0 16px;padding:0">
-              <li style="margin-bottom:6px"><strong style="color:#fff">Analytics Video Proof:</strong> Submit a minimum 2-minute screen-recorded video showing authentic analytics (views, likes, comments) within <strong style="color:#fff">72 hours</strong> of the contest closing. Failure to do so transfers the prize to the next eligible runner-up with valid proof.</li>
-              <li style="margin-bottom:6px"><strong style="color:#fff">Engagement Verification:</strong> Screenshot proof of your comment and like on the contest creator's original video is required for prize collection.</li>
-              <li style="margin-bottom:6px"><strong style="color:#fff">No Paid Promotions:</strong> Running any paid advertisement, sponsored boost, or promotion on your submitted video renders your entry ineligible. Entries backed by paid reach will be disqualified upon detection.</li>
+              <li style="margin-bottom:6px"><strong style="color:var(--text)">Analytics Video Proof:</strong> Submit a minimum 2-minute screen-recorded video showing authentic analytics (views, likes, comments) within <strong style="color:var(--text)">72 hours</strong> of the contest closing. Failure to do so transfers the prize to the next eligible runner-up with valid proof.</li>
+              <li style="margin-bottom:6px"><strong style="color:var(--text)">Engagement Verification:</strong> Screenshot proof of your comment and like on the contest creator's original video is required for prize collection.</li>
+              <li style="margin-bottom:6px"><strong style="color:var(--text)">No Paid Promotions:</strong> Running any paid advertisement, sponsored boost, or promotion on your submitted video renders your entry ineligible. Entries backed by paid reach will be disqualified upon detection.</li>
               <li style="margin-bottom:6px"><strong style="color:var(--danger)">No Artificial Engagement:</strong> The use of bots, automation tools, view-purchasing services, or any means of artificially inflating metrics is strictly forbidden. Violations will result in <strong style="color:var(--danger)">immediate permanent account suspension</strong> and full prize forfeiture, with no right of appeal.</li>
               <li>All submissions must represent genuine, organic engagement. Clipaza employs automated monitoring systems to detect fraudulent activity. Confirmed violations are subject to permanent account termination.</li>
             </ol>
           </div>
-          <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:0.85rem;color:#ccc">
+          <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:0.85rem;color:var(--text-secondary)">
             <input type="checkbox" name="agree_disclaimer" required style="margin-top:2px;accent-color:var(--accent)">
             <span>I have read and agree to the Reward Eligibility Notice and Contest Rules</span>
           </label>

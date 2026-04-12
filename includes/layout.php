@@ -17,11 +17,16 @@ function renderHead(string $title, string $extraHead = ''): void {
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="/assets/css/style.css">
+  <script>
+    (function() {
+      var t = localStorage.getItem('clipaza_theme');
+      if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+    })();
+  </script>
 HTML;
     if ($favicon) {
         echo '  <link rel="icon" href="' . e($favicon) . '">' . "\n";
     }
-    if ($extraHead) echo $extraHead . "\n";
     echo "</head>\n<body>\n";
 }
 
@@ -32,17 +37,19 @@ function renderNav(bool $isLoggedIn, array $user = [], string $activeMode = ''):
         ? '<img src="' . e($siteLogo) . '" alt="' . e($siteName) . '" style="height:32px">'
         : '<span class="fw-900" style="font-size:1.25rem;letter-spacing:-0.5px">' . e($siteName) . '<span style="color:var(--accent)">.</span></span>';
 
-    echo '<nav class="navbar navbar-expand-lg" style="background:#000;border-bottom:1px solid #1a1a1a;position:sticky;top:0;z-index:1000">';
+    echo '<nav class="navbar navbar-expand-lg navbar-themed" style="background:var(--nav-bg);border-bottom:1px solid var(--nav-border);position:sticky;top:0;z-index:1000">';
     echo '<div class="container">';
-    echo '<a class="navbar-brand text-white text-decoration-none" href="/">' . $logoHtml . '</a>';
-    echo '<button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" style="color:#fff"><span>&#9776;</span></button>';
+    echo '<a class="navbar-brand text-decoration-none" href="/" style="color:var(--text)">' . $logoHtml . '</a>';
+    echo '<button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" style="color:var(--text)"><span>&#9776;</span></button>';
     echo '<div class="collapse navbar-collapse" id="mainNav">';
     echo '<ul class="navbar-nav me-auto">';
-    echo '<li class="nav-item"><a class="nav-link text-muted" href="/contests" style="font-size:0.9rem">Browse Contests</a></li>';
-    echo '<li class="nav-item"><a class="nav-link text-muted" href="/ads" style="font-size:0.9rem">🎬 Movies</a></li>';
-    echo '<li class="nav-item"><a class="nav-link text-muted" href="/#how-it-works" style="font-size:0.9rem">How It Works</a></li>';
+    echo '<li class="nav-item"><a class="nav-link" href="/contests" style="font-size:0.9rem;color:var(--text-muted)">Browse Contests</a></li>';
+    echo '<li class="nav-item"><a class="nav-link" href="/ads" style="font-size:0.9rem;color:var(--text-muted)">🎬 Movies</a></li>';
+    echo '<li class="nav-item"><a class="nav-link" href="/#how-it-works" style="font-size:0.9rem;color:var(--text-muted)">How It Works</a></li>';
     echo '</ul>';
     echo '<div class="d-flex align-items-center gap-2">';
+    // Theme toggle
+    echo '<button class="btn-theme-toggle" id="themeToggleBtn" title="Toggle light/dark mode" aria-label="Toggle theme">🌙</button>';
     if ($isLoggedIn) {
         $username = e($user['username'] ?? 'User');
         $mode     = e($activeMode ?: ($user['mode'] ?? 'clipper'));
@@ -55,12 +62,12 @@ function renderNav(bool $isLoggedIn, array $user = [], string $activeMode = ''):
         echo '<span class="badge" style="background:var(--accent-dim);color:var(--accent);font-size:0.72rem;border:1px solid rgba(204,255,0,0.3)">' . $modeLabel . ' Mode</span>';
         echo '<a href="/dashboard" class="btn btn-sm btn-outline-accent">Dashboard</a>';
         echo '<div class="dropdown">';
-        echo '<button class="btn btn-sm" style="background:#111;color:#fff;border:1px solid #222" data-bs-toggle="dropdown">@' . $username . ' &#9660;</button>';
-        echo '<ul class="dropdown-menu dropdown-menu-end" style="background:#111;border:1px solid #222">';
-        echo '<li><a class="dropdown-item text-white" href="/profile" style="font-size:0.85rem">Profile</a></li>';
-        echo '<li><a class="dropdown-item text-white" href="/wallet" style="font-size:0.85rem">💳 Wallet</a></li>';
-        echo '<li><a class="dropdown-item text-white" href="/kyc" style="font-size:0.85rem">🪪 KYC</a></li>';
-        echo '<li><a class="dropdown-item text-white" href="/notifications" style="font-size:0.85rem">🔔 Notifications' . (function() {
+        echo '<button class="btn btn-sm" style="background:var(--card-bg);color:var(--text);border:1px solid var(--border)" data-bs-toggle="dropdown">@' . $username . ' &#9660;</button>';
+        echo '<ul class="dropdown-menu dropdown-menu-end dropdown-menu-themed" style="background:var(--dropdown-bg);border-color:var(--dropdown-border)">';
+        echo '<li><a class="dropdown-item" href="/profile" style="font-size:0.85rem;color:var(--dropdown-item)">Profile</a></li>';
+        echo '<li><a class="dropdown-item" href="/wallet" style="font-size:0.85rem;color:var(--dropdown-item)">💳 Wallet</a></li>';
+        echo '<li><a class="dropdown-item" href="/kyc" style="font-size:0.85rem;color:var(--dropdown-item)">🪪 KYC</a></li>';
+        echo '<li><a class="dropdown-item" href="/notifications" style="font-size:0.85rem;color:var(--dropdown-item)">🔔 Notifications' . (function() {
             if (session_status() === PHP_SESSION_NONE) session_start();
             if (!empty($_SESSION['user_id'])) {
                 $cnt = getUnreadNotificationCount((int)$_SESSION['user_id']);
@@ -68,10 +75,10 @@ function renderNav(bool $isLoggedIn, array $user = [], string $activeMode = ''):
             }
             return '';
         })() . '</a></li>';
-        echo '<li><a class="dropdown-item text-white" href="/payout" style="font-size:0.85rem">Payouts</a></li>';
-        echo '<li><a class="dropdown-item text-white" href="/advertise" style="font-size:0.85rem">🎬 Advertise Movie</a></li>';
-        echo '<li><a class="dropdown-item text-white" href="/my-ads" style="font-size:0.85rem">📋 My Ads</a></li>';
-        echo '<li><hr class="dropdown-divider" style="border-color:#222"></li>';
+        echo '<li><a class="dropdown-item" href="/payout" style="font-size:0.85rem;color:var(--dropdown-item)">Payouts</a></li>';
+        echo '<li><a class="dropdown-item" href="/advertise" style="font-size:0.85rem;color:var(--dropdown-item)">🎬 Advertise Movie</a></li>';
+        echo '<li><a class="dropdown-item" href="/my-ads" style="font-size:0.85rem;color:var(--dropdown-item)">📋 My Ads</a></li>';
+        echo '<li><hr class="dropdown-divider" style="border-color:var(--border)"></li>';
         echo '<li><a class="dropdown-item text-danger" href="/auth/logout" style="font-size:0.85rem">Logout</a></li>';
         echo '</ul></div>';
     } else {
@@ -94,12 +101,31 @@ function renderFooter(): void {
         <a href="/#how-it-works" class="lp-footer-link text-decoration-none">How It Works</a>
         <a href="/auth/register" class="lp-footer-link text-decoration-none">Sign Up</a>
       </div>
-      <div style="font-size:0.8rem;color:#888">&copy; {$year} {$siteName}. All rights reserved.</div>
+      <div style="font-size:0.8rem;color:var(--text-muted)">&copy; {$year} {$siteName}. All rights reserved.</div>
     </div>
   </div>
 </footer>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="/assets/js/main.js"></script>
+<script>
+(function() {
+  var btn = document.getElementById('themeToggleBtn');
+  if (!btn) return;
+  function current() {
+    var t = document.documentElement.dataset.theme;
+    if (t) return t;
+    return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  }
+  function setIcon() { btn.textContent = current() === 'dark' ? '☀️' : '🌙'; }
+  setIcon();
+  btn.addEventListener('click', function() {
+    var next = current() === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = next;
+    localStorage.setItem('clipaza_theme', next);
+    setIcon();
+  });
+})();
+</script>
 </body>
 </html>
 HTML;

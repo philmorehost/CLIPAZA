@@ -83,9 +83,9 @@ renderNav(true, ['username' => $username], $userMode);
             <div class="flex-grow-1">
               <div class="d-flex align-items-center justify-content-between">
                 <strong style="font-size:0.92rem;color:<?= $isUnread ? 'var(--accent)' : '#fff' ?>"><?= e($n['title']) ?></strong>
-                <span style="font-size:0.75rem;color:#888;white-space:nowrap;margin-left:12px"><?= e(timeAgo($n['created_at'])) ?></span>
+                <span style="font-size:0.75rem;color:var(--text-muted);white-space:nowrap;margin-left:12px"><?= e(timeAgo($n['created_at'])) ?></span>
               </div>
-              <p style="font-size:0.85rem;color:#aaa;margin:4px 0 0"><?= e($n['message']) ?></p>
+              <p style="font-size:0.85rem;color:var(--text-secondary);margin:4px 0 0"><?= e($n['message']) ?></p>
               <?php if (!empty($n['link'])): ?>
               <a href="<?= e($n['link']) ?>" style="font-size:0.8rem;color:var(--accent);margin-top:4px;display:inline-block">View →</a>
               <?php endif; ?>
