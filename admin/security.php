@@ -100,6 +100,12 @@ function checked(array $settings, string $key, string $trueVal = '1'): string {
     <meta name="csrf" content="<?= htmlspecialchars($csrf) ?>">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="../assets/css/style.css" rel="stylesheet">
+  <script>
+    (function() {
+      var t = localStorage.getItem('clipaza_theme') || 'dark';
+      document.documentElement.dataset.theme = t;
+    })();
+  </script>
 </head>
 <body>
 
@@ -130,6 +136,7 @@ function checked(array $settings, string $key, string $trueVal = '1'): string {
     <div class="admin-topbar">
         <div class="d-flex align-items-center gap-3">
             <button id="sidebarToggle" class="btn d-lg-none" style="color:#888;background:rgba(255,255,255,0.05);border-radius:8px;padding:6px 10px;">☰</button>
+            <button id="adminThemeToggle" class="btn-theme-toggle" title="Toggle light/dark mode" aria-label="Toggle theme" style="margin-left:4px">☀️</button>
             <h1>Security Management</h1>
         </div>
         <a href="index.php" style="font-size:0.8rem;color:#888;">← Dashboard</a>
@@ -709,6 +716,21 @@ async function handleManualBlock(e) {
     }
     btn.disabled = false; btn.textContent = 'Block IP';
 }
+</script>
+<script>
+(function() {
+  var btn = document.getElementById('adminThemeToggle');
+  if (!btn) return;
+  function current() { return document.documentElement.dataset.theme || 'dark'; }
+  function setIcon() { btn.textContent = current() === 'dark' ? '☀️' : '🌙'; }
+  setIcon();
+  btn.addEventListener('click', function() {
+    var next = current() === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = next;
+    localStorage.setItem('clipaza_theme', next);
+    setIcon();
+  });
+})();
 </script>
 </body>
 </html>
