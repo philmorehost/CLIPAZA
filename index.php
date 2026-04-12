@@ -63,6 +63,7 @@ $customHeader   = '';
 $adsenseCode    = '';
 $siteFavicon    = '';
 $siteLogo       = '';
+$defaultTheme   = 'dark';
 
 if (file_exists($configFile)) {
     require_once $configFile;
@@ -77,7 +78,15 @@ if (file_exists($configFile)) {
     $adsenseCode    = getSetting('adsense_code', '');
     $siteFavicon    = getSetting('site_favicon', '');
     $siteLogo       = getSetting('site_logo', '');
+    $defaultTheme   = in_array(getSetting('default_theme', 'dark'), ['dark', 'light'], true)
+                          ? getSetting('default_theme', 'dark') : 'dark';
 }
+
+// Start session so we can detect logged-in state in the navbar
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+$lpIsLoggedIn = !empty($_SESSION['user_id']);
 
 $pageTitle = $seoTitle !== '' ? $seoTitle : (htmlspecialchars($siteName) . ' — Where Creators Reward Their Biggest Fans');
 $seoDescription = getSetting('seo_description', 'Clipaza lets YouTube creators run fan clipping contests with real cash prizes. Clip, share, compete to win — paid straight to your bank. Free to join.');
@@ -173,6 +182,13 @@ function fmtStat(int|float $n, string $prefix = '', string $suffix = ''): string
     <?php if ($customHeader !== ''): ?>
     <?= $customHeader ?>
     <?php endif; ?>
+    <script>
+    (function() {
+      var stored = localStorage.getItem('clipaza_theme');
+      var theme = (stored === 'light' || stored === 'dark') ? stored : '<?= htmlspecialchars($defaultTheme, ENT_QUOTES) ?>';
+      document.documentElement.dataset.theme = theme;
+    })();
+    </script>
 </head>
 <body>
 <?php if ($adsenseCode !== ''): ?>
@@ -198,8 +214,8 @@ function fmtStat(int|float $n, string $prefix = '', string $suffix = ''): string
             </div>
             <div class="d-flex gap-2 align-items-center">
                 <button class="btn-theme-toggle" id="themeToggleBtn" title="Toggle light/dark mode" aria-label="Toggle theme">🌙</button>
-                <?php if (file_exists($configFile) && !empty($_SESSION['user_id'])): ?>
-                    <a href="/dashboard" class="btn btn-sm btn-outline-accent" style="padding:8px 16px;font-size:0.85rem">Dashboard</a>
+                <?php if ($lpIsLoggedIn): ?>
+                    <a href="/dashboard" class="btn btn-sm btn-accent" style="padding:8px 16px;font-size:0.85rem">Dashboard</a>
                 <?php else: ?>
                     <a href="/auth/login" class="btn btn-sm" style="padding:8px 16px;font-size:0.85rem;background:transparent;color:var(--text-secondary);border:1px solid var(--border)">Login</a>
                     <a href="/auth/register" class="btn btn-accent" style="padding:10px 22px;font-size:0.875rem;">Sign Up Free</a>

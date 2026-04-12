@@ -2,8 +2,11 @@
 declare(strict_types=1);
 
 function renderHead(string $title, string $extraHead = ''): void {
-    $siteName = function_exists('getSetting') ? getSetting('site_name', 'Clipaza') : 'Clipaza';
-    $favicon  = function_exists('getSetting') ? getSetting('site_favicon', '') : '';
+    $siteName     = function_exists('getSetting') ? getSetting('site_name', 'Clipaza') : 'Clipaza';
+    $favicon      = function_exists('getSetting') ? getSetting('site_favicon', '') : '';
+    $adminDefault = function_exists('getSetting') ? getSetting('default_theme', 'dark') : 'dark';
+    // Sanitise: only allow known values
+    if (!in_array($adminDefault, ['dark', 'light'], true)) $adminDefault = 'dark';
     $fullTitle = e($title) . ' — ' . e($siteName);
     echo <<<HTML
 <!DOCTYPE html>
@@ -19,13 +22,17 @@ function renderHead(string $title, string $extraHead = ''): void {
   <link rel="stylesheet" href="/assets/css/style.css">
   <script>
     (function() {
-      var t = localStorage.getItem('clipaza_theme');
-      if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+      var stored = localStorage.getItem('clipaza_theme');
+      var theme = (stored === 'light' || stored === 'dark') ? stored : '{$adminDefault}';
+      document.documentElement.dataset.theme = theme;
     })();
   </script>
 HTML;
     if ($favicon) {
         echo '  <link rel="icon" href="' . e($favicon) . '">' . "\n";
+    }
+    if ($extraHead !== '') {
+        echo $extraHead . "\n";
     }
     echo "</head>\n<body>\n";
 }

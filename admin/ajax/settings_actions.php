@@ -144,6 +144,10 @@ function handleSaveGeneral(): never {
 
     saveSiteSetting('site_name', $siteName);
 
+    // Default theme
+    $theme = $_POST['default_theme'] ?? 'dark';
+    saveSiteSetting('default_theme', in_array($theme, ['dark', 'light'], true) ? $theme : 'dark');
+
     // Logo upload
     try {
         $logoPath = processUpload('site_logo', $root . '/uploads/logo', ['png', 'jpg', 'jpeg']);

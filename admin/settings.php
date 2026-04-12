@@ -161,6 +161,14 @@ function ss(array $settings, string $key, string $default = ''): string {
                                    value="<?= ss($siteSettings, 'site_name', 'Clipaza') ?>" required maxlength="100">
                             <div style="font-size:0.78rem;color:#888;margin-top:6px;">Displayed in the browser tab and navbar.</div>
                         </div>
+                        <div class="mb-4">
+                            <label class="form-label-dark">Default Landing Page Theme</label>
+                            <select name="default_theme" class="form-control form-control-dark">
+                                <option value="dark"  <?= ($siteSettings['default_theme'] ?? 'dark') === 'dark'  ? 'selected' : '' ?>>🌙 Dark (default)</option>
+                                <option value="light" <?= ($siteSettings['default_theme'] ?? 'dark') === 'light' ? 'selected' : '' ?>>☀️ Light</option>
+                            </select>
+                            <div style="font-size:0.78rem;color:#888;margin-top:6px;">Sets the default theme for new visitors on public pages. Users can still toggle with the sun/moon button.</div>
+                        </div>
                     </div>
                 </div>
             </div>
