@@ -297,6 +297,34 @@ try {
     }
     echo "Ad bank settings ensured.\n";
 
+    // 17. Create payhub_virtual_accounts table
+    $db->exec("CREATE TABLE IF NOT EXISTS `payhub_virtual_accounts` (
+      `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+      `user_id` int(11) UNSIGNED NOT NULL,
+      `account_number` varchar(20) NOT NULL,
+      `account_name` varchar(255) NOT NULL,
+      `bank_name` varchar(255) NOT NULL,
+      `payhub_reference` varchar(255) DEFAULT NULL,
+      `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (`id`),
+      UNIQUE KEY `idx_pva_user` (`user_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
+    echo "payhub_virtual_accounts table ensured.\n";
+
+    // 18. Add payhub_reference column to contests
+    addColumnIfNotExists($db, 'contests', 'payhub_reference', "VARCHAR(255) DEFAULT NULL");
+
+    // 19. Insert default PayHub settings
+    foreach ([
+        'payhub_base_url'          => 'https://payhub.datagifting.com.ng',
+        'payhub_api_key'           => '',
+        'payhub_merchant_id'       => '',
+        'preferred_payout_gateway' => 'paystack',
+    ] as $key => $val) {
+        $db->prepare("INSERT IGNORE INTO site_settings (setting_key, setting_value) VALUES (?, ?)")->execute([$key, $val]);
+    }
+    echo "PayHub settings inserted.\n";
+
     echo "Database migrations completed successfully.\n";
 
 } catch (Throwable $e) {

@@ -173,17 +173,21 @@ function handleSaveGeneral(): never {
 
 function handleSavePayment(): never {
     $fields = [
-        'paystack_public_key'    => 200,
-        'paystack_secret_key'    => 200,
-        'platform_fee_percent'   => 10,
-        'min_contest_prize'      => 20,
-        'min_withdrawal_amount'  => 20,
-        'max_withdrawal_amount'  => 20,
-        'withdrawal_fee_percent' => 10,
-        'withdrawal_fee_flat'    => 20,
-        'ad_bank_name'           => 200,
-        'ad_bank_account'        => 200,
-        'ad_bank_number'         => 20,
+        'paystack_public_key'      => 200,
+        'paystack_secret_key'      => 200,
+        'payhub_base_url'          => 500,
+        'payhub_api_key'           => 200,
+        'payhub_merchant_id'       => 200,
+        'preferred_payout_gateway' => 20,
+        'platform_fee_percent'     => 10,
+        'min_contest_prize'        => 20,
+        'min_withdrawal_amount'    => 20,
+        'max_withdrawal_amount'    => 20,
+        'withdrawal_fee_percent'   => 10,
+        'withdrawal_fee_flat'      => 20,
+        'ad_bank_name'             => 200,
+        'ad_bank_account'          => 200,
+        'ad_bank_number'           => 20,
     ];
     foreach ($fields as $key => $maxLen) {
         $value = substr(trim($_POST[$key] ?? ''), 0, $maxLen);

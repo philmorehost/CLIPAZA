@@ -8,6 +8,7 @@ require_once $root . '/includes/db.php';
 require_once $root . '/includes/functions.php';
 require_once $root . '/includes/security.php';
 require_once $root . '/includes/auth.php';
+require_once $root . '/includes/payhub.php';
 
 requireAdmin();
 if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) {
@@ -189,17 +190,17 @@ function handlePayoutRequestAction(string $action): never {
                 }
             }
 
-            // Attempt Paystack transfer
-            $transferResult = initiatePaystackTransfer($req);
+            // Attempt transfer via preferred gateway
+            $transferResult = initiatePayoutTransfer($req);
             $transferCode   = $transferResult['transfer_code'] ?? null;
-            $reference      = $transferResult['reference'] ?? null;
+            $reference      = $transferResult['reference'] ?? ($transferResult['payhub_reference'] ?? null);
 
-            // Warn admin when Paystack is not configured or transfer failed
+            // Warn admin when gateway is not configured or transfer failed
             $paystackNote = '';
             if (($transferResult['status'] ?? '') === 'skipped') {
-                $paystackNote = ' (Paystack not configured — manual bank transfer required)';
+                $paystackNote = ' (' . ($transferResult['error'] ?? 'Manual bank transfer required') . ')';
             } elseif (in_array($transferResult['status'] ?? '', ['recipient_error', 'transfer_error'], true)) {
-                $paystackNote = ' (Paystack error: ' . ($transferResult['error'] ?? 'unknown') . ' — manual transfer required)';
+                $paystackNote = ' (Transfer error: ' . ($transferResult['error'] ?? 'unknown') . ' — manual transfer required)';
             }
 
             $db->beginTransaction();
@@ -343,6 +344,47 @@ function initiatePaystackTransfer(array $req): array {
 
     return ['status' => 'transfer_error', 'error' => $transferResult['message'] ?? 'Transfer failed', 'reference' => $reference];
 }
+
+function initiatePayoutTransfer(array $req): array {
+    $gateway = getPreferredPayoutGateway();
+    return match ($gateway) {
+        'payhub'  => initiatePayhubTransfer($req),
+        'manual'  => ['status' => 'skipped', 'error' => 'Manual payout configured'],
+        default   => initiatePaystackTransfer($req),
+    };
+}
+
+function initiatePayhubTransfer(array $req): array {
+    if (!payhubEnabled()) {
+        return ['status' => 'skipped', 'error' => 'PayHub not configured'];
+    }
+
+    $reference = 'CLPZ_PHB_PAY_' . $req['id'] . '_' . time();
+
+    $result = payhubInitPayout(
+        (float)$req['amount'],
+        (string)$req['bank_code'],
+        (string)$req['account_number'],
+        (string)$req['account_name'],
+        $reference,
+        'Clipaza withdrawal'
+    );
+
+    if (!empty($result['error'])) {
+        return ['status' => 'transfer_error', 'error' => $result['error']];
+    }
+
+    if (empty($result['status']) || !$result['status']) {
+        return ['status' => 'transfer_error', 'error' => $result['message'] ?? 'PayHub payout failed'];
+    }
+
+    return [
+        'status'            => 'initiated',
+        'reference'         => $reference,
+        'payhub_reference'  => $result['data']['reference'] ?? $reference,
+    ];
+}
+
 
 function handleLoginAsUser(): never {
     $targetUserId = (int)($_POST['target_user_id'] ?? 0);

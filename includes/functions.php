@@ -212,6 +212,10 @@ function paystackGet(string $endpoint): array {
     return json_decode($response, true) ?: ['error' => 'Invalid response.'];
 }
 
+function getPreferredPayoutGateway(): string {
+    return getSetting('preferred_payout_gateway', 'paystack');
+}
+
 function autoArchiveContests(): int {
     try {
         $db   = db();

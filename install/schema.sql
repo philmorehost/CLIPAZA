@@ -169,7 +169,7 @@ CREATE TABLE IF NOT EXISTS `contests` (
   `escrow_status` enum('unfunded','funded','released','refunded') NOT NULL DEFAULT 'unfunded',
   `winner_takes_all` tinyint(1) NOT NULL DEFAULT 0,
   `paystack_reference` varchar(255) DEFAULT NULL,
-  `funded_at` datetime DEFAULT NULL,
+  `payhub_reference` varchar(255) DEFAULT NULL,
   `start_date` datetime DEFAULT NULL,
   `end_date` datetime DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -504,7 +504,24 @@ CREATE TABLE IF NOT EXISTS `movie_ads` (
 INSERT INTO `site_settings` (`setting_key`, `setting_value`) VALUES
 ('ad_bank_name', ''),
 ('ad_bank_account', ''),
-('ad_bank_number', '')
+('ad_bank_number', ''),
+('payhub_base_url', 'https://payhub.datagifting.com.ng'),
+('payhub_api_key', ''),
+('payhub_merchant_id', ''),
+('preferred_payout_gateway', 'paystack')
 ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value);
+
+-- PayHub virtual accounts
+CREATE TABLE IF NOT EXISTS `payhub_virtual_accounts` (
+  `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) UNSIGNED NOT NULL,
+  `account_number` varchar(20) NOT NULL,
+  `account_name` varchar(255) NOT NULL,
+  `bank_name` varchar(255) NOT NULL,
+  `payhub_reference` varchar(255) DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `idx_pva_user` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 SET foreign_key_checks = 1;

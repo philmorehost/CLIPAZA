@@ -260,6 +260,48 @@ function ss(array $settings, string $key, string $default = ''): string {
         </div>
 
         <div class="card-dark mb-4">
+            <div class="card-header">PayHub API Keys</div>
+            <div class="card-body">
+                <div class="mb-4">
+                    <label class="form-label-dark">PayHub Base URL</label>
+                    <input type="text" name="payhub_base_url" class="form-control form-control-dark"
+                           value="<?= ss($siteSettings, 'payhub_base_url', 'https://payhub.datagifting.com.ng') ?>"
+                           placeholder="https://payhub.datagifting.com.ng">
+                    <div style="font-size:0.78rem;color:#888;margin-top:6px;">Base URL for the PayHub API.</div>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label-dark">PayHub API Key</label>
+                    <input type="password" name="payhub_api_key" class="form-control form-control-dark"
+                           value="<?= ss($siteSettings, 'payhub_api_key') ?>"
+                           placeholder="Your PayHub API key">
+                    <div style="font-size:0.78rem;color:#888;margin-top:6px;">Bearer token used for all PayHub API requests. Keep secret.</div>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label-dark">PayHub Merchant ID</label>
+                    <input type="text" name="payhub_merchant_id" class="form-control form-control-dark"
+                           value="<?= ss($siteSettings, 'payhub_merchant_id') ?>"
+                           placeholder="Your PayHub Merchant ID">
+                    <div style="font-size:0.78rem;color:#888;margin-top:6px;">Merchant identifier provided by PayHub.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-dark mb-4">
+            <div class="card-header">Payout Gateway</div>
+            <div class="card-body">
+                <div class="mb-4">
+                    <label class="form-label-dark">Preferred Payout Gateway</label>
+                    <select name="preferred_payout_gateway" class="form-control form-control-dark">
+                        <option value="paystack" <?= ss($siteSettings, 'preferred_payout_gateway', 'paystack') === 'paystack' ? 'selected' : '' ?>>Paystack (API Transfer)</option>
+                        <option value="payhub"   <?= ss($siteSettings, 'preferred_payout_gateway', 'paystack') === 'payhub'   ? 'selected' : '' ?>>PayHub Transfer</option>
+                        <option value="manual"   <?= ss($siteSettings, 'preferred_payout_gateway', 'paystack') === 'manual'   ? 'selected' : '' ?>>Manual Only</option>
+                    </select>
+                    <div style="font-size:0.78rem;color:#888;margin-top:6px;">When admin approves a payout request, which gateway should be used to initiate the bank transfer?</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-dark mb-4">
             <div class="card-header">Platform Fees</div>
             <div class="card-body">
                 <div class="row g-3 mb-3">

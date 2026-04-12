@@ -6,6 +6,7 @@ require_once $root . '/includes/db.php';
 require_once $root . '/includes/functions.php';
 require_once $root . '/includes/auth.php';
 require_once $root . '/includes/layout.php';
+require_once $root . '/includes/payhub.php';
 
 if (session_status() === PHP_SESSION_NONE) session_start();
 requireUser();
@@ -53,6 +54,18 @@ $minWithdrawal = (float)getSetting('min_withdrawal_amount', '1000');
 $maxWithdrawal = (float)getSetting('max_withdrawal_amount', '500000');
 $withdrawalFeePercent = (float)getSetting('withdrawal_fee_percent', '0');
 $withdrawalFeeFlat    = (float)getSetting('withdrawal_fee_flat', '0');
+$payhubOn = payhubEnabled();
+
+// Load existing virtual account if PayHub enabled
+$virtualAccount = null;
+if ($payhubOn) {
+    try {
+        $db   = db();
+        $stmt = $db->prepare("SELECT * FROM payhub_virtual_accounts WHERE user_id = ? LIMIT 1");
+        $stmt->execute([$userId]);
+        $virtualAccount = $stmt->fetch() ?: null;
+    } catch (Throwable) {}
+}
 
 renderHead('My Wallet');
 renderNav(true, ['username' => $username], $userMode);
@@ -87,16 +100,47 @@ renderNav(true, ['username' => $username], $userMode);
             <input type="hidden" name="csrf_token" value="<?= e($csrf) ?>">
             <input type="hidden" name="action" value="init_deposit">
             <div class="mb-3">
+              <label class="form-label-dark">Payment Method</label>
+              <div class="d-flex gap-3">
+                <label style="cursor:pointer;display:flex;align-items:center;gap:8px">
+                  <input type="radio" name="deposit_gateway" value="paystack" checked> Paystack
+                </label>
+                <?php if ($payhubOn): ?>
+                <label style="cursor:pointer;display:flex;align-items:center;gap:8px">
+                  <input type="radio" name="deposit_gateway" value="payhub"> PayHub
+                </label>
+                <?php endif; ?>
+              </div>
+            </div>
+            <div class="mb-3">
               <label class="form-label-dark">Amount (₦)</label>
               <input type="number" name="amount" class="form-control-dark" min="100" step="1" placeholder="Enter amount in Naira" required>
             </div>
             <div id="depositFeedback" class="mb-2"></div>
             <div class="d-flex gap-2">
-              <button type="submit" class="btn btn-accent">Pay with Paystack</button>
+              <button type="submit" class="btn btn-accent" id="depositSubmitBtn">Pay with Paystack</button>
               <button type="button" class="btn btn-outline-accent" id="cancelDepositBtn">Cancel</button>
             </div>
           </form>
         </div>
+
+        <?php if ($payhubOn): ?>
+        <!-- PayHub Virtual Account -->
+        <div class="card-dark p-4 mb-4">
+          <h6 class="fw-700 mb-3">🏦 Virtual Bank Account</h6>
+          <p class="text-muted mb-3" style="font-size:0.88rem">Get a dedicated bank account for instant deposits — transfer directly and your wallet is credited automatically.</p>
+          <?php if ($virtualAccount): ?>
+            <div style="background:#0d0d0d;border-radius:8px;padding:16px">
+              <div class="mb-2" style="font-size:0.85rem"><span class="text-muted">Bank:</span> <strong><?= e($virtualAccount['bank_name']) ?></strong></div>
+              <div class="mb-2" style="font-size:0.85rem"><span class="text-muted">Account Number:</span> <strong style="letter-spacing:2px"><?= e($virtualAccount['account_number']) ?></strong></div>
+              <div style="font-size:0.85rem"><span class="text-muted">Account Name:</span> <strong><?= e($virtualAccount['account_name']) ?></strong></div>
+            </div>
+          <?php else: ?>
+            <div id="virtualAccountResult"></div>
+            <button class="btn btn-outline-accent" id="generateVirtualAcctBtn">Generate Virtual Account</button>
+          <?php endif; ?>
+        </div>
+        <?php endif; ?>
 
         <!-- Withdrawal Modal -->
         <div id="withdrawPanel" style="display:none" class="card-dark p-4 mb-4">
@@ -383,29 +427,74 @@ document.getElementById('verifyAcctBtn')?.addEventListener('click', async functi
   this.disabled = false; this.textContent = 'Verify';
 });
 
-// Deposit form
+// Gateway-aware deposit form
+document.querySelectorAll('input[name="deposit_gateway"]').forEach(radio => {
+  radio.addEventListener('change', function() {
+    const btn = document.getElementById('depositSubmitBtn');
+    if (btn) btn.textContent = this.value === 'payhub' ? 'Pay with PayHub' : 'Pay with Paystack';
+  });
+});
+
 document.getElementById('depositForm').addEventListener('submit', async function(e) {
   e.preventDefault();
   const fb = document.getElementById('depositFeedback');
-  const btn = this.querySelector('[type="submit"]');
+  const btn = document.getElementById('depositSubmitBtn') || this.querySelector('[type="submit"]');
   const amount = parseFloat(this.querySelector('[name="amount"]').value);
+  const gateway = (this.querySelector('input[name="deposit_gateway"]:checked') || {value:'paystack'}).value;
   if (!amount || amount < 100) {
     fb.innerHTML = '<div class="alert-dark-danger" style="font-size:0.82rem">Minimum deposit is ₦100.</div>';
     return;
   }
   btn.disabled = true; btn.textContent = 'Initializing…'; fb.innerHTML = '';
   try {
-    const r = await fetch('/ajax/wallet_actions.php', { method: 'POST', body: new URLSearchParams(new FormData(this)) });
+    const params = new URLSearchParams(new FormData(this));
+    if (gateway === 'payhub') {
+      params.set('action', 'init_deposit_payhub');
+    } else {
+      params.set('action', 'init_deposit');
+    }
+    const r = await fetch('/ajax/wallet_actions.php', { method: 'POST', body: params });
     const d = await r.json();
-    if (d.success && d.authorization_url) {
+    if (gateway === 'payhub' && d.success && d.checkout_url) {
+      window.location.href = d.checkout_url;
+    } else if (gateway !== 'payhub' && d.success && d.authorization_url) {
       window.location.href = d.authorization_url;
     } else {
       fb.innerHTML = '<div class="alert-dark-danger" style="font-size:0.82rem">' + (d.message || 'Error') + '</div>';
-      btn.disabled = false; btn.textContent = 'Pay with Paystack';
+      btn.disabled = false;
+      btn.textContent = gateway === 'payhub' ? 'Pay with PayHub' : 'Pay with Paystack';
     }
   } catch {
     fb.innerHTML = '<div class="alert-dark-danger" style="font-size:0.82rem">Network error.</div>';
-    btn.disabled = false; btn.textContent = 'Pay with Paystack';
+    btn.disabled = false;
+    btn.textContent = gateway === 'payhub' ? 'Pay with PayHub' : 'Pay with Paystack';
+  }
+});
+
+// Virtual account generation
+document.getElementById('generateVirtualAcctBtn')?.addEventListener('click', async function() {
+  const resultEl = document.getElementById('virtualAccountResult');
+  this.disabled = true; this.textContent = 'Generating…';
+  try {
+    const r = await fetch('/ajax/wallet_actions.php', {
+      method: 'POST',
+      body: new URLSearchParams({ action: 'get_virtual_account', csrf_token: csrf })
+    });
+    const d = await r.json();
+    if (d.success) {
+      resultEl.innerHTML = '<div style="background:#0d0d0d;border-radius:8px;padding:16px;margin-bottom:12px">'
+        + '<div class="mb-2" style="font-size:0.85rem"><span class="text-muted">Bank:</span> <strong>' + d.bank_name + '</strong></div>'
+        + '<div class="mb-2" style="font-size:0.85rem"><span class="text-muted">Account Number:</span> <strong style="letter-spacing:2px">' + d.account_number + '</strong></div>'
+        + '<div style="font-size:0.85rem"><span class="text-muted">Account Name:</span> <strong>' + d.account_name + '</strong></div>'
+        + '</div>';
+      this.style.display = 'none';
+    } else {
+      resultEl.innerHTML = '<div class="alert-dark-danger mb-2" style="font-size:0.82rem">' + (d.message || 'Failed to generate account.') + '</div>';
+      this.disabled = false; this.textContent = 'Generate Virtual Account';
+    }
+  } catch {
+    resultEl.innerHTML = '<div class="alert-dark-danger mb-2" style="font-size:0.82rem">Network error.</div>';
+    this.disabled = false; this.textContent = 'Generate Virtual Account';
   }
 });
 

@@ -5,6 +5,7 @@ $root = dirname(__DIR__);
 require_once $root . '/includes/db.php';
 require_once $root . '/includes/functions.php';
 require_once $root . '/includes/auth.php';
+require_once $root . '/includes/payhub.php';
 
 if (session_status() === PHP_SESSION_NONE) session_start();
 
@@ -20,8 +21,17 @@ switch ($action) {
     case 'init_deposit':
         handleInitDeposit();
         break;
+    case 'init_deposit_payhub':
+        handleInitDepositPayhub();
+        break;
+    case 'get_virtual_account':
+        handleGetVirtualAccount();
+        break;
     case 'verify_deposit':
         handleVerifyDeposit();
+        break;
+    case 'verify_deposit_payhub':
+        handleVerifyDepositPayhub();
         break;
     case 'request_payout':
         handleRequestPayout();
@@ -321,5 +331,159 @@ function handleSubmitAppeal(): never {
         jsonResponse(['success' => true, 'message' => 'Appeal submitted successfully.']);
     } catch (Throwable) {
         jsonResponse(['success' => false, 'message' => 'Failed to submit appeal.']);
+    }
+}
+
+function handleInitDepositPayhub(): never {
+    if (empty($_SESSION['user_id'])) {
+        jsonResponse(['success' => false, 'message' => 'Authentication required.'], 401);
+    }
+    if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) {
+        jsonResponse(['success' => false, 'message' => 'Invalid request.'], 403);
+    }
+    if (!payhubEnabled()) {
+        jsonResponse(['success' => false, 'message' => 'PayHub is not configured.'], 503);
+    }
+
+    $userId    = (int)$_SESSION['user_id'];
+    $userEmail = $_SESSION['user_email'] ?? '';
+    $amount    = (float)($_POST['amount'] ?? 0);
+
+    if ($amount < 100) {
+        jsonResponse(['success' => false, 'message' => 'Minimum deposit is ₦100.']);
+    }
+
+    $reference   = 'CLPZ_PHB_DEP_' . $userId . '_' . time() . '_' . bin2hex(random_bytes(4));
+    $callbackUrl = rtrim(getSetting('site_url', ''), '/') . '/payment/payhub-verify.php?type=deposit&reference=' . urlencode($reference);
+
+    $result = payhubInitCheckout($userEmail, $amount, $reference, $callbackUrl, [
+        'user_id' => $userId,
+        'type'    => 'wallet_deposit',
+    ]);
+
+    if (!empty($result['error'])) {
+        jsonResponse(['success' => false, 'message' => $result['error']]);
+    }
+    if (empty($result['status']) || !$result['status']) {
+        jsonResponse(['success' => false, 'message' => $result['message'] ?? 'PayHub error.']);
+    }
+
+    try {
+        $db = db();
+        $db->prepare(
+            "INSERT INTO transactions (user_id, amount, type, status, reference, description) VALUES (?, ?, 'credit', 'pending', ?, ?)"
+        )->execute([$userId, $amount, $reference, 'Wallet deposit (PayHub)']);
+    } catch (Throwable) {}
+
+    jsonResponse([
+        'success'      => true,
+        'checkout_url' => $result['data']['checkout_url'] ?? '',
+        'reference'    => $reference,
+    ]);
+}
+
+function handleGetVirtualAccount(): never {
+    if (empty($_SESSION['user_id'])) {
+        jsonResponse(['success' => false, 'message' => 'Authentication required.'], 401);
+    }
+    if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) {
+        jsonResponse(['success' => false, 'message' => 'Invalid request.'], 403);
+    }
+    if (!payhubEnabled()) {
+        jsonResponse(['success' => false, 'message' => 'PayHub is not configured.'], 503);
+    }
+
+    $userId    = (int)$_SESSION['user_id'];
+    $userEmail = $_SESSION['user_email'] ?? '';
+    $username  = $_SESSION['username'] ?? '';
+
+    try {
+        $db   = db();
+        $stmt = $db->prepare("SELECT * FROM payhub_virtual_accounts WHERE user_id = ? LIMIT 1");
+        $stmt->execute([$userId]);
+        $existing = $stmt->fetch();
+
+        if ($existing) {
+            jsonResponse([
+                'success'        => true,
+                'account_number' => $existing['account_number'],
+                'account_name'   => $existing['account_name'],
+                'bank_name'      => $existing['bank_name'],
+            ]);
+        }
+
+        $result = payhubCreateVirtualAccount($userEmail, $username);
+
+        if (!empty($result['error'])) {
+            jsonResponse(['success' => false, 'message' => $result['error']]);
+        }
+        if (empty($result['status']) || !$result['status']) {
+            jsonResponse(['success' => false, 'message' => $result['message'] ?? 'PayHub error.']);
+        }
+
+        $acctData = $result['data'] ?? [];
+        $acctNum  = $acctData['account_number'] ?? '';
+        $acctName = $acctData['account_name']   ?? '';
+        $bankName = $acctData['bank_name']       ?? '';
+        $phRef    = $acctData['reference']       ?? null;
+
+        $db->prepare(
+            "INSERT INTO payhub_virtual_accounts (user_id, account_number, account_name, bank_name, payhub_reference)
+             VALUES (?, ?, ?, ?, ?)"
+        )->execute([$userId, $acctNum, $acctName, $bankName, $phRef]);
+
+        jsonResponse([
+            'success'        => true,
+            'account_number' => $acctNum,
+            'account_name'   => $acctName,
+            'bank_name'      => $bankName,
+        ]);
+    } catch (Throwable) {
+        jsonResponse(['success' => false, 'message' => 'Failed to get virtual account.']);
+    }
+}
+
+function handleVerifyDepositPayhub(): never {
+    $reference = sanitizeInput($_REQUEST['reference'] ?? '');
+    if (empty($reference)) {
+        header('Location: /wallet');
+        exit;
+    }
+
+    $result = payhubVerifyPayment($reference);
+
+    if (!empty($result['error']) || empty($result['data']['status']) || $result['data']['status'] !== 'success') {
+        header('Location: /wallet?deposit=failed');
+        exit;
+    }
+
+    try {
+        $db   = db();
+        $stmt = $db->prepare("SELECT * FROM transactions WHERE reference = ? AND type = 'credit' LIMIT 1");
+        $stmt->execute([$reference]);
+        $tx = $stmt->fetch();
+
+        if (!$tx) {
+            header('Location: /wallet?deposit=not_found');
+            exit;
+        }
+
+        if ($tx['status'] === 'completed') {
+            header('Location: /wallet?deposit=already');
+            exit;
+        }
+
+        $db->beginTransaction();
+        $db->prepare("UPDATE transactions SET status = 'completed' WHERE reference = ?")->execute([$reference]);
+        $db->prepare("UPDATE user_profiles SET wallet_balance = wallet_balance + ? WHERE user_id = ?")->execute([$tx['amount'], $tx['user_id']]);
+        $db->commit();
+
+        sendNotification((int)$tx['user_id'], 'deposit', 'Deposit Successful', '₦' . number_format((float)$tx['amount'], 0) . ' has been added to your wallet.', '/wallet');
+        header('Location: /wallet?deposit=success');
+        exit;
+    } catch (Throwable) {
+        try { $db->rollBack(); } catch (Throwable) {}
+        header('Location: /wallet?deposit=error');
+        exit;
     }
 }

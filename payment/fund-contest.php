@@ -6,6 +6,7 @@ require_once $root . '/includes/db.php';
 require_once $root . '/includes/functions.php';
 require_once $root . '/includes/auth.php';
 require_once $root . '/includes/layout.php';
+require_once $root . '/includes/payhub.php';
 
 if (session_status() === PHP_SESSION_NONE) session_start();
 requireCreatorMode();
@@ -92,6 +93,21 @@ renderNav(true, ['username' => $username], 'creator');
 
         <div id="payFeedback" class="mb-3"></div>
 
+        <?php $payhubOn = payhubEnabled(); ?>
+        <?php if ($payhubOn): ?>
+        <div class="card-dark p-3 mb-3">
+          <div class="mb-2 fw-700" style="font-size:0.88rem">Select Payment Method</div>
+          <div class="d-flex gap-3">
+            <label style="cursor:pointer;font-size:0.9rem;display:flex;align-items:center;gap:8px">
+              <input type="radio" name="funding_gateway" value="paystack" id="gwPaystack" checked> Paystack
+            </label>
+            <label style="cursor:pointer;font-size:0.9rem;display:flex;align-items:center;gap:8px">
+              <input type="radio" name="funding_gateway" value="payhub" id="gwPayhub"> PayHub
+            </label>
+          </div>
+        </div>
+        <?php endif; ?>
+
         <button class="btn btn-accent w-100 py-3" id="payBtn" style="font-size:1rem;font-weight:700">
           Pay ₦<?= number_format((float)$contest['total_amount'], 0) ?> to Activate Contest
         </button>
@@ -107,35 +123,44 @@ renderNav(true, ['username' => $username], 'creator');
 </div>
 
 <script>
+const _contestAmount = <?= json_encode(number_format((float)$contest['total_amount'], 0)) ?>;
+const _csrfToken = <?= json_encode(generateCsrfToken()) ?>;
+const _contestId = <?= $contestId ?>;
+
 document.getElementById('payBtn').addEventListener('click', async function() {
   const btn = this;
   const fb  = document.getElementById('payFeedback');
+  const gwEl = document.querySelector('input[name="funding_gateway"]:checked');
+  const gateway = gwEl ? gwEl.value : 'paystack';
   btn.disabled = true;
   btn.textContent = 'Initializing payment…';
   fb.innerHTML = '';
 
   try {
+    const action = gateway === 'payhub' ? 'init_payment_payhub' : 'init_payment';
     const r = await fetch('/ajax/payment_actions.php', {
       method: 'POST',
       headers: {'Content-Type': 'application/x-www-form-urlencoded'},
       body: new URLSearchParams({
-        action: 'init_payment',
-        contest_id: <?= $contestId ?>,
-        csrf_token: <?= json_encode(generateCsrfToken()) ?>
+        action: action,
+        contest_id: _contestId,
+        csrf_token: _csrfToken
       })
     });
     const d = await r.json();
-    if (d.success && d.authorization_url) {
+    if (gateway === 'payhub' && d.success && d.checkout_url) {
+      window.location.href = d.checkout_url;
+    } else if (gateway !== 'payhub' && d.success && d.authorization_url) {
       window.location.href = d.authorization_url;
     } else {
       fb.innerHTML = '<div class="alert-dark-danger">' + (d.message || 'Payment initialization failed.') + '</div>';
       btn.disabled = false;
-      btn.textContent = 'Pay ₦<?= number_format((float)$contest['total_amount'], 0) ?> to Activate Contest';
+      btn.textContent = 'Pay ₦' + _contestAmount + ' to Activate Contest';
     }
   } catch {
     fb.innerHTML = '<div class="alert-dark-danger">Network error. Please try again.</div>';
     btn.disabled = false;
-    btn.textContent = 'Pay ₦<?= number_format((float)$contest['total_amount'], 0) ?> to Activate Contest';
+    btn.textContent = 'Pay ₦' + _contestAmount + ' to Activate Contest';
   }
 });
 </script>
