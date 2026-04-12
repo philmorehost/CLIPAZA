@@ -23,6 +23,7 @@ try {
     $totalDeposits   = (float)$db->query("SELECT COALESCE(SUM(amount),0) FROM transactions WHERE type='credit' AND status='completed'")->fetchColumn();
     $pendingPayouts  = (int)$db->query("SELECT COUNT(*) FROM payout_requests WHERE status='pending'")->fetchColumn();
     $pendingKyc      = (int)$db->query("SELECT COUNT(*) FROM user_profiles WHERE kyc_status='pending'")->fetchColumn();
+    $pendingMovieAds = (int)$db->query("SELECT COUNT(*) FROM movie_ads WHERE status='pending_review'")->fetchColumn();
     $totalPayoutsAmt = (float)$db->query("SELECT COALESCE(SUM(amount),0) FROM payout_requests WHERE status='approved'")->fetchColumn();
 
     // Recent transactions (last 10)
@@ -59,7 +60,7 @@ try {
     $recentKyc = $kycStmt->fetchAll();
 
 } catch (Throwable) {
-    $totalUsers = $activeContests = $blockedIps = $pendingPayouts = $pendingKyc = 0;
+    $totalUsers = $activeContests = $blockedIps = $pendingPayouts = $pendingKyc = $pendingMovieAds = 0;
     $totalRevenue = $totalDeposits = $totalPayoutsAmt = 0.0;
     $recentTx = $loginHistory = $recentPayouts = $recentKyc = [];
 }
@@ -86,6 +87,8 @@ try {
             <li class="nav-item"><a href="contests.php" class="nav-link"><span class="nav-icon">🏆</span> Contests</a></li>
             <li class="nav-item"><a href="payouts.php" class="nav-link"><span class="nav-icon">💸</span> Payouts <?php if ($pendingPayouts > 0): ?><span class="badge-accent ms-1" style="font-size:0.65rem;padding:2px 6px"><?= $pendingPayouts ?></span><?php endif; ?></a></li>
             <li class="nav-item"><a href="kyc.php" class="nav-link"><span class="nav-icon">🪪</span> KYC <?php if ($pendingKyc > 0): ?><span class="badge-warning ms-1" style="font-size:0.65rem;padding:2px 6px"><?= $pendingKyc ?></span><?php endif; ?></a></li>
+            <li class="nav-item"><a href="ad-packages.php" class="nav-link"><span class="nav-icon">📦</span> Ad Packages</a></li>
+            <li class="nav-item"><a href="movie-ads.php" class="nav-link"><span class="nav-icon">🎞</span> Movie Ads <?php if ($pendingMovieAds > 0): ?><span class="badge-warning ms-1" style="font-size:0.65rem;padding:2px 6px"><?= $pendingMovieAds ?></span><?php endif; ?></a></li>
             <li class="nav-item"><a href="security.php" class="nav-link"><span class="nav-icon">🛡</span> Security</a></li>
             <li class="nav-item"><a href="settings.php" class="nav-link"><span class="nav-icon">⚙</span> Settings</a></li>
             <li class="nav-item"><a href="profile.php" class="nav-link"><span class="nav-icon">👤</span> Profile</a></li>

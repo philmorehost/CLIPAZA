@@ -75,6 +75,8 @@ function ss(array $settings, string $key, string $default = ''): string {
                     <span class="nav-icon">🪪</span> KYC
                 </a>
             </li>
+            <li class="nav-item"><a href="ad-packages.php" class="nav-link"><span class="nav-icon">📦</span> Ad Packages</a></li>
+            <li class="nav-item"><a href="movie-ads.php" class="nav-link"><span class="nav-icon">🎞</span> Movie Ads</a></li>
             <li class="nav-item">
                 <a href="settings.php" class="nav-link active">
                     <span class="nav-icon">⚙</span> Settings
@@ -308,6 +310,31 @@ function ss(array $settings, string $key, string $default = ''): string {
                     </div>
                 </div>
                 <div style="font-size:0.78rem;color:#888">Fees are deducted from the withdrawal amount before transfer.</div>
+            </div>
+        </div>
+
+        <div class="card-dark mb-4">
+            <div class="card-header">Movie Ad Bank Account</div>
+            <div class="card-body">
+                <div class="mb-4">
+                    <label class="form-label-dark">Bank Name</label>
+                    <input type="text" name="ad_bank_name" class="form-control form-control-dark"
+                           value="<?= ss($siteSettings, 'ad_bank_name') ?>" maxlength="200"
+                           placeholder="e.g. First Bank">
+                </div>
+                <div class="mb-4">
+                    <label class="form-label-dark">Account Name</label>
+                    <input type="text" name="ad_bank_account" class="form-control form-control-dark"
+                           value="<?= ss($siteSettings, 'ad_bank_account') ?>" maxlength="200"
+                           placeholder="e.g. Clipaza Ltd">
+                </div>
+                <div class="mb-4">
+                    <label class="form-label-dark">Account Number</label>
+                    <input type="text" name="ad_bank_number" class="form-control form-control-dark"
+                           value="<?= ss($siteSettings, 'ad_bank_number') ?>" maxlength="20"
+                           placeholder="e.g. 0123456789">
+                    <div style="font-size:0.78rem;color:#888;margin-top:6px;">Shown to advertisers who choose manual bank transfer.</div>
+                </div>
             </div>
         </div>
 

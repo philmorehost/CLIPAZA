@@ -39,6 +39,7 @@ function renderNav(bool $isLoggedIn, array $user = [], string $activeMode = ''):
     echo '<div class="collapse navbar-collapse" id="mainNav">';
     echo '<ul class="navbar-nav me-auto">';
     echo '<li class="nav-item"><a class="nav-link text-muted" href="/contests" style="font-size:0.9rem">Browse Contests</a></li>';
+    echo '<li class="nav-item"><a class="nav-link text-muted" href="/ads" style="font-size:0.9rem">🎬 Movies</a></li>';
     echo '<li class="nav-item"><a class="nav-link text-muted" href="/#how-it-works" style="font-size:0.9rem">How It Works</a></li>';
     echo '</ul>';
     echo '<div class="d-flex align-items-center gap-2">';
@@ -68,6 +69,8 @@ function renderNav(bool $isLoggedIn, array $user = [], string $activeMode = ''):
             return '';
         })() . '</a></li>';
         echo '<li><a class="dropdown-item text-white" href="/payout" style="font-size:0.85rem">Payouts</a></li>';
+        echo '<li><a class="dropdown-item text-white" href="/advertise" style="font-size:0.85rem">🎬 Advertise Movie</a></li>';
+        echo '<li><a class="dropdown-item text-white" href="/my-ads" style="font-size:0.85rem">📋 My Ads</a></li>';
         echo '<li><hr class="dropdown-divider" style="border-color:#222"></li>';
         echo '<li><a class="dropdown-item text-danger" href="/auth/logout" style="font-size:0.85rem">Logout</a></li>';
         echo '</ul></div>';

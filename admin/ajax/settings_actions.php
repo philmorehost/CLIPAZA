@@ -181,6 +181,9 @@ function handleSavePayment(): never {
         'max_withdrawal_amount'  => 20,
         'withdrawal_fee_percent' => 10,
         'withdrawal_fee_flat'    => 20,
+        'ad_bank_name'           => 200,
+        'ad_bank_account'        => 200,
+        'ad_bank_number'         => 20,
     ];
     foreach ($fields as $key => $maxLen) {
         $value = substr(trim($_POST[$key] ?? ''), 0, $maxLen);

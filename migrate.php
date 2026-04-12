@@ -206,6 +206,97 @@ try {
         }
     }
 
+    // 13. Create ad_packages table
+    try {
+        $db->exec("CREATE TABLE IF NOT EXISTS `ad_packages` (
+          `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+          `name` varchar(255) NOT NULL,
+          `description` text DEFAULT NULL,
+          `price` decimal(12,2) NOT NULL,
+          `duration_days` int(11) UNSIGNED NOT NULL DEFAULT 30,
+          `features` text DEFAULT NULL COMMENT 'JSON array of feature strings',
+          `placement_zones` varchar(500) DEFAULT NULL COMMENT 'JSON array: homepage, contests, sidebar etc',
+          `max_ads` int(11) UNSIGNED NOT NULL DEFAULT 1,
+          `is_active` tinyint(1) NOT NULL DEFAULT 1,
+          `sort_order` int(11) UNSIGNED NOT NULL DEFAULT 0,
+          `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          PRIMARY KEY (`id`),
+          KEY `idx_ap_active` (`is_active`),
+          KEY `idx_ap_sort` (`sort_order`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+        echo "ad_packages table ensured.\n";
+    } catch (Throwable $e) {
+        echo "Error creating ad_packages table: " . $e->getMessage() . "\n";
+    }
+
+    // 14. Create movie_ads table
+    try {
+        $db->exec("CREATE TABLE IF NOT EXISTS `movie_ads` (
+          `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+          `user_id` int(11) UNSIGNED NOT NULL,
+          `package_id` int(11) UNSIGNED NOT NULL,
+          `movie_title` varchar(255) NOT NULL,
+          `tagline` varchar(500) DEFAULT NULL,
+          `description` text DEFAULT NULL,
+          `genre` varchar(100) DEFAULT NULL,
+          `release_date` date DEFAULT NULL,
+          `trailer_url` varchar(2000) DEFAULT NULL COMMENT 'YouTube/video URL for preview',
+          `poster_path` varchar(500) DEFAULT NULL COMMENT 'Uploaded movie poster/e-flyer',
+          `flyer_path` varchar(500) DEFAULT NULL COMMENT 'Uploaded e-flyer image',
+          `contact_email` varchar(255) DEFAULT NULL,
+          `contact_phone` varchar(30) DEFAULT NULL,
+          `website_url` varchar(2000) DEFAULT NULL,
+          `payment_method` enum('online','manual') NOT NULL DEFAULT 'online',
+          `payment_status` enum('unpaid','pending_verification','paid') NOT NULL DEFAULT 'unpaid',
+          `payment_reference` varchar(255) DEFAULT NULL,
+          `manual_deposit_proof` varchar(500) DEFAULT NULL COMMENT 'Uploaded proof of bank transfer',
+          `manual_deposit_amount` decimal(12,2) DEFAULT NULL,
+          `manual_deposit_note` text DEFAULT NULL,
+          `status` enum('draft','pending_review','approved','rejected','expired','cancelled') NOT NULL DEFAULT 'draft',
+          `review_note` text DEFAULT NULL,
+          `reviewed_by` int(11) UNSIGNED DEFAULT NULL,
+          `reviewed_at` datetime DEFAULT NULL,
+          `starts_at` datetime DEFAULT NULL,
+          `expires_at` datetime DEFAULT NULL,
+          `impression_count` int(11) UNSIGNED NOT NULL DEFAULT 0,
+          `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          PRIMARY KEY (`id`),
+          KEY `idx_ma_user` (`user_id`),
+          KEY `idx_ma_package` (`package_id`),
+          KEY `idx_ma_status` (`status`),
+          KEY `idx_ma_expires` (`expires_at`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+        echo "movie_ads table ensured.\n";
+    } catch (Throwable $e) {
+        echo "Error creating movie_ads table: " . $e->getMessage() . "\n";
+    }
+
+    // 15. Create upload directories for movie ads
+    foreach (['uploads/movie-posters', 'uploads/movie-flyers', 'uploads/deposit-proofs'] as $dir) {
+        $fullPath = __DIR__ . '/' . $dir;
+        if (!is_dir($fullPath)) {
+            if (mkdir($fullPath, 0755, true)) {
+                echo "Created $dir directory.\n";
+            } else {
+                echo "Warning: Could not create $dir directory.\n";
+            }
+        }
+    }
+
+    // 16. Insert ad bank account settings
+    $adSettings = [
+        'ad_bank_name'    => '',
+        'ad_bank_account' => '',
+        'ad_bank_number'  => '',
+    ];
+    $stmt = $db->prepare("INSERT IGNORE INTO site_settings (setting_key, setting_value) VALUES (?, ?)");
+    foreach ($adSettings as $key => $val) {
+        $stmt->execute([$key, $val]);
+    }
+    echo "Ad bank settings ensured.\n";
+
     echo "Database migrations completed successfully.\n";
 
 } catch (Throwable $e) {

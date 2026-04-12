@@ -57,6 +57,24 @@ switch ($action) {
     case 'update_admin_profile':
         handleUpdateAdminProfile();
         break;
+    case 'create_ad_package':
+        handleCreateAdPackage();
+        break;
+    case 'update_ad_package':
+        handleUpdateAdPackage();
+        break;
+    case 'toggle_ad_package':
+        handleToggleAdPackage();
+        break;
+    case 'delete_ad_package':
+        handleDeleteAdPackage();
+        break;
+    case 'approve_movie_ad':
+        handleApproveMovieAd();
+        break;
+    case 'reject_movie_ad':
+        handleRejectMovieAd();
+        break;
     default:
         jsonResponse(['success' => false, 'message' => 'Unknown action.'], 400);
 }
@@ -613,5 +631,193 @@ function handleMarkPaid(): never {
         jsonResponse(['success' => true, 'message' => 'Payout marked as paid (manual transfer). User notified.']);
     } catch (Throwable $e) {
         jsonResponse(['success' => false, 'message' => 'Action failed: ' . $e->getMessage()]);
+    }
+}
+
+function handleCreateAdPackage(): never {
+    $name          = sanitizeInput($_POST['name'] ?? '');
+    $description   = sanitizeInput($_POST['description'] ?? '');
+    $price         = (float)($_POST['price'] ?? 0);
+    $durationDays  = (int)($_POST['duration_days'] ?? 30);
+    $featuresRaw   = $_POST['features'] ?? '';
+    $zonesRaw      = $_POST['placement_zones'] ?? [];
+    $maxAds        = max(1, (int)($_POST['max_ads'] ?? 1));
+    $sortOrder     = (int)($_POST['sort_order'] ?? 0);
+    $isActive      = isset($_POST['is_active']) ? 1 : 0;
+
+    if ($name === '') {
+        jsonResponse(['success' => false, 'message' => 'Package name is required.']);
+    }
+    if ($price <= 0) {
+        jsonResponse(['success' => false, 'message' => 'Price must be greater than zero.']);
+    }
+    if ($durationDays < 1) {
+        jsonResponse(['success' => false, 'message' => 'Duration must be at least 1 day.']);
+    }
+
+    $features = array_values(array_filter(array_map('trim', explode("\n", $featuresRaw))));
+    $featuresJson = json_encode($features);
+
+    $validZones = ['homepage', 'contests_page', 'sidebar', 'contest_detail'];
+    $zones = array_values(array_filter((array)$zonesRaw, fn($z) => in_array($z, $validZones, true)));
+    $zonesJson = json_encode($zones);
+
+    try {
+        db()->prepare(
+            "INSERT INTO ad_packages (name, description, price, duration_days, features, placement_zones, max_ads, sort_order, is_active)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        )->execute([$name, $description ?: null, $price, $durationDays, $featuresJson, $zonesJson, $maxAds, $sortOrder, $isActive]);
+        jsonResponse(['success' => true, 'message' => 'Ad package created.']);
+    } catch (Throwable) {
+        jsonResponse(['success' => false, 'message' => 'Failed to create package.']);
+    }
+}
+
+function handleUpdateAdPackage(): never {
+    $id            = (int)($_POST['package_id'] ?? 0);
+    $name          = sanitizeInput($_POST['name'] ?? '');
+    $description   = sanitizeInput($_POST['description'] ?? '');
+    $price         = (float)($_POST['price'] ?? 0);
+    $durationDays  = (int)($_POST['duration_days'] ?? 30);
+    $featuresRaw   = $_POST['features'] ?? '';
+    $zonesRaw      = $_POST['placement_zones'] ?? [];
+    $maxAds        = max(1, (int)($_POST['max_ads'] ?? 1));
+    $sortOrder     = (int)($_POST['sort_order'] ?? 0);
+    $isActive      = isset($_POST['is_active']) ? 1 : 0;
+
+    if (!$id) {
+        jsonResponse(['success' => false, 'message' => 'Invalid package ID.']);
+    }
+    if ($name === '') {
+        jsonResponse(['success' => false, 'message' => 'Package name is required.']);
+    }
+    if ($price <= 0) {
+        jsonResponse(['success' => false, 'message' => 'Price must be greater than zero.']);
+    }
+    if ($durationDays < 1) {
+        jsonResponse(['success' => false, 'message' => 'Duration must be at least 1 day.']);
+    }
+
+    $features = array_values(array_filter(array_map('trim', explode("\n", $featuresRaw))));
+    $featuresJson = json_encode($features);
+
+    $validZones = ['homepage', 'contests_page', 'sidebar', 'contest_detail'];
+    $zones = array_values(array_filter((array)$zonesRaw, fn($z) => in_array($z, $validZones, true)));
+    $zonesJson = json_encode($zones);
+
+    try {
+        db()->prepare(
+            "UPDATE ad_packages SET name=?, description=?, price=?, duration_days=?, features=?, placement_zones=?, max_ads=?, sort_order=?, is_active=?
+             WHERE id=?"
+        )->execute([$name, $description ?: null, $price, $durationDays, $featuresJson, $zonesJson, $maxAds, $sortOrder, $isActive, $id]);
+        jsonResponse(['success' => true, 'message' => 'Ad package updated.']);
+    } catch (Throwable) {
+        jsonResponse(['success' => false, 'message' => 'Failed to update package.']);
+    }
+}
+
+function handleToggleAdPackage(): never {
+    $id = (int)($_POST['package_id'] ?? 0);
+    if (!$id) {
+        jsonResponse(['success' => false, 'message' => 'Invalid package ID.']);
+    }
+    try {
+        db()->prepare("UPDATE ad_packages SET is_active = 1 - is_active WHERE id = ?")->execute([$id]);
+        jsonResponse(['success' => true, 'message' => 'Package status toggled.']);
+    } catch (Throwable) {
+        jsonResponse(['success' => false, 'message' => 'Toggle failed.']);
+    }
+}
+
+function handleDeleteAdPackage(): never {
+    $id = (int)($_POST['package_id'] ?? 0);
+    if (!$id) {
+        jsonResponse(['success' => false, 'message' => 'Invalid package ID.']);
+    }
+    try {
+        $db = db();
+        $stmt = $db->prepare(
+            "SELECT COUNT(*) FROM movie_ads WHERE package_id = ? AND status IN ('pending_review','approved')"
+        );
+        $stmt->execute([$id]);
+        if ((int)$stmt->fetchColumn() > 0) {
+            jsonResponse(['success' => false, 'message' => 'Cannot delete: active movie ads are using this package.']);
+        }
+        $db->prepare("DELETE FROM ad_packages WHERE id = ?")->execute([$id]);
+        jsonResponse(['success' => true, 'message' => 'Package deleted.']);
+    } catch (Throwable) {
+        jsonResponse(['success' => false, 'message' => 'Delete failed.']);
+    }
+}
+
+function handleApproveMovieAd(): never {
+    $adId    = (int)($_POST['ad_id'] ?? 0);
+    $adminId = (int)($_SESSION['user_id'] ?? 0);
+    if (!$adId) {
+        jsonResponse(['success' => false, 'message' => 'Invalid ad ID.']);
+    }
+    try {
+        $db   = db();
+        $stmt = $db->prepare(
+            "SELECT ma.*, ap.duration_days FROM movie_ads ma
+             LEFT JOIN ad_packages ap ON ap.id = ma.package_id
+             WHERE ma.id = ? LIMIT 1"
+        );
+        $stmt->execute([$adId]);
+        $ad = $stmt->fetch();
+        if (!$ad) {
+            jsonResponse(['success' => false, 'message' => 'Ad not found.']);
+        }
+        $durationDays = max(1, (int)($ad['duration_days'] ?? 30));
+        $db->prepare(
+            "UPDATE movie_ads
+             SET status='approved', reviewed_by=?, reviewed_at=NOW(),
+                 starts_at=NOW(), expires_at=DATE_ADD(NOW(), INTERVAL ? DAY)
+             WHERE id=?"
+        )->execute([$adminId, $durationDays, $adId]);
+        sendNotification(
+            (int)$ad['user_id'],
+            'movie_ad',
+            '🎬 Movie Ad Approved!',
+            'Your movie ad "' . ($ad['movie_title'] ?? '') . '" has been approved and is now live.',
+            '/my-ads'
+        );
+        jsonResponse(['success' => true, 'message' => 'Movie ad approved and activated.']);
+    } catch (Throwable) {
+        jsonResponse(['success' => false, 'message' => 'Approval failed.']);
+    }
+}
+
+function handleRejectMovieAd(): never {
+    $adId    = (int)($_POST['ad_id'] ?? 0);
+    $reason  = sanitizeInput($_POST['reason'] ?? '');
+    $adminId = (int)($_SESSION['user_id'] ?? 0);
+    if (!$adId) {
+        jsonResponse(['success' => false, 'message' => 'Invalid ad ID.']);
+    }
+    if ($reason === '') {
+        jsonResponse(['success' => false, 'message' => 'Rejection reason is required.']);
+    }
+    try {
+        $db   = db();
+        $stmt = $db->prepare("SELECT user_id, movie_title FROM movie_ads WHERE id = ? LIMIT 1");
+        $stmt->execute([$adId]);
+        $ad = $stmt->fetch();
+        if (!$ad) {
+            jsonResponse(['success' => false, 'message' => 'Ad not found.']);
+        }
+        $db->prepare(
+            "UPDATE movie_ads SET status='rejected', review_note=?, reviewed_by=?, reviewed_at=NOW() WHERE id=?"
+        )->execute([$reason, $adminId, $adId]);
+        sendNotification(
+            (int)$ad['user_id'],
+            'movie_ad',
+            '❌ Movie Ad Rejected',
+            'Your movie ad "' . ($ad['movie_title'] ?? '') . '" was rejected. Reason: ' . $reason,
+            '/my-ads'
+        );
+        jsonResponse(['success' => true, 'message' => 'Movie ad rejected.']);
+    } catch (Throwable) {
+        jsonResponse(['success' => false, 'message' => 'Rejection failed.']);
     }
 }
