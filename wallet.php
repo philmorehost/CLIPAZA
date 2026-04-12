@@ -440,7 +440,7 @@ document.getElementById('depositForm').addEventListener('submit', async function
   const fb = document.getElementById('depositFeedback');
   const btn = document.getElementById('depositSubmitBtn') || this.querySelector('[type="submit"]');
   const amount = parseFloat(this.querySelector('[name="amount"]').value);
-  const gateway = (this.querySelector('input[name="deposit_gateway"]:checked') || {value:'paystack'}).value;
+  const gateway = this.querySelector('input[name="deposit_gateway"]:checked')?.value ?? 'paystack';
   if (!amount || amount < 100) {
     fb.innerHTML = '<div class="alert-dark-danger" style="font-size:0.82rem">Minimum deposit is ₦100.</div>';
     return;

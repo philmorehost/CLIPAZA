@@ -131,7 +131,7 @@ document.getElementById('payBtn').addEventListener('click', async function() {
   const btn = this;
   const fb  = document.getElementById('payFeedback');
   const gwEl = document.querySelector('input[name="funding_gateway"]:checked');
-  const gateway = gwEl ? gwEl.value : 'paystack';
+  const gateway = gwEl?.value ?? 'paystack';
   btn.disabled = true;
   btn.textContent = 'Initializing payment…';
   fb.innerHTML = '';
