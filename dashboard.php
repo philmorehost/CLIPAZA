@@ -6,6 +6,7 @@ require_once $root . '/includes/db.php';
 require_once $root . '/includes/functions.php';
 require_once $root . '/includes/auth.php';
 require_once $root . '/includes/layout.php';
+require_once $root . '/includes/payhub.php';
 
 if (session_status() === PHP_SESSION_NONE) session_start();
 requireUser();
@@ -100,6 +101,7 @@ if ($mode === 'creator') {
 
 $displayName = $profile['display_name'] ?? $username;
 $initials    = strtoupper(substr($displayName, 0, 1));
+$csrf        = generateCsrfToken();
 
 renderHead('Dashboard');
 renderNav(true, ['username' => $username], $mode);
@@ -113,6 +115,9 @@ renderNav(true, ['username' => $username], $mode);
     <?php endif; ?>
     <?php if ($successMsg === 'contest_funded'): ?>
       <div class="alert-dark-success mb-3">🎉 Contest funded successfully! It is now live.</div>
+    <?php endif; ?>
+    <?php if ($successMsg === 'contest_featured'): ?>
+      <div class="alert-dark-success mb-3">⭐ Your contest is now featured! It will appear at the top of the contests page.</div>
     <?php endif; ?>
 
     <!-- Top bar -->
@@ -202,6 +207,16 @@ renderNav(true, ['username' => $username], $mode);
                   <a href="/contest-stats?id=<?= (int)$c['id'] ?>" class="btn btn-sm btn-outline-accent">Stats</a>
                   <?php if ($c['escrow_status'] === 'unfunded' && $c['status'] === 'draft'): ?>
                     <a href="/payment/fund-contest?contest_id=<?= (int)$c['id'] ?>" class="btn btn-sm btn-accent">Fund &amp; Activate</a>
+                  <?php endif; ?>
+                  <?php if ($c['status'] === 'active' && $c['escrow_status'] === 'funded'): ?>
+                    <?php $alreadyFeatured = !empty($c['is_featured']) && !empty($c['featured_until']) && strtotime($c['featured_until']) > time(); ?>
+                    <?php if ($alreadyFeatured): ?>
+                      <span class="badge-accent" style="font-size:0.72rem;padding:3px 8px">⭐ Featured</span>
+                    <?php else: ?>
+                      <button class="btn btn-sm btn-outline-accent feature-btn"
+                              data-contest-id="<?= (int)$c['id'] ?>"
+                              data-contest-title="<?= e($c['title']) ?>">⭐ Feature</button>
+                    <?php endif; ?>
                   <?php endif; ?>
                 </div>
               </div>
@@ -317,7 +332,7 @@ document.getElementById('modeSwitchBtn')?.addEventListener('click', function() {
     headers: {'Content-Type': 'application/x-www-form-urlencoded'},
     body: new URLSearchParams({
       action: 'switch_mode',
-      csrf_token: <?= json_encode(generateCsrfToken()) ?>
+      csrf_token: <?= json_encode($csrf) ?>
     })
   })
   .then(r => r.json())
@@ -326,6 +341,125 @@ document.getElementById('modeSwitchBtn')?.addEventListener('click', function() {
     else { btn.disabled = false; btn.textContent = 'Try Again'; }
   })
   .catch(() => { btn.disabled = false; btn.textContent = 'Error'; });
+});
+</script>
+
+<!-- Feature Contest Modal -->
+<div class="modal fade modal-dark" id="featureModal" tabindex="-1">
+  <div class="modal-dialog modal-dark">
+    <div class="modal-content modal-dark">
+      <div class="modal-header" style="border-bottom:1px solid #1a1a1a">
+        <h5 class="modal-title fw-700">⭐ Feature Contest</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted mb-3" style="font-size:0.85rem">
+          Featuring your contest puts it at the top of the contests page and in the sidebar — maximizing visibility.
+        </p>
+        <div id="featurePlansContainer">
+          <div class="text-center py-3"><span class="text-muted" style="font-size:0.85rem">Loading plans…</span></div>
+        </div>
+        <div class="mt-3" id="featureGatewayRow" style="display:none">
+          <label class="form-label-dark">Payment Method</label>
+          <div class="d-flex gap-3">
+            <label style="cursor:pointer;display:flex;align-items:center;gap:6px;font-size:0.88rem">
+              <input type="radio" name="feature_gateway" value="paystack" checked> Paystack
+            </label>
+            <?php if (function_exists('payhubEnabled') && payhubEnabled()): ?>
+            <label style="cursor:pointer;display:flex;align-items:center;gap:6px;font-size:0.88rem">
+              <input type="radio" name="feature_gateway" value="payhub"> PayHub
+            </label>
+            <?php endif; ?>
+          </div>
+        </div>
+        <div id="featureFeedback" class="mt-3"></div>
+      </div>
+      <div class="modal-footer" style="border-top:1px solid #1a1a1a">
+        <button type="button" class="btn btn-outline-accent btn-sm" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-accent btn-sm" id="featurePayBtn" disabled>Select a Plan</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let selectedPlanId = null;
+let featureContestId = null;
+const featureCsrf = <?= json_encode($csrf) ?>;
+
+document.querySelectorAll('.feature-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    featureContestId = this.dataset.contestId;
+    document.getElementById('featurePayBtn').disabled = true;
+    document.getElementById('featurePayBtn').textContent = 'Select a Plan';
+    document.getElementById('featureFeedback').innerHTML = '';
+    selectedPlanId = null;
+
+    document.getElementById('featurePlansContainer').innerHTML = '<div class="text-center py-3"><span class="text-muted">Loading…</span></div>';
+    document.getElementById('featureGatewayRow').style.display = 'none';
+
+    fetch('/ajax/feature_actions.php?action=get_plans')
+      .then(r => r.json())
+      .then(d => {
+        if (!d.success || !d.plans?.length) {
+          document.getElementById('featurePlansContainer').innerHTML = '<p class="text-muted text-center">No feature plans available. Contact admin.</p>';
+          return;
+        }
+        let html = '<div class="feature-plans-grid">';
+        d.plans.forEach(p => {
+          html += `<div class="feature-plan-card" data-plan-id="${p.id}" data-price="${p.price}">
+            <div class="fw-700 mb-1">${p.name}</div>
+            <div class="text-muted mb-1" style="font-size:0.8rem">${p.description||''}</div>
+            <div style="color:var(--accent);font-weight:700;font-size:1.1rem">₦${Number(p.price).toLocaleString()}</div>
+            <div class="text-muted" style="font-size:0.75rem">${p.duration_days} days</div>
+          </div>`;
+        });
+        html += '</div>';
+        document.getElementById('featurePlansContainer').innerHTML = html;
+        document.getElementById('featureGatewayRow').style.display = 'block';
+
+        document.querySelectorAll('.feature-plan-card').forEach(card => {
+          card.addEventListener('click', function() {
+            document.querySelectorAll('.feature-plan-card').forEach(c => c.classList.remove('selected'));
+            this.classList.add('selected');
+            selectedPlanId = this.dataset.planId;
+            const price = Number(this.dataset.price).toLocaleString();
+            document.getElementById('featurePayBtn').disabled = false;
+            document.getElementById('featurePayBtn').textContent = 'Pay ₦' + price;
+          });
+        });
+      })
+      .catch(() => {
+        document.getElementById('featurePlansContainer').innerHTML = '<p class="text-muted text-center">Failed to load plans.</p>';
+      });
+
+    new bootstrap.Modal(document.getElementById('featureModal')).show();
+  });
+});
+
+document.getElementById('featurePayBtn')?.addEventListener('click', async function() {
+  if (!selectedPlanId || !featureContestId) return;
+  const gateway = document.querySelector('input[name="feature_gateway"]:checked')?.value || 'paystack';
+  this.disabled = true; this.textContent = 'Initializing…';
+  document.getElementById('featureFeedback').innerHTML = '';
+  try {
+    const r = await fetch('/ajax/feature_actions.php', {
+      method: 'POST',
+      body: new URLSearchParams({action:'init_feature', contest_id:featureContestId, plan_id:selectedPlanId, gateway, csrf_token:featureCsrf})
+    });
+    const d = await r.json();
+    if (d.success) {
+      const url = d.checkout_url || d.authorization_url;
+      if (url) window.location.href = url;
+      else document.getElementById('featureFeedback').innerHTML = '<div class="alert-dark-danger">No checkout URL returned.</div>';
+    } else {
+      document.getElementById('featureFeedback').innerHTML = '<div class="alert-dark-danger">' + (d.message||'Error') + '</div>';
+      this.disabled = false; this.textContent = 'Retry';
+    }
+  } catch {
+    document.getElementById('featureFeedback').innerHTML = '<div class="alert-dark-danger">Network error.</div>';
+    this.disabled = false; this.textContent = 'Retry';
+  }
 });
 </script>
 

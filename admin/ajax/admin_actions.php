@@ -76,6 +76,11 @@ switch ($action) {
     case 'reject_movie_ad':
         handleRejectMovieAd();
         break;
+    case 'create_feature_plan':  handleCreateFeaturePlan();  break;
+    case 'update_feature_plan':  handleUpdateFeaturePlan();  break;
+    case 'delete_feature_plan':  handleDeleteFeaturePlan();  break;
+    case 'unfeature_contest':    handleUnfeatureContest();   break;
+    case 'admin_feature_contest': handleAdminFeatureContest(); break;
     default:
         jsonResponse(['success' => false, 'message' => 'Unknown action.'], 400);
 }
@@ -861,5 +866,74 @@ function handleRejectMovieAd(): never {
         jsonResponse(['success' => true, 'message' => 'Movie ad rejected.']);
     } catch (Throwable) {
         jsonResponse(['success' => false, 'message' => 'Rejection failed.']);
+    }
+}
+
+function handleCreateFeaturePlan(): never {
+    $name   = sanitizeInput($_POST['name'] ?? '');
+    $desc   = sanitizeInput($_POST['description'] ?? '');
+    $price  = (float)($_POST['price'] ?? 0);
+    $days   = max(1, (int)($_POST['duration_days'] ?? 7));
+    $active = (int)(!empty($_POST['is_active']));
+    if (empty($name)) jsonResponse(['success' => false, 'message' => 'Plan name required.']);
+    if ($price < 0) jsonResponse(['success' => false, 'message' => 'Price cannot be negative.']);
+    try {
+        db()->prepare("INSERT INTO featured_contest_plans (name, description, price, duration_days, is_active, sort_order) VALUES (?,?,?,?,?,COALESCE((SELECT MAX(sort_order)+1 FROM featured_contest_plans p2),1))")
+           ->execute([$name, $desc, $price, $days, $active]);
+        jsonResponse(['success' => true, 'message' => 'Plan created.']);
+    } catch (Throwable) {
+        jsonResponse(['success' => false, 'message' => 'Failed to create plan.']);
+    }
+}
+
+function handleUpdateFeaturePlan(): never {
+    $id     = (int)($_POST['plan_id'] ?? 0);
+    $name   = sanitizeInput($_POST['name'] ?? '');
+    $desc   = sanitizeInput($_POST['description'] ?? '');
+    $price  = (float)($_POST['price'] ?? 0);
+    $days   = max(1, (int)($_POST['duration_days'] ?? 7));
+    $active = (int)(!empty($_POST['is_active']));
+    if (!$id || empty($name)) jsonResponse(['success' => false, 'message' => 'Invalid data.']);
+    try {
+        db()->prepare("UPDATE featured_contest_plans SET name=?, description=?, price=?, duration_days=?, is_active=? WHERE id=?")
+           ->execute([$name, $desc, $price, $days, $active, $id]);
+        jsonResponse(['success' => true, 'message' => 'Plan updated.']);
+    } catch (Throwable) {
+        jsonResponse(['success' => false, 'message' => 'Failed to update plan.']);
+    }
+}
+
+function handleDeleteFeaturePlan(): never {
+    $id = (int)($_POST['plan_id'] ?? 0);
+    if (!$id) jsonResponse(['success' => false, 'message' => 'Invalid plan ID.']);
+    try {
+        db()->prepare("DELETE FROM featured_contest_plans WHERE id = ?")->execute([$id]);
+        jsonResponse(['success' => true, 'message' => 'Plan deleted.']);
+    } catch (Throwable) {
+        jsonResponse(['success' => false, 'message' => 'Failed to delete plan.']);
+    }
+}
+
+function handleUnfeatureContest(): never {
+    $contestId = (int)($_POST['contest_id'] ?? 0);
+    if (!$contestId) jsonResponse(['success' => false, 'message' => 'Invalid contest ID.']);
+    try {
+        db()->prepare("UPDATE contests SET is_featured = 0, featured_until = NULL WHERE id = ?")->execute([$contestId]);
+        jsonResponse(['success' => true, 'message' => 'Contest unfeatured.']);
+    } catch (Throwable) {
+        jsonResponse(['success' => false, 'message' => 'Failed to unfeature contest.']);
+    }
+}
+
+function handleAdminFeatureContest(): never {
+    $contestId = (int)($_POST['contest_id'] ?? 0);
+    $days      = max(1, (int)($_POST['duration_days'] ?? 7));
+    if (!$contestId) jsonResponse(['success' => false, 'message' => 'Invalid contest ID.']);
+    try {
+        $until = date('Y-m-d H:i:s', strtotime("+{$days} days"));
+        db()->prepare("UPDATE contests SET is_featured = 1, featured_until = ? WHERE id = ?")->execute([$until, $contestId]);
+        jsonResponse(['success' => true, 'message' => 'Contest featured until ' . date('M j, Y', strtotime($until)) . '.']);
+    } catch (Throwable) {
+        jsonResponse(['success' => false, 'message' => 'Failed to feature contest.']);
     }
 }

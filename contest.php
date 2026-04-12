@@ -82,6 +82,27 @@ function getLeaderboard(PDO $db, int $contestId, string $platform, int $limit = 
 }
 
 $csrf = generateCsrfToken();
+
+// Load sidebar featured contests (excluding current)
+$sidebarFeatured = [];
+try {
+    $db2   = db();
+    $stmt2 = $db2->prepare(
+        "SELECT c.id, c.title, c.prize_pool, c.youtube_thumbnail, c.end_date,
+                GROUP_CONCAT(DISTINCT cp.platform ORDER BY cp.platform SEPARATOR ',') AS platforms
+         FROM contests c
+         LEFT JOIN contest_platforms cp ON cp.contest_id = c.id
+         WHERE c.id != ? AND c.status = 'active' AND c.is_featured = 1
+           AND (c.featured_until IS NULL OR c.featured_until > NOW())
+           AND (c.end_date IS NULL OR c.end_date > NOW())
+         GROUP BY c.id
+         ORDER BY RAND()
+         LIMIT 8"
+    );
+    $stmt2->execute([$contestId]);
+    $sidebarFeatured = $stmt2->fetchAll();
+} catch (Throwable) {}
+
 $pageTitle = $contest['title'];
 renderHead($pageTitle);
 renderNav($isLoggedIn, ['username' => $username], $userMode);
@@ -89,6 +110,8 @@ renderNav($isLoggedIn, ['username' => $username], $userMode);
 
 <div class="public-page">
   <div class="container py-5">
+    <div class="row g-4">
+      <div class="<?= !empty($sidebarFeatured) ? 'col-lg-8' : 'col-12' ?>">
     <!-- Header -->
     <div class="d-flex flex-column flex-md-row align-items-start gap-3 mb-4">
       <div class="flex-grow-1">
@@ -367,6 +390,57 @@ renderNav($isLoggedIn, ['username' => $username], $userMode);
         </div>
       </div>
     </div>
+      </div><!-- end main col -->
+
+      <?php if (!empty($sidebarFeatured)): ?>
+      <div class="col-lg-4">
+        <div class="featured-sidebar-widget" style="position:sticky;top:80px">
+          <div class="d-flex align-items-center gap-2 mb-3">
+            <span style="font-size:1.1rem">⭐</span>
+            <span class="fw-700" style="font-size:0.95rem">Featured Contests</span>
+          </div>
+          <div class="featured-sidebar-slider" id="featuredSidebarSlider">
+            <?php foreach ($sidebarFeatured as $sf): ?>
+              <?php
+                $sfTime = '';
+                if (!empty($sf['end_date'])) {
+                    $secs = strtotime($sf['end_date']) - time();
+                    if ($secs > 0) {
+                        $d = floor($secs / 86400);
+                        $h = floor(($secs % 86400) / 3600);
+                        $sfTime = $d > 0 ? "{$d}d {$h}h left" : "{$h}h left";
+                    }
+                }
+              ?>
+              <div class="featured-sidebar-card">
+                <?php if (!empty($sf['youtube_thumbnail'])): ?>
+                  <img src="<?= e($sf['youtube_thumbnail']) ?>" alt="<?= e($sf['title']) ?>" class="featured-sidebar-thumb">
+                <?php else: ?>
+                  <div class="featured-sidebar-thumb featured-sidebar-thumb--placeholder"><span>🎬</span></div>
+                <?php endif; ?>
+                <div class="featured-sidebar-info">
+                  <div class="fw-600 mb-1" style="font-size:0.82rem;line-height:1.3"><?= e($sf['title']) ?></div>
+                  <div class="d-flex align-items-center justify-content-between">
+                    <span style="font-size:0.78rem;color:var(--accent);font-weight:700">₦<?= number_format((float)$sf['prize_pool'], 0) ?></span>
+                    <?php if ($sfTime): ?><span class="text-muted" style="font-size:0.72rem"><?= e($sfTime) ?></span><?php endif; ?>
+                  </div>
+                  <a href="/contest?id=<?= (int)$sf['id'] ?>" class="btn btn-xs btn-outline-accent mt-2 d-block text-center">Enter Now</a>
+                </div>
+              </div>
+            <?php endforeach; ?>
+          </div>
+          <?php if (count($sidebarFeatured) > 1): ?>
+          <div class="featured-sidebar-dots" id="sidebarDots">
+            <?php for ($i = 0; $i < count($sidebarFeatured); $i++): ?>
+              <button class="sidebar-dot <?= $i === 0 ? 'active' : '' ?>" data-index="<?= $i ?>"></button>
+            <?php endfor; ?>
+          </div>
+          <?php endif; ?>
+        </div>
+      </div>
+      <?php endif; ?>
+
+    </div><!-- end row -->
   </div>
 </div>
 
@@ -463,6 +537,50 @@ document.getElementById('contestVerifyBtn')?.addEventListener('click', async fun
   } catch { alert('Network error.'); }
   this.disabled = false; this.textContent = 'Verify';
 });
+</script>
+
+<script>
+(function() {
+  const slider = document.getElementById('featuredSidebarSlider');
+  if (!slider) return;
+  const cards = slider.querySelectorAll('.featured-sidebar-card');
+  if (cards.length <= 1) return;
+  const dots = document.querySelectorAll('.sidebar-dot');
+  let current = 0;
+  let timer;
+
+  function show(idx) {
+    current = (idx + cards.length) % cards.length;
+    cards.forEach((c, i) => c.classList.toggle('active', i === current));
+    dots.forEach((d, i) => d.classList.toggle('active', i === current));
+  }
+
+  function startAuto() {
+    timer = setInterval(() => show(current + 1), 4000);
+  }
+
+  show(0);
+  startAuto();
+
+  dots.forEach((dot, i) => {
+    dot.addEventListener('click', () => {
+      clearInterval(timer);
+      show(i);
+      startAuto();
+    });
+  });
+
+  let startX = 0;
+  slider.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, {passive: true});
+  slider.addEventListener('touchend', e => {
+    const diff = startX - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 40) {
+      clearInterval(timer);
+      show(diff > 0 ? current + 1 : current - 1);
+      startAuto();
+    }
+  }, {passive: true});
+})();
 </script>
 
 <?php renderFooter(); ?>

@@ -173,6 +173,10 @@ CREATE TABLE IF NOT EXISTS `contests` (
   `start_date` datetime DEFAULT NULL,
   `end_date` datetime DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `is_featured` tinyint(1) NOT NULL DEFAULT 0,
+  `featured_until` datetime DEFAULT NULL,
+  `featured_plan_id` int(11) UNSIGNED DEFAULT NULL,
+  `featured_payment_ref` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `idx_contests_status` (`status`),
   KEY `idx_contests_dates` (`start_date`, `end_date`),
@@ -522,6 +526,18 @@ CREATE TABLE IF NOT EXISTS `payhub_virtual_accounts` (
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `idx_pva_user` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `featured_contest_plans` (
+  `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL,
+  `description` varchar(500) DEFAULT NULL,
+  `price` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `duration_days` int(11) NOT NULL DEFAULT 7,
+  `is_active` tinyint(1) NOT NULL DEFAULT 1,
+  `sort_order` int(11) NOT NULL DEFAULT 0,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 SET foreign_key_checks = 1;

@@ -21,6 +21,25 @@ $sort   = sanitizeInput($_GET['sort'] ?? 'latest');
 
 $contests     = [];
 $totalContests = 0;
+$featuredContests = [];
+try {
+    $db2   = db();
+    $stmt2 = $db2->prepare(
+        "SELECT c.*, u.username AS creator_username,
+                (SELECT COUNT(*) FROM contest_entries WHERE contest_id = c.id AND disqualified = 0) AS entry_count,
+                GROUP_CONCAT(DISTINCT cp.platform ORDER BY cp.platform SEPARATOR ',') AS platforms
+         FROM contests c
+         LEFT JOIN users u ON u.id = c.creator_id
+         LEFT JOIN contest_platforms cp ON cp.contest_id = c.id
+         WHERE c.status = 'active' AND c.is_featured = 1 AND (c.featured_until IS NULL OR c.featured_until > NOW())
+           AND (c.end_date IS NULL OR c.end_date > NOW())
+         GROUP BY c.id
+         ORDER BY c.featured_until ASC
+         LIMIT 10"
+    );
+    $stmt2->execute();
+    $featuredContests = $stmt2->fetchAll();
+} catch (Throwable) {}
 
 try {
     $db = db();
@@ -83,6 +102,68 @@ renderNav($isLoggedIn, ['username' => $username], $userMode);
                 onclick="setFilter('<?= $val ?>')"><?= $label ?></button>
       <?php endforeach; ?>
     </div>
+
+    <?php if (!empty($featuredContests)): ?>
+    <div class="featured-contests-section mb-5">
+      <div class="d-flex align-items-center gap-2 mb-3">
+        <span style="font-size:1.3rem">⭐</span>
+        <h5 class="fw-700 mb-0">Featured Contests</h5>
+        <span class="badge-accent" style="font-size:0.7rem;padding:2px 8px">SPONSORED</span>
+      </div>
+      <div class="featured-contests-grid">
+        <?php foreach ($featuredContests as $fc): ?>
+          <?php
+            $fcPlatforms = array_filter(explode(',', $fc['platforms'] ?? ''));
+            $fcTimeLeft  = '';
+            if (!empty($fc['end_date'])) {
+                $secs = strtotime($fc['end_date']) - time();
+                if ($secs > 0) {
+                    $d = floor($secs / 86400);
+                    $h = floor(($secs % 86400) / 3600);
+                    $fcTimeLeft = $d > 0 ? "{$d}d {$h}h left" : "{$h}h left";
+                }
+            }
+            $fcPlatformIcons = '';
+            foreach ($fcPlatforms as $p2) {
+                $fcPlatformIcons .= match(trim($p2)) {
+                    'tiktok'    => '<span class="platform-icon" title="TikTok">🎵</span>',
+                    'instagram' => '<span class="platform-icon" title="Instagram">📸</span>',
+                    'facebook'  => '<span class="platform-icon" title="Facebook">📘</span>',
+                    default     => '',
+                };
+            }
+          ?>
+          <div class="featured-contest-card">
+            <div class="featured-star-badge">⭐ Featured</div>
+            <?php if (!empty($fc['youtube_thumbnail'])): ?>
+              <div class="featured-thumb">
+                <img src="<?= e($fc['youtube_thumbnail']) ?>" alt="<?= e($fc['title']) ?>">
+                <div class="contest-badge-prize pulse-accent">₦<?= number_format((float)$fc['prize_pool'], 0) ?></div>
+              </div>
+            <?php else: ?>
+              <div class="featured-thumb featured-thumb--placeholder">
+                <span style="font-size:2rem">🎬</span>
+                <div class="contest-badge-prize">₦<?= number_format((float)$fc['prize_pool'], 0) ?></div>
+              </div>
+            <?php endif; ?>
+            <div class="p-3">
+              <h6 class="fw-700 mb-1" style="font-size:0.9rem;line-height:1.4"><?= e($fc['title']) ?></h6>
+              <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+                <?= $fcPlatformIcons ?>
+                <?php if ($fcTimeLeft): ?>
+                  <span class="countdown-timer" style="font-size:0.75rem"><?= e($fcTimeLeft) ?></span>
+                <?php endif; ?>
+              </div>
+              <div class="d-flex align-items-center justify-content-between">
+                <span class="text-muted" style="font-size:0.78rem"><?= (int)$fc['entry_count'] ?> participants</span>
+                <a href="/contest?id=<?= (int)$fc['id'] ?>" class="btn btn-sm btn-accent">View Contest</a>
+              </div>
+            </div>
+          </div>
+        <?php endforeach; ?>
+      </div>
+    </div>
+    <?php endif; ?>
 
     <?php if (empty($contests)): ?>
       <div class="text-center py-5">

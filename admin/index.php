@@ -85,6 +85,7 @@ try {
             <li class="nav-item"><a href="index.php" class="nav-link active"><span class="nav-icon">⊞</span> Dashboard</a></li>
             <li class="nav-item"><a href="users.php" class="nav-link"><span class="nav-icon">👥</span> Users</a></li>
             <li class="nav-item"><a href="contests.php" class="nav-link"><span class="nav-icon">🏆</span> Contests</a></li>
+            <li class="nav-item"><a href="featured-contests.php" class="nav-link"><span class="nav-icon">⭐</span> Featured</a></li>
             <li class="nav-item"><a href="payouts.php" class="nav-link"><span class="nav-icon">💸</span> Payouts <?php if ($pendingPayouts > 0): ?><span class="badge-accent ms-1" style="font-size:0.65rem;padding:2px 6px"><?= $pendingPayouts ?></span><?php endif; ?></a></li>
             <li class="nav-item"><a href="kyc.php" class="nav-link"><span class="nav-icon">🪪</span> KYC <?php if ($pendingKyc > 0): ?><span class="badge-warning ms-1" style="font-size:0.65rem;padding:2px 6px"><?= $pendingKyc ?></span><?php endif; ?></a></li>
             <li class="nav-item"><a href="ad-packages.php" class="nav-link"><span class="nav-icon">📦</span> Ad Packages</a></li>

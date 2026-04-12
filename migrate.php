@@ -325,6 +325,36 @@ try {
     }
     echo "PayHub settings inserted.\n";
 
+    // 20. Create featured_contest_plans table
+    $db->exec("CREATE TABLE IF NOT EXISTS `featured_contest_plans` (
+      `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+      `name` varchar(100) NOT NULL,
+      `description` varchar(500) DEFAULT NULL,
+      `price` decimal(10,2) NOT NULL DEFAULT 0.00,
+      `duration_days` int(11) NOT NULL DEFAULT 7,
+      `is_active` tinyint(1) NOT NULL DEFAULT 1,
+      `sort_order` int(11) NOT NULL DEFAULT 0,
+      `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
+    echo "featured_contest_plans table ensured.\n";
+
+    // 21. Add featured columns to contests
+    addColumnIfNotExists($db, 'contests', 'is_featured', 'TINYINT(1) NOT NULL DEFAULT 0');
+    addColumnIfNotExists($db, 'contests', 'featured_until', 'DATETIME DEFAULT NULL');
+    addColumnIfNotExists($db, 'contests', 'featured_plan_id', 'INT(11) UNSIGNED DEFAULT NULL');
+    addColumnIfNotExists($db, 'contests', 'featured_payment_ref', 'VARCHAR(255) DEFAULT NULL');
+
+    // Insert default feature plans
+    $existingPlans = $db->query("SELECT COUNT(*) FROM featured_contest_plans")->fetchColumn();
+    if ((int)$existingPlans === 0) {
+        $db->exec("INSERT INTO featured_contest_plans (name, description, price, duration_days, sort_order) VALUES
+          ('Starter', 'Feature your contest for 3 days', 2000.00, 3, 1),
+          ('Standard', 'Feature your contest for 7 days', 5000.00, 7, 2),
+          ('Premium', 'Feature your contest for 14 days', 9000.00, 14, 3)");
+    }
+    echo "Feature plans ensured.\n";
+
     echo "Database migrations completed successfully.\n";
 
 } catch (Throwable $e) {

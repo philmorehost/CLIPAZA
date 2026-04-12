@@ -66,6 +66,11 @@ function ss(array $settings, string $key, string $default = ''): string {
                 </a>
             </li>
             <li class="nav-item">
+                <a href="featured-contests.php" class="nav-link">
+                    <span class="nav-icon">⭐</span> Featured
+                </a>
+            </li>
+            <li class="nav-item">
                 <a href="payouts.php" class="nav-link">
                     <span class="nav-icon">💸</span> Payouts
                 </a>
