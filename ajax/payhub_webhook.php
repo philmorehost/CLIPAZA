@@ -19,7 +19,7 @@ if (empty($apiKey) || empty($signature)) {
 }
 
 $expectedSig = hash_hmac('sha256', $rawBody, $apiKey);
-if (!hash_equals($expectedSig, strtolower((string)$signature))) {
+if (!hash_equals(strtolower($expectedSig), strtolower((string)$signature))) {
     http_response_code(401);
     exit;
 }
