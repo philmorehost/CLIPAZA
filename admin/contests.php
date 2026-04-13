@@ -137,6 +137,7 @@ try {
                         <td>
                             <div class="d-flex gap-1 flex-wrap">
                                 <a href="/contest?id=<?= $c['id'] ?>" target="_blank" class="btn btn-xs btn-outline-accent">View</a>
+                                <a href="/contest-stats.php?id=<?= $c['id'] ?>" target="_blank" class="btn btn-xs" style="background:rgba(99,102,241,0.12);color:#a5b4fc;font-size:0.72rem;border:1px solid rgba(99,102,241,0.25);border-radius:6px;padding:2px 8px">Stats</a>
                                 <?php if ($c['status']==='draft'): ?>
                                     <button class="btn btn-xs cab" style="background:rgba(34,197,94,0.1);color:#4ade80;font-size:0.72rem;border:1px solid rgba(34,197,94,0.2)"
                                             data-id="<?= $c['id'] ?>" data-st="active" data-csrf="<?= e($csrf) ?>">Activate</button>

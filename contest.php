@@ -76,7 +76,10 @@ function getLeaderboard(PDO $db, int $contestId, string $platform, int $limit = 
              ORDER BY ce.view_count DESC, ce.like_count DESC
              LIMIT ?"
         );
-        $stmt->execute([$contestId, $platform, $limit]);
+        $stmt->bindValue(1, $contestId, PDO::PARAM_INT);
+        $stmt->bindValue(2, $platform);
+        $stmt->bindValue(3, $limit, PDO::PARAM_INT);
+        $stmt->execute();
         return $stmt->fetchAll();
     } catch (Throwable) { return []; }
 }
@@ -312,6 +315,7 @@ renderNav($isLoggedIn, ['username' => $username], $userMode);
                           </span>
                           <span class="lb-stat text-muted"><?= number_format((int)$row['view_count']) ?> views</span>
                           <span class="lb-stat text-muted"><?= number_format((int)$row['like_count']) ?> likes</span>
+                          <span class="lb-stat text-muted"><?= number_format((int)$row['comment_count']) ?> comments</span>
                           <span class="lb-prize" style="color:var(--accent)"><?= $prizeAmt ?></span>
                         </div>
                       <?php endforeach; ?>

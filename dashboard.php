@@ -313,6 +313,7 @@ renderNav(true, ['username' => $username], $mode);
                   <span><?= e($rankLabel) ?></span>
                   <span><?= number_format((int)$entry['view_count']) ?> views</span>
                   <span><?= number_format((int)$entry['like_count']) ?> likes</span>
+                  <span><?= number_format((int)$entry['comment_count']) ?> comments</span>
                 </div>
                 <?php if ($entry['disqualified']): ?>
                   <span class="badge" style="background:rgba(220,38,38,0.1);color:#f87171;font-size:0.72rem">Disqualified</span>
