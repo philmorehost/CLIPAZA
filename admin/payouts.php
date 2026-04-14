@@ -99,7 +99,7 @@ try {
 <main class="admin-main">
     <div class="admin-topbar">
         <div class="d-flex align-items-center gap-3">
-            <button id="sidebarToggle" class="btn d-lg-none" style="color:#888;background:rgba(255,255,255,0.05);border-radius:8px;padding:6px 10px;">☰</button>
+            <button id="sidebarToggle" class="btn d-lg-none" style="color:var(--text-muted);background:var(--subtle-bg);border-radius:8px;padding:6px 10px;">☰</button>
             <button id="adminThemeToggle" class="btn-theme-toggle" title="Toggle light/dark mode" aria-label="Toggle theme" style="margin-left:4px">☀️</button>
             <h1>Payout Requests</h1>
         </div>
@@ -120,7 +120,7 @@ try {
                 <div class="stat-card">
                     <div class="stat-value" style="font-size:1.5rem"><?= $stats[$st]['count'] ?? 0 ?></div>
                     <div class="stat-label"><?= $meta['label'] ?></div>
-                    <div style="font-size:0.75rem;color:#888;margin-top:4px">₦<?= number_format($stats[$st]['total'] ?? 0, 0) ?></div>
+                    <div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px">₦<?= number_format($stats[$st]['total'] ?? 0, 0) ?></div>
                 </div>
             </div>
             <?php endforeach; ?>
@@ -148,7 +148,7 @@ try {
                 </thead>
                 <tbody>
                 <?php if (empty($requests)): ?>
-                    <tr><td colspan="7" class="text-center py-5" style="color:#888">No payout requests found.</td></tr>
+                    <tr><td colspan="7" class="text-center py-5" style="color:var(--text-muted)">No payout requests found.</td></tr>
                 <?php else: ?>
                     <?php foreach ($requests as $r): ?>
                     <?php
@@ -162,21 +162,21 @@ try {
                         };
                     ?>
                     <tr data-id="<?= (int)$r['id'] ?>">
-                        <td style="font-size:0.82rem;color:#888">#<?= (int)$r['id'] ?></td>
+                        <td style="font-size:0.82rem;color:var(--text-muted)">#<?= (int)$r['id'] ?></td>
                         <td>
-                            <div class="fw-600" style="color:#fff;font-size:0.88rem"><?= e($r['username'] ?? '—') ?></div>
-                            <div style="font-size:0.75rem;color:#888"><?= e($r['email'] ?? '') ?></div>
+                            <div class="fw-600" style="color:var(--text);font-size:0.88rem"><?= e($r['username'] ?? '—') ?></div>
+                            <div style="font-size:0.75rem;color:var(--text-muted)"><?= e($r['email'] ?? '') ?></div>
                             <?php if (($r['kyc_status'] ?? 'none') === 'approved'): ?>
                                 <span class="badge-success" style="font-size:0.65rem">KYC ✓</span>
                             <?php else: ?>
                                 <span class="badge-warning" style="font-size:0.65rem">KYC: <?= e($r['kyc_status'] ?? 'none') ?></span>
                             <?php endif; ?>
                         </td>
-                        <td style="font-weight:700;font-size:0.95rem;color:#fff">₦<?= number_format((float)$r['amount'], 0) ?></td>
+                        <td style="font-weight:700;font-size:0.95rem;color:var(--text)">₦<?= number_format((float)$r['amount'], 0) ?></td>
                         <td style="font-size:0.8rem">
-                            <div style="color:#ccc"><?= e($r['bank_name'] ?? '—') ?></div>
-                            <div style="color:#888"><?= e($r['account_number'] ?? '') ?></div>
-                            <div style="color:#aaa"><?= e($r['account_name'] ?? '') ?></div>
+                            <div style="color:var(--text-secondary)"><?= e($r['bank_name'] ?? '—') ?></div>
+                            <div style="color:var(--text-muted)"><?= e($r['account_number'] ?? '') ?></div>
+                            <div style="color:var(--text-muted)"><?= e($r['account_name'] ?? '') ?></div>
                         </td>
                         <td>
                             <span class="<?= $stClass ?>" style="font-size:0.75rem"><?= e(ucfirst(str_replace('_',' ',$r['status']))) ?></span>
@@ -189,11 +189,11 @@ try {
                             <div class="badge-info mt-1" style="font-size:0.65rem;display:inline-block">Appeal submitted</div>
                             <?php endif; ?>
                         </td>
-                        <td style="white-space:nowrap;font-size:0.78rem;color:#888"><?= e(formatDate($r['created_at'], 'M j, Y')) ?></td>
+                        <td style="white-space:nowrap;font-size:0.78rem;color:var(--text-muted)"><?= e(formatDate($r['created_at'], 'M j, Y')) ?></td>
                         <td>
                             <div class="d-flex gap-1 flex-wrap">
                                 <button class="btn btn-xs view-detail-btn" data-id="<?= (int)$r['id'] ?>"
-                                        style="background:rgba(255,255,255,0.05);color:#ccc;font-size:0.72rem;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:3px 8px">
+                                        style="background:var(--subtle-bg);color:var(--text-secondary);font-size:0.72rem;border:1px solid var(--subtle-border);border-radius:6px;padding:3px 8px">
                                     View
                                 </button>
                                 <?php if ($r['status'] === 'pending'): ?>
@@ -324,11 +324,11 @@ try {
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <div class="mb-3 p-3" style="background:#0d0d0d;border:1px solid #222;border-radius:8px">
+        <div class="mb-3 p-3" style="background:var(--input-bg);border:1px solid var(--border);border-radius:8px">
           <div class="fw-700 mb-1" style="color:var(--accent)" id="markPaidAmount"></div>
-          <div style="font-size:0.85rem;color:#ccc">Bank: <span id="markPaidBank"></span></div>
-          <div style="font-size:0.85rem;color:#ccc">Account: <span id="markPaidAcct"></span></div>
-          <div style="font-size:0.85rem;color:#aaa">Name: <span id="markPaidAcctName"></span></div>
+          <div style="font-size:0.85rem;color:var(--text-secondary)">Bank: <span id="markPaidBank"></span></div>
+          <div style="font-size:0.85rem;color:var(--text-secondary)">Account: <span id="markPaidAcct"></span></div>
+          <div style="font-size:0.85rem;color:var(--text-muted)">Name: <span id="markPaidAcctName"></span></div>
         </div>
         <p class="text-muted mb-3" style="font-size:0.82rem">Confirm you have manually transferred the funds to the above bank account.</p>
         <form id="markPaidForm">
@@ -387,30 +387,30 @@ document.querySelectorAll('.view-detail-btn').forEach(btn => {
         document.getElementById('detailModalBody').innerHTML = `
             <div class="row g-3">
                 <div class="col-md-6">
-                    <div style="font-size:0.75rem;color:#888;text-transform:uppercase;letter-spacing:0.06em">User</div>
-                    <div style="font-weight:600;color:#fff">${r.username || '—'}</div>
-                    <div style="font-size:0.82rem;color:#888">${r.email || ''}</div>
+                    <div style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em">User</div>
+                    <div style="font-weight:600;color:var(--text)">${r.username || '—'}</div>
+                    <div style="font-size:0.82rem;color:var(--text-muted)">${r.email || ''}</div>
                 </div>
                 <div class="col-md-6">
-                    <div style="font-size:0.75rem;color:#888;text-transform:uppercase;letter-spacing:0.06em">Amount</div>
+                    <div style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em">Amount</div>
                     <div style="font-weight:700;font-size:1.4rem;color:var(--accent)">₦${parseFloat(r.amount).toLocaleString()}</div>
                 </div>
                 <div class="col-md-6">
-                    <div style="font-size:0.75rem;color:#888;text-transform:uppercase;letter-spacing:0.06em">Bank</div>
-                    <div style="color:#ccc">${r.bank_name || '—'}</div>
-                    <div style="font-size:0.82rem;color:#888">Account: ${r.account_number || '—'}</div>
-                    <div style="font-size:0.82rem;color:#aaa">Name: ${r.account_name || '—'}</div>
+                    <div style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em">Bank</div>
+                    <div style="color:var(--text-secondary)">${r.bank_name || '—'}</div>
+                    <div style="font-size:0.82rem;color:var(--text-muted)">Account: ${r.account_number || '—'}</div>
+                    <div style="font-size:0.82rem;color:var(--text-muted)">Name: ${r.account_name || '—'}</div>
                 </div>
                 <div class="col-md-6">
-                    <div style="font-size:0.75rem;color:#888;text-transform:uppercase;letter-spacing:0.06em">Status</div>
-                    <div style="color:#fff;font-weight:600;text-transform:capitalize">${(r.status||'').replace('_',' ')}</div>
-                    ${r.processed_at ? `<div style="font-size:0.78rem;color:#888">Processed: ${r.processed_at}</div>` : ''}
+                    <div style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em">Status</div>
+                    <div style="color:var(--text);font-weight:600;text-transform:capitalize">${(r.status||'').replace('_',' ')}</div>
+                    ${r.processed_at ? `<div style="font-size:0.78rem;color:var(--text-muted)">Processed: ${r.processed_at}</div>` : ''}
                 </div>
-                ${r.rejection_reason ? `<div class="col-12"><div style="font-size:0.75rem;color:#888;text-transform:uppercase;letter-spacing:0.06em">Rejection Reason</div><div style="color:var(--danger)">${r.rejection_reason}</div></div>` : ''}
-                ${r.cancel_reason ? `<div class="col-12"><div style="font-size:0.75rem;color:#888;text-transform:uppercase;letter-spacing:0.06em">Cancel Reason</div><div style="color:var(--warning)">${r.cancel_reason}</div></div>` : ''}
-                ${r.appeal_message ? `<div class="col-12"><div style="font-size:0.75rem;color:#888;text-transform:uppercase;letter-spacing:0.06em">Appeal Message</div><div style="color:var(--info)">${r.appeal_message}</div></div>` : ''}
-                ${r.admin_note ? `<div class="col-12"><div style="font-size:0.75rem;color:#888;text-transform:uppercase;letter-spacing:0.06em">Admin Note</div><div style="color:#aaa">${r.admin_note}</div></div>` : ''}
-                <div class="col-12"><div style="font-size:0.75rem;color:#888">Requested: ${r.created_at}</div></div>
+                ${r.rejection_reason ? `<div class="col-12"><div style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em">Rejection Reason</div><div style="color:var(--danger)">${r.rejection_reason}</div></div>` : ''}
+                ${r.cancel_reason ? `<div class="col-12"><div style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em">Cancel Reason</div><div style="color:var(--warning)">${r.cancel_reason}</div></div>` : ''}
+                ${r.appeal_message ? `<div class="col-12"><div style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em">Appeal Message</div><div style="color:var(--info)">${r.appeal_message}</div></div>` : ''}
+                ${r.admin_note ? `<div class="col-12"><div style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em">Admin Note</div><div style="color:var(--text-muted)">${r.admin_note}</div></div>` : ''}
+                <div class="col-12"><div style="font-size:0.75rem;color:var(--text-muted)">Requested: ${r.created_at}</div></div>
             </div>
         `;
         modal.show();

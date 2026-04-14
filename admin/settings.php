@@ -74,11 +74,11 @@ function ss(array $settings, string $key, string $default = ''): string {
 <main class="admin-main">
     <div class="admin-topbar">
         <div class="d-flex align-items-center gap-3">
-            <button id="sidebarToggle" class="btn d-lg-none" style="color:#888;background:rgba(255,255,255,0.05);border-radius:8px;padding:6px 10px;">☰</button>
+            <button id="sidebarToggle" class="btn d-lg-none" style="color:var(--text-muted);background:var(--subtle-bg);border-radius:8px;padding:6px 10px;">☰</button>
             <button id="adminThemeToggle" class="btn-theme-toggle" title="Toggle light/dark mode" aria-label="Toggle theme" style="margin-left:4px">☀️</button>
             <h1>Site Settings</h1>
         </div>
-        <a href="index.php" style="font-size:0.8rem;color:#888;">← Dashboard</a>
+        <a href="index.php" style="font-size:0.8rem;color:var(--text-muted);">← Dashboard</a>
     </div>
 
     <!-- Tabs -->
@@ -115,7 +115,6 @@ function ss(array $settings, string $key, string $default = ''): string {
                             <div class="mb-4">
                                 <label class="form-label-dark">Site Name</label>
                                 <input type="text" name="site_name" class="form-control form-control-dark" value="<?= ss($siteSettings, 'site_name', 'Clipaza') ?>" required maxlength="100">
-                                <div style="font-size:0.78rem;color:#888;margin-top:6px;">Displayed in the browser tab (if SEO title is empty) and navbar.</div>
                             </div>
                             <div class="mb-4">
                                 <label class="form-label-dark">Default Landing Page Theme</label>
@@ -132,7 +131,7 @@ function ss(array $settings, string $key, string $default = ''): string {
                         <div class="card-header">Site Logo</div>
                         <div class="card-body">
                             <?php if (!empty($siteSettings['site_logo'])): ?>
-                            <div class="mb-3 text-center"><img src="<?= ss($siteSettings, 'site_logo') ?>" alt="Logo" style="max-height:60px;max-width:100%;border-radius:6px;background:#1a1a1a;padding:8px;"></div>
+                            <div class="mb-3 text-center"><img src="<?= ss($siteSettings, 'site_logo') ?>" alt="Logo" style="max-height:60px;max-width:100%;border-radius:6px;background:var(--bg-secondary);padding:8px;"></div>
                             <?php endif; ?>
                             <input type="file" name="site_logo" class="form-control form-control-dark" accept=".png,.jpg,.jpeg">
                         </div>
@@ -141,7 +140,7 @@ function ss(array $settings, string $key, string $default = ''): string {
                         <div class="card-header">Favicon</div>
                         <div class="card-body">
                             <?php if (!empty($siteSettings['site_favicon'])): ?>
-                            <div class="mb-3 text-center"><img src="<?= ss($siteSettings, 'site_favicon') ?>" alt="Favicon" style="max-height:32px;max-width:32px;border-radius:4px;background:#1a1a1a;padding:4px;"></div>
+                            <div class="mb-3 text-center"><img src="<?= ss($siteSettings, 'site_favicon') ?>" alt="Favicon" style="max-height:32px;max-width:32px;border-radius:4px;background:var(--bg-secondary);padding:4px;"></div>
                             <?php endif; ?>
                             <input type="file" name="site_favicon" class="form-control form-control-dark" accept=".png,.jpg,.jpeg,.ico">
                         </div>
@@ -154,22 +153,10 @@ function ss(array $settings, string $key, string $default = ''): string {
             <div class="card-dark mb-4">
                 <div class="card-header">SEO Settings</div>
                 <div class="card-body">
-                    <div class="mb-4">
-                        <label class="form-label-dark">Meta Title</label>
-                        <input type="text" name="seo_title" class="form-control form-control-dark" value="<?= ss($siteSettings, 'seo_title', 'Clipaza — Where Creators Reward Their Biggest Fans') ?>" maxlength="200">
-                    </div>
-                    <div class="mb-4">
-                        <label class="form-label-dark">Meta Description</label>
-                        <textarea name="seo_description" class="form-control form-control-dark" rows="3" maxlength="500"><?= ss($siteSettings, 'seo_description', 'Clipaza lets YouTube creators run fan clipping contests with real cash prizes. Clip, share, compete to win — paid straight to your bank. Free to join.') ?></textarea>
-                    </div>
-                    <div class="mb-4">
-                        <label class="form-label-dark">Meta Keywords</label>
-                        <input type="text" name="seo_keywords" class="form-control form-control-dark" value="<?= ss($siteSettings, 'seo_keywords') ?>" maxlength="500">
-                    </div>
-                    <div class="mb-4">
-                        <label class="form-label-dark">Open Graph Image URL</label>
-                        <input type="url" name="og_image_url" class="form-control form-control-dark" value="<?= ss($siteSettings, 'og_image_url') ?>" maxlength="500">
-                    </div>
+                    <div class="mb-4"><label class="form-label-dark">Meta Title</label><input type="text" name="seo_title" class="form-control form-control-dark" value="<?= ss($siteSettings, 'seo_title') ?>" maxlength="200"></div>
+                    <div class="mb-4"><label class="form-label-dark">Meta Description</label><textarea name="seo_description" class="form-control form-control-dark" rows="3" maxlength="500"><?= ss($siteSettings, 'seo_description') ?></textarea></div>
+                    <div class="mb-4"><label class="form-label-dark">Meta Keywords</label><input type="text" name="seo_keywords" class="form-control form-control-dark" value="<?= ss($siteSettings, 'seo_keywords') ?>" maxlength="500"></div>
+                    <div class="mb-4"><label class="form-label-dark">Open Graph Image URL</label><input type="url" name="og_image_url" class="form-control form-control-dark" value="<?= ss($siteSettings, 'og_image_url') ?>" maxlength="500"></div>
                 </div>
             </div>
 
@@ -183,22 +170,60 @@ function ss(array $settings, string $key, string $default = ''): string {
                 </div>
             </div>
             <div class="card-dark mb-4">
-                <div class="card-header">Platform Fees & Withdrawal</div>
+                <div class="card-header">Fees &amp; Limits</div>
                 <div class="card-body">
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <label class="form-label-dark">Platform Fee (%)</label>
+                            <input type="number" step="0.1" name="platform_fee_percent" class="form-control form-control-dark" value="<?= ss($siteSettings, 'platform_fee_percent', '10') ?>">
+                            <div class="form-text text-muted">Percentage taken from every contest prize pool.</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label-dark">Min Contest Prize (₦)</label>
+                            <input type="number" name="min_contest_prize" class="form-control form-control-dark" value="<?= ss($siteSettings, 'min_contest_prize', '5000') ?>">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label-dark">Max Contest Duration (Days)</label>
+                            <input type="number" name="max_contest_days" class="form-control form-control-dark" value="<?= ss($siteSettings, 'max_contest_days', '30') ?>">
+                        </div>
+                    </div>
                     <div class="row g-3">
-                        <div class="col-md-6"><label class="form-label-dark">Platform Fee (%)</label><input type="number" name="platform_fee_percent" class="form-control form-control-dark" value="<?= ss($siteSettings, 'platform_fee_percent', '10') ?>"></div>
-                        <div class="col-md-6"><label class="form-label-dark">Min Contest Prize (₦)</label><input type="number" name="min_contest_prize" class="form-control form-control-dark" value="<?= ss($siteSettings, 'min_contest_prize', '5000') ?>"></div>
+                        <div class="col-md-6">
+                            <label class="form-label-dark">Withdrawal Fee (%)</label>
+                            <input type="number" step="0.1" name="withdrawal_fee_percent" class="form-control form-control-dark" value="<?= ss($siteSettings, 'withdrawal_fee_percent', '0') ?>">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-dark">Withdrawal Fee Flat (₦)</label>
+                            <input type="number" name="withdrawal_fee_flat" class="form-control form-control-dark" value="<?= ss($siteSettings, 'withdrawal_fee_flat', '0') ?>">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-dark mb-4">
+                <div class="card-header">Payout Settings</div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <label class="form-label-dark">Preferred Payout Gateway</label>
+                        <select name="preferred_payout_gateway" class="form-control form-control-dark">
+                            <option value="paystack" <?= ss($siteSettings, 'preferred_payout_gateway', 'paystack') === 'paystack' ? 'selected' : '' ?>>Paystack (API Transfer)</option>
+                            <option value="payhub"   <?= ss($siteSettings, 'preferred_payout_gateway', 'paystack') === 'payhub'   ? 'selected' : '' ?>>PayHub Transfer</option>
+                            <option value="manual"   <?= ss($siteSettings, 'preferred_payout_gateway', 'paystack') === 'manual'   ? 'selected' : '' ?>>Manual Only</option>
+                        </select>
+                    </div>
+                    <div class="row g-3">
                         <div class="col-md-6"><label class="form-label-dark">Min Withdrawal (₦)</label><input type="number" name="min_withdrawal_amount" class="form-control form-control-dark" value="<?= ss($siteSettings, 'min_withdrawal_amount', '1000') ?>"></div>
                         <div class="col-md-6"><label class="form-label-dark">Max Withdrawal (₦)</label><input type="number" name="max_withdrawal_amount" class="form-control form-control-dark" value="<?= ss($siteSettings, 'max_withdrawal_amount', '500000') ?>"></div>
                     </div>
                 </div>
             </div>
             <div class="card-dark mb-4">
-                <div class="card-header">PayHub Configuration (Alternative)</div>
+                <div class="card-header">Movie Ad Bank Account (Manual)</div>
                 <div class="card-body">
-                    <div class="mb-3"><label class="form-label-dark">Base URL</label><input type="text" name="payhub_base_url" class="form-control form-control-dark" value="<?= ss($siteSettings, 'payhub_base_url') ?>"></div>
-                    <div class="mb-3"><label class="form-label-dark">API Key</label><input type="password" name="payhub_api_key" class="form-control form-control-dark" value="<?= ss($siteSettings, 'payhub_api_key') ?>"></div>
-                    <div class="mb-3"><label class="form-label-dark">Merchant ID</label><input type="text" name="payhub_merchant_id" class="form-control form-control-dark" value="<?= ss($siteSettings, 'payhub_merchant_id') ?>"></div>
+                    <div class="row g-3">
+                        <div class="col-md-4"><label class="form-label-dark">Bank Name</label><input type="text" name="ad_bank_name" class="form-control form-control-dark" value="<?= ss($siteSettings, 'ad_bank_name') ?>"></div>
+                        <div class="col-md-4"><label class="form-label-dark">Account Name</label><input type="text" name="ad_bank_account" class="form-control form-control-dark" value="<?= ss($siteSettings, 'ad_bank_account') ?>"></div>
+                        <div class="col-md-4"><label class="form-label-dark">Account Number</label><input type="text" name="ad_bank_number" class="form-control form-control-dark" value="<?= ss($siteSettings, 'ad_bank_number') ?>"></div>
+                    </div>
                 </div>
             </div>
 
@@ -207,19 +232,38 @@ function ss(array $settings, string $key, string $default = ''): string {
             <div class="card-dark mb-4">
                 <div class="card-header">Hero Section</div>
                 <div class="card-body">
-                    <div class="mb-3"><label class="form-label-dark">Hero Title</label><input type="text" name="lp_hero_title" class="form-control form-control-dark" value="<?= ss($siteSettings, 'lp_hero_title', 'Where Creators Reward') ?>"></div>
-                    <div class="mb-3"><label class="form-label-dark">Hero Accent Title</label><input type="text" name="lp_hero_accent" class="form-control form-control-dark" value="<?= ss($siteSettings, 'lp_hero_accent', 'Their Biggest Fans.') ?>"></div>
-                    <div class="mb-3"><label class="form-label-dark">Hero Subtext</label><textarea name="lp_hero_sub" class="form-control form-control-dark" rows="3"><?= ss($siteSettings, 'lp_hero_sub', "Pick a contest from your favourite YouTube creator. Clip their best moment, post it on TikTok, Reels or Shorts, and let the views decide who wins.") ?></textarea></div>
+                    <div class="mb-3"><label class="form-label-dark">Hero Title</label><input type="text" name="lp_hero_title" class="form-control form-control-dark" value="<?= ss($siteSettings, 'lp_hero_title') ?>"></div>
+                    <div class="mb-3"><label class="form-label-dark">Hero Accent Title</label><input type="text" name="lp_hero_accent" class="form-control form-control-dark" value="<?= ss($siteSettings, 'lp_hero_accent') ?>"></div>
+                    <div class="mb-3"><label class="form-label-dark">Hero Subtext</label><textarea name="lp_hero_sub" class="form-control form-control-dark" rows="3"><?= ss($siteSettings, 'lp_hero_sub') ?></textarea></div>
+                </div>
+            </div>
                     <div class="row g-3">
-                        <div class="col-md-6"><label class="form-label-dark">Start Contest Button</label><input type="text" name="lp_hero_btn_creator" class="form-control form-control-dark" value="<?= ss($siteSettings, 'lp_hero_btn_creator', 'Start a Contest →') ?>"></div>
-                        <div class="col-md-6"><label class="form-label-dark">Join as Fan Button</label><input type="text" name="lp_hero_btn_fan" class="form-control form-control-dark" value="<?= ss($siteSettings, 'lp_hero_btn_fan', 'Join as a Fan →') ?>"></div>
+                        <div class="col-md-6"><label class="form-label-dark">Start Contest Button</label><input type="text" name="lp_hero_btn_creator" class="form-control form-control-dark" value="<?= ss($siteSettings, "lp_hero_btn_creator") ?>"></div>
+                        <div class="col-md-6"><label class="form-label-dark">Join as Fan Button</label><input type="text" name="lp_hero_btn_fan" class="form-control form-control-dark" value="<?= ss($siteSettings, "lp_hero_btn_fan") ?>"></div>
+                    </div>
+            <div class="card-dark mb-4">
+                <div class="card-header">Features Section (Why Clipaza?)</div>
+                <div class="card-body">
+                    <div class="form-check mb-4">
+                        <input class="form-check-input" type="checkbox" name="lp_hide_features" id="hideFeatures" value="1" <?= ($siteSettings['lp_hide_features'] ?? '0') === '1' ? 'checked' : '' ?>>
+                        <label class="form-check-label text-theme" for="hideFeatures">Hide Features Section</label>
+                    </div>
+                    <div class="mb-3"><label class="form-label-dark">Features Section Title</label><input type="text" name="lp_features_title" class="form-control form-control-dark" value="<?= ss($siteSettings, 'lp_features_title') ?>"></div>
+                    <div class="mb-4"><label class="form-label-dark">Features Subtext</label><input type="text" name="lp_features_sub" class="form-control form-control-dark" value="<?= ss($siteSettings, 'lp_features_sub') ?>"></div>
+                    <div class="row g-3">
+                        <?php for($i=1;$i<=6;$i++): ?>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label-dark">Feature <?= $i ?> Title</label><input type="text" name="lp_f<?= $i ?>_title" class="form-control form-control-dark mb-2" value="<?= ss($siteSettings, "lp_f{$i}_title") ?>">
+                            <label class="form-label-dark">Feature <?= $i ?> Desc</label><textarea name="lp_f<?= $i ?>_desc" class="form-control form-control-dark" rows="3"><?= ss($siteSettings, "lp_f{$i}_desc") ?></textarea>
+                        </div>
+                        <?php endfor; ?>
                     </div>
                 </div>
             </div>
             <div class="card-dark mb-4">
                 <div class="card-header">How It Works Section</div>
                 <div class="card-body">
-                    <div class="mb-3"><label class="form-label-dark">Section Title</label><input type="text" name="lp_hiw_title" class="form-control form-control-dark" value="<?= ss($siteSettings, 'lp_hiw_title', 'Works') ?>"></div>
+                    <div class="mb-3"><label class="form-label-dark">Section Title</label><input type="text" name="lp_hiw_title" class="form-control form-control-dark" value="<?= ss($siteSettings, "lp_hiw_title") ?>"></div>
                     <div class="row g-3">
                         <?php for($i=1;$i<=3;$i++): ?>
                         <div class="col-md-4">
@@ -254,10 +298,10 @@ function ss(array $settings, string $key, string $default = ''): string {
             <div class="card-dark mb-4">
                 <div class="card-header">Leaderboard & CTA</div>
                 <div class="card-body">
-                    <div class="mb-3"><label class="form-label-dark">Leaderboard Title (Accent)</label><input type="text" name="lp_lb_title_accent" class="form-control form-control-dark" value="<?= ss($siteSettings, 'lp_lb_title_accent', 'Win Here.') ?>"></div>
-                    <div class="mb-3"><label class="form-label-dark">Leaderboard Text</label><textarea name="lp_lb_text" class="form-control form-control-dark" rows="3"><?= ss($siteSettings, 'lp_lb_text') ?></textarea></div>
-                    <div class="mb-3"><label class="form-label-dark">Footer CTA Title</label><input type="text" name="lp_cta_title" class="form-control form-control-dark" value="<?= ss($siteSettings, 'lp_cta_title') ?>"></div>
-                    <div class="mb-3"><label class="form-label-dark">Footer CTA Subtext</label><input type="text" name="lp_cta_sub" class="form-control form-control-dark" value="<?= ss($siteSettings, 'lp_cta_sub') ?>"></div>
+                    <div class="mb-3"><label class="form-label-dark">Leaderboard Title (Accent)</label><input type="text" name="lp_lb_title_accent" class="form-control form-control-dark" value="<?= ss($siteSettings, "lp_lb_title_accent") ?>"></div>
+                    <div class="mb-3"><label class="form-label-dark">Leaderboard Text</label><textarea name="lp_lb_text" class="form-control form-control-dark" rows="3"><?= ss($siteSettings, "lp_lb_text") ?></textarea></div>
+                    <div class="mb-3"><label class="form-label-dark">Footer CTA Title</label><input type="text" name="lp_cta_title" class="form-control form-control-dark" value="<?= ss($siteSettings, "lp_cta_title") ?>"></div>
+                    <div class="mb-3"><label class="form-label-dark">Footer CTA Subtext</label><input type="text" name="lp_cta_sub" class="form-control form-control-dark" value="<?= ss($siteSettings, "lp_cta_sub") ?>"></div>
                 </div>
             </div>
 

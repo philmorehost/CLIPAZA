@@ -62,7 +62,7 @@ try {
 <main class="admin-main">
     <div class="admin-topbar">
         <div class="d-flex align-items-center gap-3">
-            <button id="sidebarToggle" class="btn d-lg-none" style="color:#888;background:rgba(255,255,255,0.05);border-radius:8px;padding:6px 10px;">☰</button>
+            <button id="sidebarToggle" class="btn d-lg-none" style="color:var(--text-muted);background:var(--subtle-bg);border-radius:8px;padding:6px 10px;">☰</button>
             <button id="adminThemeToggle" class="btn-theme-toggle" title="Toggle light/dark mode" aria-label="Toggle theme" style="margin-left:4px">☀️</button>
             <h1>Ad Packages</h1>
         </div>
@@ -102,7 +102,7 @@ try {
                 <td>
                     <div class="fw-700" style="font-size:0.9rem"><?= e($pkg['name']) ?></div>
                     <?php if ($pkg['description']): ?>
-                    <div style="font-size:0.78rem;color:#888"><?= e(mb_strimwidth($pkg['description'], 0, 60, '…')) ?></div>
+                    <div style="font-size:0.78rem;color:var(--text-muted)"><?= e(mb_strimwidth($pkg['description'], 0, 60, '…')) ?></div>
                     <?php endif; ?>
                 </td>
                 <td class="fw-700" style="color:var(--accent)">₦<?= number_format((float)$pkg['price'], 2) ?></td>
@@ -136,7 +136,7 @@ try {
                         <button class="btn btn-sm toggle-pkg-btn"
                                 data-id="<?= (int)$pkg['id'] ?>"
                                 data-active="<?= (int)$pkg['is_active'] ?>"
-                                style="font-size:0.75rem;background:rgba(255,255,255,0.05);color:#aaa;border:1px solid #333">
+                                style="font-size:0.75rem;background:var(--subtle-bg);color:var(--text-muted);border:1px solid var(--border)">
                             <?= $pkg['is_active'] ? 'Disable' : 'Enable' ?>
                         </button>
                         <button class="btn btn-sm delete-pkg-btn"
@@ -207,7 +207,7 @@ try {
                 <div class="form-check" style="min-width:160px">
                   <input type="checkbox" class="form-check-input zone-check" name="placement_zones[]"
                          id="zone_<?= $val ?>" value="<?= $val ?>">
-                  <label class="form-check-label text-white" for="zone_<?= $val ?>"><?= $lbl ?></label>
+                  <label class="form-check-label text-theme" for="zone_<?= $val ?>"><?= $lbl ?></label>
                 </div>
                 <?php endforeach; ?>
               </div>
@@ -215,7 +215,7 @@ try {
             <div class="col-12">
               <div class="form-check">
                 <input type="checkbox" class="form-check-input" name="is_active" id="pkgIsActive" value="1" checked>
-                <label class="form-check-label text-white" for="pkgIsActive">Active (visible to users)</label>
+                <label class="form-check-label text-theme" for="pkgIsActive">Active (visible to users)</label>
               </div>
             </div>
           </div>

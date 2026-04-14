@@ -126,7 +126,7 @@ $csrf = generateCsrfToken();
                                 <td>#<?= $idx + 1 ?></td>
                                 <td>
                                     <div class="fw-600"><?= e($entry['username']) ?></div>
-                                    <div style="font-size:0.75rem;color:#888"><?= e($entry['email']) ?></div>
+                                    <div style="font-size:0.75rem;color:var(--text-muted)"><?= e($entry['email']) ?></div>
                                 </td>
                                 <td><?= ucfirst(e($entry['platform'])) ?></td>
                                 <td class="fw-600"><?= number_format((int)$entry['view_count']) ?></td>
@@ -141,7 +141,7 @@ $csrf = generateCsrfToken();
                                         <?= ucfirst(e($entry['status'])) ?>
                                     </span>
                                 </td>
-                                <td style="font-size:0.8rem;color:#888"><?= e(timeAgo($entry['submitted_at'])) ?></td>
+                                <td style="font-size:0.8rem;color:var(--text-muted)"><?= e(timeAgo($entry['submitted_at'])) ?></td>
                             </tr>
                             <?php endforeach; ?>
                         <?php endif; ?>

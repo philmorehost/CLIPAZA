@@ -81,7 +81,12 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 $lpIsLoggedIn = !empty($_SESSION['user_id']);
 
-$defaultPageTitle = htmlspecialchars($siteName) . ' — ' . getSetting('lp_hero_title', 'Where Creators Reward') . ' ' . getSetting('lp_hero_accent', 'Their Biggest Fans.');
+$defaultPageTitle = htmlspecialchars($siteName);
+if (function_exists('getSetting')) {
+    $defaultPageTitle .= ' — ' . getSetting('lp_hero_title', 'Where Creators Reward') . ' ' . getSetting('lp_hero_accent', 'Their Biggest Fans.');
+} else {
+    $defaultPageTitle .= ' — Where Creators Reward Their Biggest Fans.';
+}
 $pageTitle = $seoTitle !== '' ? $seoTitle : $defaultPageTitle;
 
 // Load active contests for trending section

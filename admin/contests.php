@@ -83,9 +83,9 @@ try {
 <main class="admin-main">
     <div class="admin-topbar">
         <div class="d-flex align-items-center gap-3">
-            <button id="sidebarToggle" class="btn d-lg-none" style="color:#888;background:rgba(255,255,255,0.05);border-radius:8px;padding:6px 10px;">☰</button>
+            <button id="sidebarToggle" class="btn d-lg-none" style="color:var(--text-muted);background:var(--subtle-bg);border-radius:8px;padding:6px 10px;">☰</button>
             <button id="adminThemeToggle" class="btn-theme-toggle" title="Toggle light/dark mode" aria-label="Toggle theme" style="margin-left:4px">☀️</button>
-            <span style="color:#888;font-size:0.9rem">Welcome, <strong style="color:#fff"><?= e($_SESSION['username'] ?? '') ?></strong></span>
+            <span style="color:var(--text-muted);font-size:0.9rem">Welcome, <strong style="color:var(--text)"><?= e($_SESSION['username'] ?? '') ?></strong></span>
         </div>
     </div>
     <div class="p-4">
@@ -126,14 +126,14 @@ try {
                                 <span class="badge" style="background:rgba(34,197,94,0.1);color:#4ade80;font-size:0.68rem"><?= e(ucfirst($c['escrow_status'])) ?></span>
                             <?php endif; ?>
                         </td>
-                        <td style="font-size:0.85rem;color:#ccc"><?= e($c['creator_name'] ?? '—') ?></td>
+                        <td style="font-size:0.85rem;color:var(--text-secondary)"><?= e($c['creator_name'] ?? '—') ?></td>
                         <td style="font-size:0.88rem;font-weight:600">₦<?= number_format((float)$c['prize_pool'], 0) ?></td>
                         <td>
                             <?php $sc = $c['status']==='active' ? 'badge-success' : ($c['status']==='cancelled' ? 'badge-danger' : 'badge-muted'); ?>
                             <span class="<?= $sc ?>" style="font-size:0.72rem"><?= e(ucfirst($c['status'])) ?></span>
                         </td>
                         <td style="font-size:0.85rem;text-align:center"><?= (int)$c['entry_count'] ?></td>
-                        <td style="font-size:0.8rem;color:#888"><?= !empty($c['end_date']) ? e(formatDate($c['end_date'],'M j, Y')) : '—' ?></td>
+                        <td style="font-size:0.8rem;color:var(--text-muted)"><?= !empty($c['end_date']) ? e(formatDate($c['end_date'],'M j, Y')) : '—' ?></td>
                         <td>
                             <div class="d-flex gap-1 flex-wrap">
                                 <a href="/contest?id=<?= $c['id'] ?>" target="_blank" class="btn btn-xs btn-outline-accent">View</a>

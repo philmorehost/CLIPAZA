@@ -88,9 +88,9 @@ try {
 <main class="admin-main">
     <div class="admin-topbar">
         <div class="d-flex align-items-center gap-3">
-            <button id="sidebarToggle" class="btn d-lg-none" style="color:#888;background:rgba(255,255,255,0.05);border-radius:8px;padding:6px 10px;">☰</button>
+            <button id="sidebarToggle" class="btn d-lg-none" style="color:var(--text-muted);background:var(--subtle-bg);border-radius:8px;padding:6px 10px;">☰</button>
             <button id="adminThemeToggle" class="btn-theme-toggle" title="Toggle light/dark mode" aria-label="Toggle theme" style="margin-left:4px">☀️</button>
-            <span style="color:#888;font-size:0.9rem">Welcome, <strong style="color:#fff"><?= e($_SESSION['username'] ?? '') ?></strong></span>
+            <span style="color:var(--text-muted);font-size:0.9rem">Welcome, <strong style="color:var(--text)"><?= e($_SESSION['username'] ?? '') ?></strong></span>
         </div>
     </div>
     <div class="p-4">
@@ -124,17 +124,17 @@ try {
                     <?php foreach ($users as $u): ?>
                     <tr>
                         <td><div class="fw-600"><?= e($u['username']) ?></div><div class="text-muted" style="font-size:0.78rem"><?= e($u['email']) ?></div></td>
-                        <td><span class="badge" style="background:#1a1a1a;font-size:0.72rem"><?= e($u['role']) ?></span></td>
+                        <td><span class="badge" style="background:var(--card-bg);font-size:0.72rem"><?= e($u['role']) ?></span></td>
                         <td>
                             <?php $sc = $u['status']==='active' ? 'badge-success' : ($u['status']==='banned' ? 'badge-danger' : 'badge-muted'); ?>
                             <span class="<?= $sc ?>" style="font-size:0.75rem"><?= e(ucfirst($u['status'])) ?></span>
                         </td>
-                        <td style="font-size:0.82rem;color:#888"><?= e(ucfirst($u['active_mode'] ?? 'clipper')) ?></td>
-                        <td style="font-size:0.8rem;color:#888"><?= e(formatDate($u['created_at'],'M j, Y')) ?></td>
+                        <td style="font-size:0.82rem;color:var(--text-muted)"><?= e(ucfirst($u['active_mode'] ?? 'clipper')) ?></td>
+                        <td style="font-size:0.8rem;color:var(--text-muted)"><?= e(formatDate($u['created_at'],'M j, Y')) ?></td>
                         <td>
                             <div class="d-flex gap-1 flex-wrap">
                             <?php if ($u['status']!=='active'): ?><button class="btn btn-xs btn-outline-accent uab" data-id="<?= $u['id'] ?>" data-st="active" data-csrf="<?= e($csrf) ?>">Activate</button><?php endif; ?>
-                            <?php if ($u['status']!=='inactive'): ?><button class="btn btn-xs uab" style="background:#1a1a1a;color:#ccc;font-size:0.72rem;border:1px solid #2a2a2a" data-id="<?= $u['id'] ?>" data-st="inactive" data-csrf="<?= e($csrf) ?>">Suspend</button><?php endif; ?>
+                            <?php if ($u['status']!=='inactive'): ?><button class="btn btn-xs uab" style="background:var(--card-bg);color:var(--text-secondary);font-size:0.72rem;border:1px solid var(--border)" data-id="<?= $u['id'] ?>" data-st="inactive" data-csrf="<?= e($csrf) ?>">Suspend</button><?php endif; ?>
                             <?php if ($u['status']!=='banned'): ?><button class="btn btn-xs uab" style="background:rgba(220,38,38,0.1);color:#f87171;font-size:0.72rem;border:1px solid rgba(220,38,38,0.2)" data-id="<?= $u['id'] ?>" data-st="banned" data-csrf="<?= e($csrf) ?>">Ban</button><?php endif; ?>
                             <a href="edit-user.php?id=<?= $u['id'] ?>" class="btn btn-xs" style="background:rgba(0,153,255,0.1);color:var(--info);font-size:0.72rem;border:1px solid rgba(0,153,255,0.2)">Edit</a>
                             <?php if ($u['role'] !== 'admin'): ?>

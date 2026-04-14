@@ -60,11 +60,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $tokenRow) {
 $csrf = generateCsrfToken();
 renderHead('Reset Password');
 ?>
-<div class="public-page d-flex align-items-center justify-content-center" style="min-height:100vh;background:#000;padding:40px 16px">
+<div class="public-page d-flex align-items-center justify-content-center" style="min-height:100vh;background:var(--bg);padding:40px 16px">
   <div class="w-100" style="max-width:400px">
     <div class="text-center mb-4">
       <a href="/" class="text-decoration-none">
-        <span style="font-size:1.5rem;font-weight:900;color:#fff;letter-spacing:-0.5px">Clipaza<span style="color:var(--accent)">.</span></span>
+        <span style="font-size:1.5rem;font-weight:900;color:var(--text);letter-spacing:-0.5px">Clipaza<span style="color:var(--accent)">.</span></span>
       </a>
     </div>
 

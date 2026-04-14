@@ -73,7 +73,7 @@ function getLeaderboard(PDO $db, int $contestId, string $platform, int $limit = 
             "SELECT ce.*, u.username FROM contest_entries ce
              INNER JOIN users u ON u.id = ce.user_id
              WHERE ce.contest_id = ? AND ce.platform = ? AND ce.disqualified = 0
-             ORDER BY ce.view_count DESC, ce.like_count DESC
+             ORDER BY ce.view_count DESC, ce.like_count DESC, ce.comment_count DESC
              LIMIT ?"
         );
         $stmt->bindValue(1, $contestId, PDO::PARAM_INT);
@@ -280,7 +280,7 @@ renderNav($isLoggedIn, ['username' => $username], $userMode);
                   $pIcon = match($p['platform']) { 'tiktok'=>'🎵','instagram'=>'📸','facebook'=>'📘',default=>'' };
                 ?>
                 <li class="nav-item">
-                  <button class="nav-link <?= $idx===0?'active':'' ?> text-white"
+                  <button class="nav-link <?= $idx===0?'active':'' ?> text-theme"
                           data-bs-toggle="tab"
                           data-bs-target="#lb-<?= e($p['platform']) ?>"
                           style="background:none;border:none;border-bottom:2px solid transparent;font-size:0.85rem;padding:8px 16px">

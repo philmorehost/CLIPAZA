@@ -47,11 +47,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $csrf = generateCsrfToken();
 renderHead('Sign In');
 ?>
-<div class="public-page d-flex align-items-center justify-content-center" style="min-height:100vh;background:#000;padding:40px 16px">
+<div class="public-page d-flex align-items-center justify-content-center" style="min-height:100vh;background:var(--bg);padding:40px 16px">
   <div class="w-100" style="max-width:400px">
     <div class="text-center mb-4">
       <a href="/" class="text-decoration-none">
-        <span style="font-size:1.5rem;font-weight:900;color:#fff;letter-spacing:-0.5px">Clipaza<span style="color:var(--accent)">.</span></span>
+        <span style="font-size:1.5rem;font-weight:900;color:var(--text);letter-spacing:-0.5px">Clipaza<span style="color:var(--accent)">.</span></span>
       </a>
       <p class="text-muted mt-2 mb-0" style="font-size:0.9rem">Sign in to your account</p>
     </div>
@@ -78,7 +78,7 @@ renderHead('Sign In');
           <input type="password" name="password" class="form-control-dark" placeholder="Your password" autocomplete="current-password" required>
         </div>
         <div class="mb-4 d-flex align-items-center gap-2">
-          <input class="form-check-input" type="checkbox" name="remember_me" id="rememberMe" style="background:#111;border-color:#555">
+          <input class="form-check-input" type="checkbox" name="remember_me" id="rememberMe" style="background:var(--bg-secondary);border-color:#555">
           <label class="form-check-label text-muted" for="rememberMe" style="font-size:0.85rem">Remember me</label>
         </div>
         <button type="submit" class="btn btn-accent w-100">Sign In</button>

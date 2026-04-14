@@ -85,7 +85,7 @@ try {
 <main class="admin-main">
     <div class="admin-topbar">
         <div class="d-flex align-items-center gap-3">
-            <button id="sidebarToggle" class="btn d-lg-none" style="color:#888;background:rgba(255,255,255,0.05);border-radius:8px;padding:6px 10px;">☰</button>
+            <button id="sidebarToggle" class="btn d-lg-none" style="color:var(--text-muted);background:var(--subtle-bg);border-radius:8px;padding:6px 10px;">☰</button>
             <button id="adminThemeToggle" class="btn-theme-toggle" title="Toggle light/dark mode" aria-label="Toggle theme" style="margin-left:4px">☀️</button>
             <h1>Edit User: @<?= e($user['username']) ?></h1>
         </div>
@@ -139,19 +139,19 @@ try {
                         </div>
 
                         <hr class="divider-dark">
-                        <h6 class="fw-600 mb-3" style="font-size:0.88rem;color:#ccc">New Password (leave blank to keep current)</h6>
+                        <h6 class="fw-600 mb-3" style="font-size:0.88rem;color:var(--text-secondary)">New Password (leave blank to keep current)</h6>
                         <div class="mb-3">
                             <label class="form-label-dark">New Password</label>
                             <input type="password" name="new_password" class="form-control-dark" minlength="8" placeholder="Min 8 characters">
                         </div>
 
                         <hr class="divider-dark">
-                        <h6 class="fw-600 mb-3" style="font-size:0.88rem;color:#ccc">Wallet Adjustment</h6>
+                        <h6 class="fw-600 mb-3" style="font-size:0.88rem;color:var(--text-secondary)">Wallet Adjustment</h6>
                         <div class="mb-4">
                             <label class="form-label-dark">Adjust Wallet Balance (₦)</label>
                             <input type="number" name="wallet_adjust" class="form-control-dark" step="1" value="0"
                                    placeholder="+ to add, - to deduct">
-                            <div style="font-size:0.78rem;color:#888;margin-top:4px">Current balance: <strong style="color:var(--accent)">₦<?= number_format((float)($profile['wallet_balance'] ?? 0), 2) ?></strong></div>
+                            <div style="font-size:0.78rem;color:var(--text-muted);margin-top:4px">Current balance: <strong style="color:var(--accent)">₦<?= number_format((float)($profile['wallet_balance'] ?? 0), 2) ?></strong></div>
                         </div>
 
                         <button type="submit" class="btn btn-accent">Save Changes</button>
@@ -165,37 +165,37 @@ try {
                     <h6 class="fw-700 mb-3">User Info</h6>
                     <div class="d-flex flex-column gap-2" style="font-size:0.85rem">
                         <div class="d-flex justify-content-between">
-                            <span style="color:#888">Username</span>
-                            <span style="color:#ccc">@<?= e($user['username']) ?></span>
+                            <span style="color:var(--text-muted)">Username</span>
+                            <span style="color:var(--text-secondary)">@<?= e($user['username']) ?></span>
                         </div>
                         <div class="d-flex justify-content-between">
-                            <span style="color:#888">Joined</span>
-                            <span style="color:#ccc"><?= e(formatDate($user['created_at'], 'M j, Y')) ?></span>
+                            <span style="color:var(--text-muted)">Joined</span>
+                            <span style="color:var(--text-secondary)"><?= e(formatDate($user['created_at'], 'M j, Y')) ?></span>
                         </div>
                         <div class="d-flex justify-content-between">
-                            <span style="color:#888">Role</span>
+                            <span style="color:var(--text-muted)">Role</span>
                             <span class="badge-<?= $user['role']==='admin'?'danger':'info' ?>" style="font-size:0.72rem"><?= e(ucfirst($user['role'])) ?></span>
                         </div>
                         <div class="d-flex justify-content-between">
-                            <span style="color:#888">Status</span>
+                            <span style="color:var(--text-muted)">Status</span>
                             <span class="badge-<?= $user['status']==='active'?'success':($user['status']==='banned'?'danger':'muted') ?>" style="font-size:0.72rem"><?= e(ucfirst($user['status'])) ?></span>
                         </div>
                         <div class="d-flex justify-content-between">
-                            <span style="color:#888">KYC</span>
+                            <span style="color:var(--text-muted)">KYC</span>
                             <?php $kycCls = match($profile['kyc_status']??'none') { 'approved'=>'badge-success','pending'=>'badge-warning','rejected'=>'badge-danger', default=>'badge-muted' }; ?>
                             <span class="<?= $kycCls ?>" style="font-size:0.72rem"><?= e(ucfirst($profile['kyc_status']??'none')) ?></span>
                         </div>
                         <div class="d-flex justify-content-between">
-                            <span style="color:#888">Wallet</span>
+                            <span style="color:var(--text-muted)">Wallet</span>
                             <span style="color:var(--accent);font-weight:700">₦<?= number_format((float)($profile['wallet_balance'] ?? 0), 2) ?></span>
                         </div>
                         <div class="d-flex justify-content-between">
-                            <span style="color:#888">Total Earned</span>
-                            <span style="color:#ccc">₦<?= number_format((float)($profile['total_earned'] ?? 0), 2) ?></span>
+                            <span style="color:var(--text-muted)">Total Earned</span>
+                            <span style="color:var(--text-secondary)">₦<?= number_format((float)($profile['total_earned'] ?? 0), 2) ?></span>
                         </div>
                         <div class="d-flex justify-content-between">
-                            <span style="color:#888">Total Spent</span>
-                            <span style="color:#ccc">₦<?= number_format((float)($profile['total_spent'] ?? 0), 2) ?></span>
+                            <span style="color:var(--text-muted)">Total Spent</span>
+                            <span style="color:var(--text-secondary)">₦<?= number_format((float)($profile['total_spent'] ?? 0), 2) ?></span>
                         </div>
                     </div>
                 </div>
@@ -205,7 +205,7 @@ try {
                     <div class="card-header">Recent Transactions</div>
                     <div class="card-body p-0">
                         <?php if (empty($txHistory)): ?>
-                        <div class="text-center py-4" style="color:#888;font-size:0.85rem">No transactions.</div>
+                        <div class="text-center py-4" style="color:var(--text-muted);font-size:0.85rem">No transactions.</div>
                         <?php else: ?>
                         <?php foreach (array_slice($txHistory, 0, 8) as $tx): ?>
                         <?php
@@ -214,11 +214,11 @@ try {
                         <div class="d-flex align-items-center justify-content-between px-3 py-2" style="border-bottom:1px solid var(--border)">
                             <div>
                                 <span class="<?= $txClass ?>" style="font-size:0.68rem"><?= e(ucfirst($tx['type'])) ?></span>
-                                <div style="font-size:0.75rem;color:#888;margin-top:2px"><?= e($tx['description'] ?? '') ?></div>
+                                <div style="font-size:0.75rem;color:var(--text-muted);margin-top:2px"><?= e($tx['description'] ?? '') ?></div>
                             </div>
                             <div class="text-end">
                                 <div style="font-weight:700;font-size:0.85rem">₦<?= number_format((float)$tx['amount'], 0) ?></div>
-                                <div style="font-size:0.72rem;color:#888"><?= e(timeAgo($tx['created_at'])) ?></div>
+                                <div style="font-size:0.72rem;color:var(--text-muted)"><?= e(timeAgo($tx['created_at'])) ?></div>
                             </div>
                         </div>
                         <?php endforeach; ?>
