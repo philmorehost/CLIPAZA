@@ -128,6 +128,7 @@ function ss(array $settings, string $key, string $default = ''): string {
             'general' => '🌐 General',
             'seo'     => '🔍 SEO',
             'payment' => '💳 Payment',
+            'landing' => '🏠 Landing Page',
             'code'    => '💻 Code Injection',
             'ads'     => '📢 Ads',
         ];
@@ -440,6 +441,134 @@ function ss(array $settings, string $key, string $default = ''): string {
         <button type="submit" class="btn btn-accent">Save Code Settings</button>
     </form>
 
+    <!-- TAB: LANDING PAGE -->
+    <?php elseif ($activeTab === 'landing'): ?>
+    <form id="settingsForm">
+        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrf) ?>">
+        <input type="hidden" name="action" value="save_landing">
+
+        <!-- Hero Section -->
+        <div class="card-dark mb-4">
+            <div class="card-header">Hero Section</div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label-dark">Hero Title</label>
+                    <input type="text" name="lp_hero_title" class="form-control form-control-dark" value="<?= ss($siteSettings, 'lp_hero_title', 'Where Creators Reward') ?>">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label-dark">Hero Accent Title</label>
+                    <input type="text" name="lp_hero_accent" class="form-control form-control-dark" value="<?= ss($siteSettings, 'lp_hero_accent', 'Their Biggest Fans.') ?>">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label-dark">Hero Subtext</label>
+                    <textarea name="lp_hero_sub" class="form-control form-control-dark" rows="3"><?= ss($siteSettings, 'lp_hero_sub', "Pick a contest from your favourite YouTube creator. Clip their best moment,\npost it on TikTok, Reels or Shorts, and let the views decide who wins.") ?></textarea>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label-dark">Start Contest Button</label>
+                        <input type="text" name="lp_hero_btn_creator" class="form-control form-control-dark" value="<?= ss($siteSettings, 'lp_hero_btn_creator', 'Start a Contest →') ?>">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label-dark">Join as Fan Button</label>
+                        <input type="text" name="lp_hero_btn_fan" class="form-control form-control-dark" value="<?= ss($siteSettings, 'lp_hero_btn_fan', 'Join as a Fan →') ?>">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- How It Works Section -->
+        <div class="card-dark mb-4">
+            <div class="card-header">How It Works Section</div>
+            <div class="card-body">
+                <div class="mb-4">
+                    <label class="form-label-dark">Section Title</label>
+                    <input type="text" name="lp_hiw_title" class="form-control form-control-dark" value="<?= ss($siteSettings, 'lp_hiw_title', 'Works') ?>">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label-dark">Trending Section Title (Accent)</label>
+                    <input type="text" name="lp_trending_title_accent" class="form-control form-control-dark" value="<?= ss($siteSettings, 'lp_trending_title_accent', 'Contests') ?>">
+                </div>
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <div class="p-3 border border-secondary rounded">
+                            <h6>Step 1</h6>
+                            <input type="text" name="lp_step1_title" class="form-control form-control-dark mb-2" value="<?= ss($siteSettings, 'lp_step1_title', 'Creator launches a contest') ?>">
+                            <textarea name="lp_step1_desc" class="form-control form-control-dark" rows="3"><?= ss($siteSettings, 'lp_step1_desc', 'They pick a video, set a prize, and open it to their fanbase. The contest goes live on Clipaza and anyone can join.') ?></textarea>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3 border border-secondary rounded">
+                            <h6>Step 2</h6>
+                            <input type="text" name="lp_step2_title" class="form-control form-control-dark mb-2" value="<?= ss($siteSettings, 'lp_step2_title', 'Fans clip and post') ?>">
+                            <textarea name="lp_step2_desc" class="form-control form-control-dark" rows="3"><?= ss($siteSettings, 'lp_step2_desc', 'Find the moment that\'s going to stop people mid-scroll. Cut it, post it wherever you\'re strongest — TikTok, Reels, Shorts — then drop the link.') ?></textarea>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3 border border-secondary rounded">
+                            <h6>Step 3</h6>
+                            <input type="text" name="lp_step3_title" class="form-control form-control-dark mb-2" value="<?= ss($siteSettings, 'lp_step3_title', 'Views decide the winner') ?>">
+                            <textarea name="lp_step3_desc" class="form-control form-control-dark" rows="3"><?= ss($siteSettings, 'lp_step3_desc', 'Every clip sits on a live leaderboard. Watch your rank move in real time. When the contest closes, whoever has the most views takes the money home.') ?></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Features Section -->
+        <div class="card-dark mb-4">
+            <div class="card-header">Features Section</div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label-dark">Section Title</label>
+                    <input type="text" name="lp_features_title" class="form-control form-control-dark" value="<?= ss($siteSettings, 'lp_features_title', 'Clipaza') ?>">
+                </div>
+                <div class="mb-4">
+                    <label class="form-label-dark">Section Subtext</label>
+                    <input type="text" name="lp_features_sub" class="form-control form-control-dark" value="<?= ss($siteSettings, 'lp_features_sub', 'Everything a creator or fan needs — nothing they don\'t') ?>">
+                </div>
+                <div class="row g-3">
+                    <?php for($i=1; $i<=6; $i++): ?>
+                    <div class="col-md-4">
+                        <div class="p-3 border border-secondary rounded h-100">
+                            <h6>Feature <?= $i ?></h6>
+                            <input type="text" name="lp_f<?= $i ?>_title" class="form-control form-control-dark mb-2" value="<?= ss($siteSettings, "lp_f{$i}_title") ?>">
+                            <textarea name="lp_f<?= $i ?>_desc" class="form-control form-control-dark" rows="3"><?= ss($siteSettings, "lp_f{$i}_desc") ?></textarea>
+                        </div>
+                    </div>
+                    <?php endfor; ?>
+                </div>
+            </div>
+        </div>
+
+        <!-- CTA Section -->
+        <div class="card-dark mb-4">
+            <div class="card-header">Leaderboard Section</div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label-dark">Leaderboard Title (Accent)</label>
+                    <input type="text" name="lp_lb_title_accent" class="form-control form-control-dark" value="<?= ss($siteSettings, 'lp_lb_title_accent', 'Win Here.') ?>">
+                </div>
+            </div>
+        </div>
+
+        <!-- CTA Section -->
+        <div class="card-dark mb-4">
+            <div class="card-header">CTA Section (Bottom)</div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label-dark">CTA Title</label>
+                    <input type="text" name="lp_cta_title" class="form-control form-control-dark" value="<?= ss($siteSettings, 'lp_cta_title', 'there\'s a spot for you.') ?>">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label-dark">CTA Subtext</label>
+                    <input type="text" name="lp_cta_sub" class="form-control form-control-dark" value="<?= ss($siteSettings, 'lp_cta_sub', 'Contests are live right now. Sign up for free and see what\'s running.') ?>">
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-accent">Save Landing Page Settings</button>
+    </form>
+
     <!-- TAB: ADS -->
     <?php elseif ($activeTab === 'ads'): ?>
     <form id="settingsForm" enctype="multipart/form-data">
@@ -512,20 +641,6 @@ function ss(array $settings, string $key, string $default = ''): string {
     });
 })();
 </script>
-<script>
-(function() {
-  var btn = document.getElementById('adminThemeToggle');
-  if (!btn) return;
-  function current() { return document.documentElement.dataset.theme || 'dark'; }
-  function setIcon() { btn.textContent = current() === 'dark' ? '☀️' : '🌙'; }
-  setIcon();
-  btn.addEventListener('click', function() {
-    var next = current() === 'dark' ? 'light' : 'dark';
-    document.documentElement.dataset.theme = next;
-    localStorage.setItem('clipaza_theme', next);
-    setIcon();
-  });
-})();
-</script>
+<script src="assets/js/theme_sync.js"></script>
 </body>
 </html>

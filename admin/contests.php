@@ -137,7 +137,7 @@ try {
                         <td>
                             <div class="d-flex gap-1 flex-wrap">
                                 <a href="/contest?id=<?= $c['id'] ?>" target="_blank" class="btn btn-xs btn-outline-accent">View</a>
-                                <a href="/contest-stats.php?id=<?= $c['id'] ?>" target="_blank" class="btn btn-xs" style="background:rgba(99,102,241,0.12);color:#a5b4fc;font-size:0.72rem;border:1px solid rgba(99,102,241,0.25);border-radius:6px;padding:2px 8px">Stats</a>
+                                <a href="contest-analytics.php?id=<?= $c['id'] ?>" class="btn btn-xs" style="background:rgba(99,102,241,0.12);color:#a5b4fc;font-size:0.72rem;border:1px solid rgba(99,102,241,0.25);border-radius:6px;padding:2px 8px">Analytics</a>
                                 <?php if ($c['status']==='draft'): ?>
                                     <button class="btn btn-xs cab" style="background:rgba(34,197,94,0.1);color:#4ade80;font-size:0.72rem;border:1px solid rgba(34,197,94,0.2)"
                                             data-id="<?= $c['id'] ?>" data-st="active" data-csrf="<?= e($csrf) ?>">Activate</button>
@@ -181,19 +181,5 @@ document.querySelectorAll('.cab').forEach(btn => {
     });
 });
 </script>
-<script>
-(function() {
-  var btn = document.getElementById('adminThemeToggle');
-  if (!btn) return;
-  function current() { return document.documentElement.dataset.theme || 'dark'; }
-  function setIcon() { btn.textContent = current() === 'dark' ? '☀️' : '🌙'; }
-  setIcon();
-  btn.addEventListener('click', function() {
-    var next = current() === 'dark' ? 'light' : 'dark';
-    document.documentElement.dataset.theme = next;
-    localStorage.setItem('clipaza_theme', next);
-    setIcon();
-  });
-})();
-</script>
+<script src="assets/js/theme_sync.js"></script>
 </body></html>

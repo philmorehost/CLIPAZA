@@ -39,6 +39,8 @@ try {
         'save_payment' => handleSavePayment(),
         'save_code'    => handleSaveCode(),
         'save_ads'     => handleSaveAds(),
+        'save_landing' => handleSaveLanding(),
+        'update_default_theme' => handleUpdateDefaultTheme(),
         default        => jsonResponse(['success' => false, 'message' => 'Unknown action.']),
     };
 } catch (\UnhandledMatchError $e) {
@@ -233,6 +235,51 @@ function handleSaveCode(): never {
     saveSiteSetting('adsense_code', $adsenseCode);
 
     jsonResponse(['success' => true, 'message' => 'Code injection settings saved.']);
+}
+
+function handleUpdateDefaultTheme(): never {
+    $theme = $_POST['default_theme'] ?? 'dark';
+    if (!in_array($theme, ['dark', 'light'], true)) {
+        jsonResponse(['success' => false, 'message' => 'Invalid theme.']);
+    }
+    if (saveSiteSetting('default_theme', $theme)) {
+        jsonResponse(['success' => true, 'message' => 'Default theme updated to ' . $theme]);
+    }
+    jsonResponse(['success' => false, 'message' => 'Failed to update default theme.']);
+}
+
+function handleSaveLanding(): never {
+    $fields = [
+        'lp_hero_title'        => 200,
+        'lp_hero_accent'       => 200,
+        'lp_hero_sub'          => 1000,
+        'lp_hero_btn_creator'  => 100,
+        'lp_hero_btn_fan'      => 100,
+        'lp_hiw_title'         => 200,
+        'lp_trending_title_accent' => 200,
+        'lp_lb_title_accent'   => 200,
+        'lp_step1_title'       => 200,
+        'lp_step1_desc'        => 500,
+        'lp_step2_title'       => 200,
+        'lp_step2_desc'        => 500,
+        'lp_step3_title'       => 200,
+        'lp_step3_desc'        => 500,
+        'lp_features_title'    => 200,
+        'lp_features_sub'      => 500,
+        'lp_cta_title'         => 200,
+        'lp_cta_sub'           => 500,
+    ];
+    // Feature 1-6
+    for ($i = 1; $i <= 6; $i++) {
+        $fields["lp_f{$i}_title"] = 200;
+        $fields["lp_f{$i}_desc"]  = 500;
+    }
+
+    foreach ($fields as $key => $maxLen) {
+        $value = substr(trim($_POST[$key] ?? ''), 0, $maxLen);
+        saveSiteSetting($key, $value);
+    }
+    jsonResponse(['success' => true, 'message' => 'Landing page settings saved.']);
 }
 
 function handleSaveAds(): never {

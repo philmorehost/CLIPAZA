@@ -717,20 +717,6 @@ async function handleManualBlock(e) {
     btn.disabled = false; btn.textContent = 'Block IP';
 }
 </script>
-<script>
-(function() {
-  var btn = document.getElementById('adminThemeToggle');
-  if (!btn) return;
-  function current() { return document.documentElement.dataset.theme || 'dark'; }
-  function setIcon() { btn.textContent = current() === 'dark' ? '☀️' : '🌙'; }
-  setIcon();
-  btn.addEventListener('click', function() {
-    var next = current() === 'dark' ? 'light' : 'dark';
-    document.documentElement.dataset.theme = next;
-    localStorage.setItem('clipaza_theme', next);
-    setIcon();
-  });
-})();
-</script>
+<script src="assets/js/theme_sync.js"></script>
 </body>
 </html>

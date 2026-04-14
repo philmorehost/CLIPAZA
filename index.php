@@ -88,7 +88,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 $lpIsLoggedIn = !empty($_SESSION['user_id']);
 
-$pageTitle = $seoTitle !== '' ? $seoTitle : (htmlspecialchars($siteName) . ' — Where Creators Reward Their Biggest Fans');
+$pageTitle = $seoTitle !== '' ? $seoTitle : (htmlspecialchars($siteName) . ' — ' . getSetting('lp_hero_title', 'Where Creators Reward') . ' ' . getSetting('lp_hero_accent', 'Their Biggest Fans.'));
 $seoDescription = getSetting('seo_description', 'Clipaza lets YouTube creators run fan clipping contests with real cash prizes. Clip, share, compete to win — paid straight to your bank. Free to join.');
 
 // Load active contests for trending section
@@ -127,6 +127,8 @@ if (file_exists($configFile)) {
         $lbStmt = $db->query(
             "SELECT u.username, COUNT(ce.id) AS clip_count,
                     SUM(ce.view_count) AS total_views,
+                    SUM(ce.like_count) AS total_likes,
+                    SUM(ce.comment_count) AS total_comments,
                     COALESCE(SUM(pr.amount),0) AS total_earned
              FROM contest_entries ce
              INNER JOIN users u ON u.id = ce.user_id
@@ -215,7 +217,7 @@ function fmtStat(int|float $n, string $prefix = '', string $suffix = ''): string
             <div class="d-flex gap-2 align-items-center">
                 <button class="btn-theme-toggle" id="themeToggleBtn" title="Toggle light/dark mode" aria-label="Toggle theme">🌙</button>
                 <?php if ($lpIsLoggedIn): ?>
-                    <a href="/dashboard" class="btn btn-sm btn-accent" style="padding:8px 16px;font-size:0.85rem">Dashboard</a>
+                    <a href="/dashboard" class="btn btn-accent" style="padding:10px 22px;font-size:0.875rem;">Dashboard</a>
                 <?php else: ?>
                     <a href="/auth/login" class="btn btn-sm" style="padding:8px 16px;font-size:0.85rem;background:transparent;color:var(--text-secondary);border:1px solid var(--border)">Login</a>
                     <a href="/auth/register" class="btn btn-accent" style="padding:10px 22px;font-size:0.875rem;">Sign Up Free</a>
@@ -232,17 +234,21 @@ function fmtStat(int|float $n, string $prefix = '', string $suffix = ''): string
         <div class="text-center animate-in">
             <div class="live-badge mb-4">🟢 Live Now — Contests Open</div>
             <h1 class="lp-hero-title">
-                Where Creators Reward<br>
-                <span class="lp-hero-accent">Their Biggest Fans.</span>
+                <?= htmlspecialchars(getSetting('lp_hero_title', 'Where Creators Reward')) ?><br>
+                <span class="lp-hero-accent"><?= htmlspecialchars(getSetting('lp_hero_accent', 'Their Biggest Fans.')) ?></span>
             </h1>
             <p class="lp-hero-sub">
-                Pick a contest from your favourite YouTube creator. Clip their best moment,<br class="d-none d-md-block">
-                post it on TikTok, Reels or Shorts, and let the views decide who wins.
+                <?= nl2br(htmlspecialchars(getSetting('lp_hero_sub', "Pick a contest from your favourite YouTube creator. Clip their best moment,\npost it on TikTok, Reels or Shorts, and let the views decide who wins."))) ?>
             </p>
 
             <div class="d-flex gap-3 justify-content-center flex-wrap mb-5">
-                <a href="/auth/register?mode=creator" class="btn btn-accent pulse-accent" style="padding:14px 32px;font-size:1rem;border-radius:10px">Start a Contest →</a>
-                <a href="/auth/register" class="btn btn-outline-accent" style="padding:14px 32px;font-size:1rem;border-radius:10px">Join as a Fan →</a>
+                <?php if ($lpIsLoggedIn): ?>
+                    <a href="/dashboard" class="btn btn-accent pulse-accent" style="padding:14px 32px;font-size:1rem;border-radius:10px">Go to Dashboard →</a>
+                    <a href="/contests" class="btn btn-outline-accent" style="padding:14px 32px;font-size:1rem;border-radius:10px">Browse Contests</a>
+                <?php else: ?>
+                    <a href="/auth/register?mode=creator" class="btn btn-accent pulse-accent" style="padding:14px 32px;font-size:1rem;border-radius:10px"><?= htmlspecialchars(getSetting('lp_hero_btn_creator', 'Start a Contest →')) ?></a>
+                    <a href="/auth/register" class="btn btn-outline-accent" style="padding:14px 32px;font-size:1rem;border-radius:10px"><?= htmlspecialchars(getSetting('lp_hero_btn_fan', 'Join as a Fan →')) ?></a>
+                <?php endif; ?>
             </div>
 
             <!-- Stats Row -->
@@ -272,7 +278,7 @@ function fmtStat(int|float $n, string $prefix = '', string $suffix = ''): string
         <div class="d-flex align-items-center justify-content-between mb-4">
             <div>
                 <div class="lp-section-eyebrow">Live Now</div>
-                <h2 class="lp-section-title" style="font-size:clamp(1.5rem,3vw,2rem);margin-bottom:0">Trending <span class="text-accent">Contests</span></h2>
+                <h2 class="lp-section-title" style="font-size:clamp(1.5rem,3vw,2rem);margin-bottom:0">Trending <span class="text-accent"><?= htmlspecialchars(getSetting('lp_trending_title_accent', 'Contests')) ?></span></h2>
             </div>
             <a href="/contests" class="btn btn-outline-accent" style="white-space:nowrap">View All →</a>
         </div>
@@ -333,31 +339,31 @@ function fmtStat(int|float $n, string $prefix = '', string $suffix = ''): string
     <div class="container">
         <div class="text-center mb-5">
             <div class="lp-section-eyebrow">Simple Process</div>
-            <h2 class="lp-section-title">How It <span class="text-accent">Works</span></h2>
+            <h2 class="lp-section-title">How It <span class="text-accent"><?= htmlspecialchars(getSetting('lp_hiw_title', 'Works')) ?></span></h2>
         </div>
         <div class="row g-4 justify-content-center">
             <div class="col-md-4">
                 <div class="lp-step-card">
                     <div class="lp-step-num">01</div>
                     <div class="lp-step-icon">🎬</div>
-                    <h3 class="lp-step-title">Creator launches a contest</h3>
-                    <p class="lp-step-desc">They pick a video, set a prize, and open it to their fanbase. The contest goes live on <?= e($siteName) ?> and anyone can join.</p>
+                    <h3 class="lp-step-title"><?= htmlspecialchars(getSetting('lp_step1_title', 'Creator launches a contest')) ?></h3>
+                    <p class="lp-step-desc"><?= htmlspecialchars(getSetting('lp_step1_desc', "They pick a video, set a prize, and open it to their fanbase. The contest goes live on " . $siteName . " and anyone can join.")) ?></p>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="lp-step-card lp-step-card--accent">
                     <div class="lp-step-num">02</div>
                     <div class="lp-step-icon">✂️</div>
-                    <h3 class="lp-step-title">Fans clip and post</h3>
-                    <p class="lp-step-desc">Find the moment that's going to stop people mid-scroll. Cut it, post it wherever you're strongest — TikTok, Reels, Shorts — then drop the link.</p>
+                    <h3 class="lp-step-title"><?= htmlspecialchars(getSetting('lp_step2_title', 'Fans clip and post')) ?></h3>
+                    <p class="lp-step-desc"><?= htmlspecialchars(getSetting('lp_step2_desc', "Find the moment that's going to stop people mid-scroll. Cut it, post it wherever you're strongest — TikTok, Reels, Shorts — then drop the link.")) ?></p>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="lp-step-card">
                     <div class="lp-step-num">03</div>
                     <div class="lp-step-icon">🏆</div>
-                    <h3 class="lp-step-title">Views decide the winner</h3>
-                    <p class="lp-step-desc">Every clip sits on a live leaderboard. Watch your rank move in real time. When the contest closes, whoever has the most views takes the money home.</p>
+                    <h3 class="lp-step-title"><?= htmlspecialchars(getSetting('lp_step3_title', 'Views decide the winner')) ?></h3>
+                    <p class="lp-step-desc"><?= htmlspecialchars(getSetting('lp_step3_desc', "Every clip sits on a live leaderboard. Watch your rank move in real time. When the contest closes, whoever has the most views takes the money home.")) ?></p>
                 </div>
             </div>
         </div>
@@ -369,52 +375,32 @@ function fmtStat(int|float $n, string $prefix = '', string $suffix = ''): string
     <div class="container">
         <div class="text-center mb-5">
             <div class="lp-section-eyebrow">Platform Features</div>
-            <h2 class="lp-section-title">Why <span class="text-accent"><?= e($siteName) ?></span>?</h2>
-            <p class="lp-section-sub">Everything a creator or fan needs — nothing they don't</p>
+            <h2 class="lp-section-title">Why <span class="text-accent"><?= htmlspecialchars(getSetting('lp_features_title', $siteName)) ?></span>?</h2>
+            <p class="lp-section-sub"><?= htmlspecialchars(getSetting('lp_features_sub', "Everything a creator or fan needs — nothing they don't")) ?></p>
         </div>
         <div class="row g-4">
+            <?php
+            $defaultFeatures = [
+                ['icon' => '🎬', 'title' => 'Any budget works', 'desc' => 'You set the prize. Contests work at any prize level — from a quick boost to a serious campaign. You decide how much and how long.'],
+                ['icon' => '📊', 'title' => 'Live dashboard', 'desc' => 'Every clip submitted sits on a live leaderboard. View counts update in real time so you — and your fans — always know where things stand.'],
+                ['icon' => '🚀', 'title' => 'Three platforms at once', 'desc' => 'Your video hits TikTok, Instagram Reels, and YouTube Shorts simultaneously — carried by people who genuinely like what you make.'],
+                ['icon' => '🛡', 'title' => 'Brand control', 'desc' => 'Flag any clip that doesn\'t fit your brand. You stay in control of what\'s associated with your channel throughout the contest.'],
+                ['icon' => '💸', 'title' => 'Cash to your bank', 'desc' => 'Winners get paid directly to their bank account. No gift cards, no vouchers, no waiting — just a bank transfer when the contest closes.'],
+                ['icon' => '✅', 'title' => 'Only real views win', 'desc' => 'No purchased traffic. No bot plays. No inflated numbers. If real people watched it, it counts. If they didn\'t, it doesn\'t.'],
+            ];
+            for ($i = 1; $i <= 6; $i++):
+                $fTitle = getSetting("lp_f{$i}_title", $defaultFeatures[$i-1]['title']);
+                $fDesc  = getSetting("lp_f{$i}_desc", $defaultFeatures[$i-1]['desc']);
+                $fIcon  = $defaultFeatures[$i-1]['icon'];
+            ?>
             <div class="col-md-4">
                 <div class="feature-card">
-                    <div class="feature-icon">🎬</div>
-                    <div class="feature-title">Any budget works</div>
-                    <div class="feature-desc">You set the prize. Contests work at any prize level — from a quick boost to a serious campaign. You decide how much and how long.</div>
+                    <div class="feature-icon"><?= $fIcon ?></div>
+                    <div class="feature-title"><?= htmlspecialchars($fTitle) ?></div>
+                    <div class="feature-desc"><?= htmlspecialchars($fDesc) ?></div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="feature-card">
-                    <div class="feature-icon">📊</div>
-                    <div class="feature-title">Live dashboard</div>
-                    <div class="feature-desc">Every clip submitted sits on a live leaderboard. View counts update in real time so you — and your fans — always know where things stand.</div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="feature-card">
-                    <div class="feature-icon">🚀</div>
-                    <div class="feature-title">Three platforms at once</div>
-                    <div class="feature-desc">Your video hits TikTok, Instagram Reels, and YouTube Shorts simultaneously — carried by people who genuinely like what you make.</div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="feature-card">
-                    <div class="feature-icon">🛡</div>
-                    <div class="feature-title">Brand control</div>
-                    <div class="feature-desc">Flag any clip that doesn't fit your brand. You stay in control of what's associated with your channel throughout the contest.</div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="feature-card">
-                    <div class="feature-icon">💸</div>
-                    <div class="feature-title">Cash to your bank</div>
-                    <div class="feature-desc">Winners get paid directly to their bank account. No gift cards, no vouchers, no waiting — just a bank transfer when the contest closes.</div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="feature-card">
-                    <div class="feature-icon">✅</div>
-                    <div class="feature-title">Only real views win</div>
-                    <div class="feature-desc">No purchased traffic. No bot plays. No inflated numbers. If real people watched it, it counts. If they didn't, it doesn't.</div>
-                </div>
-            </div>
+            <?php endfor; ?>
         </div>
     </div>
 </section>
@@ -468,7 +454,7 @@ function fmtStat(int|float $n, string $prefix = '', string $suffix = ''): string
     <div class="container">
         <div class="text-center mb-5">
             <div class="lp-section-eyebrow">Live Rankings</div>
-            <h2 class="lp-section-title">Only Real Views <span class="text-accent">Win Here.</span></h2>
+            <h2 class="lp-section-title">Only Real Views <span class="text-accent"><?= htmlspecialchars(getSetting('lp_lb_title_accent', 'Win Here.')) ?></span></h2>
             <p class="lp-section-sub" style="max-width:600px;margin:0 auto">Every submitted link gets tracked across TikTok, Reels, and Shorts — but only authentic views count. No purchased traffic. No bot plays. Contest closes, and the honest number at the top wins.</p>
         </div>
         <div class="lp-leaderboard">
@@ -477,6 +463,8 @@ function fmtStat(int|float $n, string $prefix = '', string $suffix = ''): string
                 <span>Clipper</span>
                 <span>Clips</span>
                 <span>Views</span>
+                <span>Likes</span>
+                <span>Comments</span>
                 <span>Prize</span>
             </div>
             <?php
@@ -497,6 +485,8 @@ function fmtStat(int|float $n, string $prefix = '', string $suffix = ''): string
                 <span class="lp-lb-name"><?= htmlspecialchars($row['username']) ?></span>
                 <span class="lp-lb-meta"><?= (int)$row['clip_count'] ?> clips</span>
                 <span class="lp-lb-meta"><?= $viewsFmt ?> views</span>
+                <span class="lp-lb-meta"><?= number_format((int)$row['total_likes']) ?> likes</span>
+                <span class="lp-lb-meta"><?= number_format((int)$row['total_comments']) ?> comments</span>
                 <span class="lp-lb-prize" style="color:var(--accent);"><?= $prizeFmt ?></span>
             </div>
             <?php endforeach; ?>
@@ -518,14 +508,21 @@ function fmtStat(int|float $n, string $prefix = '', string $suffix = ''): string
 <section class="lp-cta-section">
     <div class="lp-cta-glow"></div>
     <div class="container text-center" style="position:relative;z-index:1;">
-        <h2 class="lp-cta-title">Creator or fan — <span class="text-accent">there's a spot for you.</span></h2>
-        <p class="lp-cta-sub">Contests are live right now. Sign up for free and see what's running.</p>
+        <h2 class="lp-cta-title">Creator or fan — <span class="text-accent"><?= htmlspecialchars(getSetting('lp_cta_title', "there's a spot for you.")) ?></span></h2>
+        <p class="lp-cta-sub"><?= htmlspecialchars(getSetting('lp_cta_sub', "Contests are live right now. Sign up for free and see what's running.")) ?></p>
 
         <div class="d-flex gap-3 justify-content-center flex-wrap mb-4">
-            <a href="/auth/register?mode=creator" class="btn btn-accent pulse-accent" style="padding:15px 40px;font-size:1.05rem;border-radius:10px">Start a Contest →</a>
-            <a href="/auth/register" class="btn btn-outline-accent" style="padding:15px 36px;font-size:1.05rem;border-radius:10px">Join as a Fan →</a>
+            <?php if ($lpIsLoggedIn): ?>
+                <a href="/dashboard" class="btn btn-accent pulse-accent" style="padding:15px 40px;font-size:1.05rem;border-radius:10px">Go to Dashboard →</a>
+                <a href="/contests" class="btn btn-outline-accent" style="padding:15px 36px;font-size:1.05rem;border-radius:10px">Browse Contests</a>
+            <?php else: ?>
+                <a href="/auth/register?mode=creator" class="btn btn-accent pulse-accent" style="padding:15px 40px;font-size:1.05rem;border-radius:10px">Start a Contest →</a>
+                <a href="/auth/register" class="btn btn-outline-accent" style="padding:15px 36px;font-size:1.05rem;border-radius:10px">Join as a Fan →</a>
+            <?php endif; ?>
         </div>
-        <p class="lp-form-note">Already have an account? <a href="/auth/login" class="text-accent text-decoration-none">Log in here</a></p>
+        <?php if (!$lpIsLoggedIn): ?>
+            <p class="lp-form-note">Already have an account? <a href="/auth/login" class="text-accent text-decoration-none">Log in here</a></p>
+        <?php endif; ?>
     </div>
 </section>
 
@@ -558,5 +555,24 @@ function fmtStat(int|float $n, string $prefix = '', string $suffix = ''): string
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="assets/js/main.js"></script>
+<script>
+(function() {
+  var btn = document.getElementById('themeToggleBtn');
+  if (!btn) return;
+  function current() {
+    var t = document.documentElement.dataset.theme;
+    if (t) return t;
+    return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  }
+  function setIcon() { btn.textContent = current() === 'dark' ? '☀️' : '🌙'; }
+  setIcon();
+  btn.addEventListener('click', function() {
+    var next = current() === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = next;
+    localStorage.setItem('clipaza_theme', next);
+    setIcon();
+  });
+})();
+</script>
 </body>
 </html>
