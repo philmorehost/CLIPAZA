@@ -185,7 +185,7 @@ function fmtStat(int|float $n, string $prefix = '', string $suffix = ''): string
     <script>
     (function() {
       var stored = localStorage.getItem('clipaza_theme');
-      var theme = (stored === 'light' || stored === 'dark') ? stored : '<?= htmlspecialchars($defaultTheme, ENT_QUOTES) ?>';
+      var theme = (stored === 'light' || stored === 'dark') ? stored : '<?= htmlspecialchars($defaultTheme ?? "dark", ENT_QUOTES) ?>';
       document.documentElement.dataset.theme = theme;
     })();
     </script>

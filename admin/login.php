@@ -68,9 +68,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--bg);">
 <div style="width:100%;max-width:400px;padding:24px;">
+    <?php $sn = getSetting("site_name", "Clipaza"); $sl = getSetting("site_logo", ""); ?>
     <div class="text-center mb-4">
-        <div style="font-size:1.8rem;font-weight:900;letter-spacing:-1px;">Clipa<span style="color:#CCFF00;">za</span></div>
-        <p style="color:var(--text-muted);font-size:0.875rem;margin-top:4px;">Admin Panel</p>
+        <?php if ($sl): ?>
+            <img src="../<?= ltrim($sl, '/') ?>" alt="<?= e($sn) ?>" style="height:60px;max-width:100%;object-fit:contain">
+        <?php else: ?>
+            <div style="font-size:1.8rem;font-weight:900;letter-spacing:-1px;"><?= e($sn) ?></div>
+        <?php endif; ?>
+        <p style="color:var(--text-muted);font-size:0.875rem;margin-top:8px;">Admin Panel</p>
     </div>
 
     <div class="card-dark">
