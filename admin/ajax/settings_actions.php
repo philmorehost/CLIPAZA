@@ -268,6 +268,21 @@ function handleSaveLanding(): never {
         'lp_features_sub'      => 500,
         'lp_cta_title'         => 200,
         'lp_cta_sub'           => 500,
+        'lp_creators_title'    => 200,
+        'lp_creators_sub'      => 1000,
+        'lp_creators_extra'    => 500,
+        'lp_creators_p1'       => 200,
+        'lp_creators_p2'       => 200,
+        'lp_creators_p3'       => 200,
+        'lp_creators_p4'       => 200,
+        'lp_fans_title'        => 200,
+        'lp_fans_sub'          => 1000,
+        'lp_fans_extra'        => 500,
+        'lp_fans_p1'           => 200,
+        'lp_fans_p2'           => 200,
+        'lp_fans_p3'           => 200,
+        'lp_fans_p4'           => 200,
+        'lp_lb_text'           => 1000,
     ];
     // Feature 1-6
     for ($i = 1; $i <= 6; $i++) {

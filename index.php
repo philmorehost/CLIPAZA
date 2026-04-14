@@ -1,13 +1,6 @@
 <?php
 /**
  * PHP version gate.
- * This block uses only PHP 5.4-compatible syntax so it can be parsed and
- * executed on any PHP version, displaying a friendly error instead of a
- * cryptic internal server error when the server runs PHP < 8.0.
- * NOTE: declare(strict_types=1) is intentionally omitted from this entry-
- * point file because it must be the first statement, which would prevent
- * placing the version check first. Strict type checking is enforced in
- * all included library files (includes/*.php).
  */
 if (version_compare(PHP_VERSION, '8.0.0', '<')) {
     header('Content-Type: text/html; charset=utf-8');
@@ -56,7 +49,7 @@ $siteTagline = 'Earn Money Clipping Videos';
 
 // SEO / branding settings
 $seoTitle       = '';
-$seoDescription = 'Turn viral moments into real income. Clipaza rewards creators and clippers for finding and sharing the best video clips.';
+$seoDescription = 'Clipaza lets YouTube creators run fan clipping contests with real cash prizes. Clip, share, compete to win — paid straight to your bank. Free to join.';
 $seoKeywords    = '';
 $ogImageUrl     = '';
 $customHeader   = '';
@@ -88,8 +81,8 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 $lpIsLoggedIn = !empty($_SESSION['user_id']);
 
-$pageTitle = $seoTitle !== '' ? $seoTitle : (htmlspecialchars($siteName) . ' — ' . getSetting('lp_hero_title', 'Where Creators Reward') . ' ' . getSetting('lp_hero_accent', 'Their Biggest Fans.'));
-$seoDescription = getSetting('seo_description', 'Clipaza lets YouTube creators run fan clipping contests with real cash prizes. Clip, share, compete to win — paid straight to your bank. Free to join.');
+$defaultPageTitle = htmlspecialchars($siteName) . ' — ' . getSetting('lp_hero_title', 'Where Creators Reward') . ' ' . getSetting('lp_hero_accent', 'Their Biggest Fans.');
+$pageTitle = $seoTitle !== '' ? $seoTitle : $defaultPageTitle;
 
 // Load active contests for trending section
 $trendingContests = [];
@@ -142,7 +135,7 @@ if (file_exists($configFile)) {
     } catch (Throwable) {}
 }
 
-// Format stat figures; fall back to marketing-tier labels when platform is new
+// Format stat figures
 function fmtStat(int|float $n, string $prefix = '', string $suffix = ''): string {
     if ($n <= 0) return '—';
     if ($n >= 1_000_000) return $prefix . number_format($n / 1_000_000, 1) . 'M+' . $suffix;
@@ -151,7 +144,7 @@ function fmtStat(int|float $n, string $prefix = '', string $suffix = ''): string
 }
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="<?= e($defaultTheme) ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -205,7 +198,7 @@ function fmtStat(int|float $n, string $prefix = '', string $suffix = ''): string
                 <?php if ($siteLogo !== ''): ?>
                 <img src="<?= htmlspecialchars($siteLogo) ?>" alt="<?= htmlspecialchars($siteName) ?>" style="height:36px;vertical-align:middle;">
                 <?php else: ?>
-                Clipa<span>za</span>
+                <?= htmlspecialchars($siteName) ?>
                 <?php endif; ?>
             </a>
             <div class="navbar-links d-none d-md-flex align-items-center gap-4">
@@ -238,7 +231,7 @@ function fmtStat(int|float $n, string $prefix = '', string $suffix = ''): string
                 <span class="lp-hero-accent"><?= htmlspecialchars(getSetting('lp_hero_accent', 'Their Biggest Fans.')) ?></span>
             </h1>
             <p class="lp-hero-sub">
-                <?= nl2br(htmlspecialchars(getSetting('lp_hero_sub', "Pick a contest from your favourite YouTube creator. Clip their best moment,\npost it on TikTok, Reels or Shorts, and let the views decide who wins."))) ?>
+                <?= nl2br(htmlspecialchars(getSetting('lp_hero_sub', "Pick a contest from your favourite YouTube creator. Clip their best moment, post it on TikTok, Reels or Shorts, and let the views decide who wins."))) ?>
             </p>
 
             <div class="d-flex gap-3 justify-content-center flex-wrap mb-5">
@@ -355,7 +348,7 @@ function fmtStat(int|float $n, string $prefix = '', string $suffix = ''): string
                     <div class="lp-step-num">02</div>
                     <div class="lp-step-icon">✂️</div>
                     <h3 class="lp-step-title"><?= htmlspecialchars(getSetting('lp_step2_title', 'Fans clip and post')) ?></h3>
-                    <p class="lp-step-desc"><?= htmlspecialchars(getSetting('lp_step2_desc', "Find the moment that's going to stop people mid-scroll. Cut it, post it wherever you're strongest — TikTok, Reels, Shorts — then drop the link.")) ?></p>
+                    <p class="lp-step-desc"><?= htmlspecialchars(getSetting('lp_step2_desc', "You find the moment that's going to stop people mid-scroll. Cut it, post it wherever you're strongest — TikTok, Reels, Shorts — then drop the link.")) ?></p>
                 </div>
             </div>
             <div class="col-md-4">
@@ -371,7 +364,7 @@ function fmtStat(int|float $n, string $prefix = '', string $suffix = ''): string
 </section>
 
 <!-- Features Section -->
-<section class="lp-section lp-section--alt" id="features">
+<section class="lp-section lp-section--alt" id="features" style="<?= getSetting('lp_hide_features', '0') === '1' ? 'display:none' : '' ?>">
     <div class="container">
         <div class="text-center mb-5">
             <div class="lp-section-eyebrow">Platform Features</div>
@@ -416,15 +409,18 @@ function fmtStat(int|float $n, string $prefix = '', string $suffix = ''): string
             <div class="col-md-6">
                 <div class="lp-split-card">
                     <div class="lp-split-badge">For Creators</div>
-                    <h3 class="lp-split-title">Your fans will promote you<br><span class="text-accent">better than any ad ever will.</span></h3>
+                    <h3 class="lp-split-title"><?= htmlspecialchars(getSetting('lp_creators_title', 'Your fans will promote you better than any ad ever will.')) ?></h3>
                     <p style="color:var(--text-muted);font-size:0.9rem;line-height:1.8;margin-bottom:20px">
-                        They already know your content. They already have opinions about it. <?= e($siteName) ?> gives them a contest to enter and a prize to chase — and the side effect is your video spreading across three platforms at once, carried by people who genuinely like what you make.
+                        <?= nl2br(htmlspecialchars(getSetting('lp_creators_sub', "They already know your content. They already have opinions about it. " . $siteName . " gives them a contest to enter and a prize to chase — and the side effect is your video spreading across three platforms at once, carried by people who genuinely like what you make."))) ?>
+                    </p>
+                    <p style="color:var(--text-muted);font-size:0.85rem;font-style:italic;margin-bottom:20px">
+                        <?= htmlspecialchars(getSetting('lp_creators_extra', 'You set the prize. You pick the video. You decide how long the contest runs. After that, your fans handle the rest.')) ?>
                     </p>
                     <ul class="lp-split-list">
-                        <li>🎯 Any budget works — you set the number</li>
-                        <li>📊 Live dashboard showing every clip submitted</li>
-                        <li>🚀 Your video hits TikTok, Reels, and Shorts simultaneously</li>
-                        <li>🛡 Flag any clip that doesn't fit your brand</li>
+                        <li>🎯 <?= htmlspecialchars(getSetting('lp_creators_p1', 'Any budget works — you set the number')) ?></li>
+                        <li>📊 <?= htmlspecialchars(getSetting('lp_creators_p2', 'Live dashboard showing every clip submitted')) ?></li>
+                        <li>🚀 <?= htmlspecialchars(getSetting('lp_creators_p3', 'Your video hits TikTok, Reels and Shorts simultaneously')) ?></li>
+                        <li>🛡 <?= htmlspecialchars(getSetting('lp_creators_p4', 'Flag any clip that doesn\'t fit your brand')) ?></li>
                     </ul>
                     <a href="/auth/register?mode=creator" class="btn btn-accent mt-3">Start a Contest →</a>
                 </div>
@@ -432,15 +428,18 @@ function fmtStat(int|float $n, string $prefix = '', string $suffix = ''): string
             <div class="col-md-6" id="fans">
                 <div class="lp-split-card lp-split-card--accent">
                     <div class="lp-split-badge lp-split-badge--dark">For Fans</div>
-                    <h3 class="lp-split-title">You were going to watch it.<br><span style="color:#000;">Might as well win something.</span></h3>
+                    <h3 class="lp-split-title"><?= htmlspecialchars(getSetting('lp_fans_title', 'You were going to watch it. Might as well win something.')) ?></h3>
                     <p style="color:rgba(0,0,0,0.65);font-size:0.9rem;line-height:1.8;margin-bottom:20px">
-                        Find a contest for a creator you follow. Watch the video. Pull out the clip that nobody else will think to cut. Post it. Then check the leaderboard obsessively for the next two weeks like the rest of us.
+                        <?= nl2br(htmlspecialchars(getSetting('lp_fans_sub', "Find a contest for a creator you follow. Watch the video. Pull out the clip that nobody else will think to cut. Post it. Then check the leaderboard obsessively for the next two weeks like the rest of us."))) ?>
+                    </p>
+                    <p style="color:rgba(0,0,0,0.6);font-size:0.85rem;font-style:italic;margin-bottom:20px">
+                        <?= htmlspecialchars(getSetting('lp_fans_extra', 'No fancy equipment. No editing degree. Just a good eye and a phone that works.')) ?>
                     </p>
                     <ul class="lp-split-list lp-split-list--dark">
-                        <li>📱 Runs on TikTok, Instagram Reels, and YouTube Shorts</li>
-                        <li>✂️ Submit as many clips as contests allow</li>
-                        <li>📊 Leaderboard updates in real time</li>
-                        <li>💸 Cash goes straight to your bank when you win</li>
+                        <li>📱 <?= htmlspecialchars(getSetting('lp_fans_p1', 'Runs on TikTok, Instagram Reels and YouTube Shorts')) ?></li>
+                        <li>✂️ <?= htmlspecialchars(getSetting('lp_fans_p2', 'Submit as many clips as contests allow')) ?></li>
+                        <li>📊 <?= htmlspecialchars(getSetting('lp_fans_p3', 'Leaderboard updates in real time so you always know where you stand')) ?></li>
+                        <li>💸 <?= htmlspecialchars(getSetting('lp_fans_p4', 'Cash goes straight to your bank when you win')) ?></li>
                     </ul>
                     <a href="/auth/register" class="btn btn-accent" style="margin-top:12px;display:inline-block;">Join as a Fan →</a>
                 </div>
@@ -455,7 +454,9 @@ function fmtStat(int|float $n, string $prefix = '', string $suffix = ''): string
         <div class="text-center mb-5">
             <div class="lp-section-eyebrow">Live Rankings</div>
             <h2 class="lp-section-title">Only Real Views <span class="text-accent"><?= htmlspecialchars(getSetting('lp_lb_title_accent', 'Win Here.')) ?></span></h2>
-            <p class="lp-section-sub" style="max-width:600px;margin:0 auto">Every submitted link gets tracked across TikTok, Reels, and Shorts — but only authentic views count. No purchased traffic. No bot plays. Contest closes, and the honest number at the top wins.</p>
+            <p class="lp-section-sub" style="max-width:700px;margin:0 auto">
+                <?= nl2br(htmlspecialchars(getSetting('lp_lb_text', "Every submitted link gets tracked across TikTok, Reels and Shorts — but only authentic views count. No purchased traffic. No bot plays. No inflated numbers. If real people watched it, it counts. If they didn't, it doesn't. No judges, no panels, no back-room decisions. Contest closes and the honest number at the top wins."))) ?>
+            </p>
         </div>
         <div class="lp-leaderboard">
             <div class="lp-lb-header">
@@ -508,8 +509,8 @@ function fmtStat(int|float $n, string $prefix = '', string $suffix = ''): string
 <section class="lp-cta-section">
     <div class="lp-cta-glow"></div>
     <div class="container text-center" style="position:relative;z-index:1;">
-        <h2 class="lp-cta-title">Creator or fan — <span class="text-accent"><?= htmlspecialchars(getSetting('lp_cta_title', "there's a spot for you.")) ?></span></h2>
-        <p class="lp-cta-sub"><?= htmlspecialchars(getSetting('lp_cta_sub', "Contests are live right now. Sign up for free and see what's running.")) ?></p>
+        <h2 class="lp-cta-title"><?= htmlspecialchars(getSetting('lp_cta_title', "Creator or fan — there's a spot for you.")) ?></h2>
+        <p class="lp-cta-sub"><?= htmlspecialchars(getSetting('lp_cta_sub', "Contests are live right now. Sign up free and see what's running.")) ?></p>
 
         <div class="d-flex gap-3 justify-content-center flex-wrap mb-4">
             <?php if ($lpIsLoggedIn): ?>
@@ -534,7 +535,7 @@ function fmtStat(int|float $n, string $prefix = '', string $suffix = ''): string
                 <?php if ($siteLogo !== ''): ?>
                 <img src="<?= htmlspecialchars($siteLogo) ?>" alt="<?= htmlspecialchars($siteName) ?>" style="height:28px;">
                 <?php else: ?>
-                Clipa<span>za</span>
+                <?= htmlspecialchars($siteName) ?>
                 <?php endif; ?>
             </div>
             <p style="font-size:0.8rem;color:var(--text-muted);margin:0;">© <?= date('Y') ?> <?= htmlspecialchars($siteName) ?>. All rights reserved.</p>
