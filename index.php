@@ -203,7 +203,7 @@ function fmtStat(int|float $n, string $prefix = '', string $suffix = ''): string
                 <?php if ($siteLogo !== ''): ?>
                 <img src="<?= htmlspecialchars($siteLogo) ?>" alt="<?= htmlspecialchars($siteName) ?>" style="height:36px;vertical-align:middle;">
                 <?php else: ?>
-                <?= htmlspecialchars($siteName) ?>
+                <?= formatSiteName($siteName) ?>
                 <?php endif; ?>
             </a>
             <div class="navbar-links d-none d-md-flex align-items-center gap-4">
@@ -540,7 +540,7 @@ function fmtStat(int|float $n, string $prefix = '', string $suffix = ''): string
                 <?php if ($siteLogo !== ''): ?>
                 <img src="<?= htmlspecialchars($siteLogo) ?>" alt="<?= htmlspecialchars($siteName) ?>" style="height:28px;">
                 <?php else: ?>
-                <?= htmlspecialchars($siteName) ?>
+                <?= formatSiteName($siteName) ?>
                 <?php endif; ?>
             </div>
             <p style="font-size:0.8rem;color:var(--text-muted);margin:0;">© <?= date('Y') ?> <?= htmlspecialchars($siteName) ?>. All rights reserved.</p>

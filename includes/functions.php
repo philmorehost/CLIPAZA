@@ -76,6 +76,32 @@ function sanitizeInput(string $input): string {
     return trim(strip_tags($input));
 }
 
+/**
+ * Formats site name with a lemon-colored span starting from the second capital letter.
+ * Useful for "ClipZaza" -> "Clip<span...>Zaza</span>"
+ */
+function formatSiteName(string $siteName): string {
+    $len = mb_strlen($siteName);
+    $capCount = 0;
+    $breakIndex = -1;
+
+    for ($i = 0; $i < $len; $i++) {
+        $char = mb_substr($siteName, $i, 1);
+        if ($char >= 'A' && $char <= 'Z') {
+            $capCount++;
+            if ($capCount === 2) {
+                $breakIndex = $i;
+                break;
+            }
+        }
+    }
+
+    if ($breakIndex !== -1) {
+        return e(mb_substr($siteName, 0, $breakIndex)) . '<span style="color:var(--accent)">' . e(mb_substr($siteName, $breakIndex)) . '</span>';
+    }
+    return e($siteName);
+}
+
 function isValidEmail(string $email): bool {
     return (bool)filter_var($email, FILTER_VALIDATE_EMAIL);
 }

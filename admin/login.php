@@ -73,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <?php if ($sl): ?>
             <img src="../<?= ltrim($sl, '/') ?>" alt="<?= e($sn) ?>" style="height:60px;max-width:100%;object-fit:contain">
         <?php else: ?>
-            <div style="font-size:1.8rem;font-weight:900;letter-spacing:-1px;"><?= e($sn) ?></div>
+            <div style="font-size:1.8rem;font-weight:900;letter-spacing:-1px;"><?= formatSiteName($sn) ?></div>
         <?php endif; ?>
         <p style="color:var(--text-muted);font-size:0.875rem;margin-top:8px;">Admin Panel</p>
     </div>

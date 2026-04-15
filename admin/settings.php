@@ -48,7 +48,7 @@ function ss(array $settings, string $key, string $default = ''): string {
 
 <!-- Sidebar -->
 <nav class="admin-sidebar">
-    <?php $sn = getSetting("site_name", "Clipaza"); $sl = getSetting("site_logo", ""); if ($sl): ?><div class="sidebar-brand"><img src="<?= e($sl) ?>" alt="<?= e($sn) ?>" style="height:28px"></div><?php else: ?><div class="sidebar-brand"><?= e($sn) ?></div><?php endif; ?>
+    <?php $sn = getSetting("site_name", "Clipaza"); $sl = getSetting("site_logo", ""); if ($sl): ?><div class="sidebar-brand"><img src="<?= e($sl) ?>" alt="<?= e($sn) ?>" style="height:28px"></div><?php else: ?><div class="sidebar-brand"><?= formatSiteName($sn) ?></div><?php endif; ?>
     <div class="sidebar-nav">
         <ul class="nav flex-column">
             <li class="nav-item"><a href="index.php" class="nav-link"><span class="nav-icon">⊞</span> Dashboard</a></li>
@@ -114,7 +114,8 @@ function ss(array $settings, string $key, string $default = ''): string {
                         <div class="card-body">
                             <div class="mb-4">
                                 <label class="form-label-dark">Site Name</label>
-                                <input type="text" name="site_name" class="form-control form-control-dark" value="<?= ss($siteSettings, 'site_name', 'Clipaza') ?>" required maxlength="100">
+                                <input type="text" name="site_name" class="form-control form-control-dark" value="<?= ss($siteSettings, 'site_name', 'Clipaza') ?>" required maxlength="100" placeholder="e.g. ClipZaza">
+                                <div class="form-text text-muted">Use a second Capital letter to start the Lemon color (e.g., <strong>ClipZaza</strong> will color "Zaza").</div>
                             </div>
                             <div class="mb-4">
                                 <label class="form-label-dark">Default Landing Page Theme</label>

@@ -42,7 +42,7 @@ function renderNav(bool $isLoggedIn, array $user = [], string $activeMode = ''):
     $siteLogo = function_exists('getSetting') ? getSetting('site_logo', '') : '';
     $logoHtml = $siteLogo
         ? '<img src="' . e($siteLogo) . '" alt="' . e($siteName) . '" style="height:32px">'
-        : '<span class="fw-900" style="font-size:1.25rem;letter-spacing:-0.5px">' . e($siteName) . '<span style="color:var(--accent)">.</span></span>';
+        : '<span class="fw-900" style="font-size:1.25rem;letter-spacing:-0.5px">' . formatSiteName($siteName) . '</span>';
 
     echo '<nav class="navbar navbar-expand-lg navbar-themed" style="background:var(--nav-bg);border-bottom:1px solid var(--nav-border);position:sticky;top:0;z-index:1000">';
     echo '<div class="container">';

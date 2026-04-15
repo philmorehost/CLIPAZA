@@ -74,7 +74,7 @@ renderHead('Forgot Password');
         <?php if ($siteLogo): ?>
           <img src="<?= e($siteLogo) ?>" alt="<?= e($siteName) ?>" style="height:48px;max-width:100%;object-fit:contain">
         <?php else: ?>
-          <span style="font-size:1.5rem;font-weight:900;color:var(--text);letter-spacing:-0.5px"><?= e($siteName) ?><span style="color:var(--accent)">.</span></span>
+          <span style="font-size:1.5rem;font-weight:900;color:var(--text);letter-spacing:-0.5px"><?= formatSiteName($siteName) ?></span>
         <?php endif; ?>
       </a>
     </div>
