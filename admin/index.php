@@ -59,6 +59,17 @@ try {
     );
     $recentKyc = $kycStmt->fetchAll();
 
+    // Global Leaderboard for Admin
+    $adminLB = $db->query(
+        "SELECT u.username, SUM(ce.view_count) AS total_views, COUNT(ce.id) AS clip_count
+         FROM contest_entries ce
+         INNER JOIN users u ON u.id = ce.user_id
+         WHERE ce.status = 'approved' AND ce.disqualified = 0
+         GROUP BY ce.user_id
+         ORDER BY total_views DESC
+         LIMIT 10"
+    )->fetchAll();
+
 } catch (Throwable) {
     $totalUsers = $activeContests = $blockedIps = $pendingPayouts = $pendingKyc = $pendingMovieAds = 0;
     $totalRevenue = $totalDeposits = $totalPayoutsAmt = 0.0;
@@ -334,7 +345,7 @@ try {
 
         <!-- Recent Logins -->
         <div class="col-md-6">
-            <div class="card-dark">
+            <div class="card-dark h-100">
                 <div class="card-header d-flex align-items-center justify-content-between">
                     <span>🔐 Recent Logins</span>
                     <a href="security.php?tab=history" style="font-size:0.78rem;color:var(--text-muted)">All →</a>
@@ -364,6 +375,50 @@ try {
                     </div>
                     <?php endforeach; ?>
                     <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Global Leaderboard for Admin -->
+    <div class="row g-3 mt-1">
+        <div class="col-12">
+            <div class="card-dark">
+                <div class="card-header d-flex align-items-center justify-content-between">
+                    <span>🏆 Global Leaderboard</span>
+                    <a href="../leaderboards" target="_blank" style="font-size:0.78rem;color:var(--text-muted)">Public View ↗</a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table-dark-custom w-100">
+                            <thead>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>Clipper</th>
+                                    <th>Clips</th>
+                                    <th>Total Views</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php if (empty($adminLB)): ?>
+                                    <tr><td colspan="5" class="text-center py-4 text-muted">No data.</td></tr>
+                                <?php else: ?>
+                                    <?php foreach ($adminLB as $idx => $row): ?>
+                                        <tr>
+                                            <td>#<?= $idx+1 ?></td>
+                                            <td><strong style="color:var(--text)">@<?= htmlspecialchars($row['username']) ?></strong></td>
+                                            <td><?= number_format((int)$row['clip_count']) ?></td>
+                                            <td style="color:var(--accent); font-weight:700"><?= number_format((int)$row['total_views']) ?></td>
+                                            <td>
+                                                <a href="users.php?q=<?= urlencode($row['username']) ?>" class="btn btn-xs btn-outline-accent">Manage</a>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>

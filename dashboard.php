@@ -73,6 +73,22 @@ if ($mode === 'creator') {
         );
         $stmt->execute([$userId]);
         $recentContests = $stmt->fetchAll();
+
+        // Top clippers summary for creator
+        $creatorLB = [];
+        $stmt = $db->prepare(
+            "SELECT u.username, SUM(ce.view_count) AS total_views, COUNT(ce.id) AS clip_count
+             FROM contest_entries ce
+             INNER JOIN contests c ON c.id = ce.contest_id
+             INNER JOIN users u ON u.id = ce.user_id
+             WHERE c.creator_id = ? AND ce.status = 'approved' AND ce.disqualified = 0
+             GROUP BY ce.user_id
+             ORDER BY total_views DESC
+             LIMIT 5"
+        );
+        $stmt->execute([$userId]);
+        $creatorLB = $stmt->fetchAll();
+
     } catch (Throwable) {}
 } else {
     try {
@@ -96,6 +112,20 @@ if ($mode === 'creator') {
         );
         $stmt->execute([$userId]);
         $myEntries = $stmt->fetchAll();
+
+        // Top 5 Global leaderboard for clipper dashboard
+        $clipperLB = [];
+        $stmt = $db->query(
+            "SELECT u.username, SUM(ce.view_count) AS total_views
+             FROM contest_entries ce
+             INNER JOIN users u ON u.id = ce.user_id
+             WHERE ce.status = 'approved' AND ce.disqualified = 0
+             GROUP BY ce.user_id
+             ORDER BY total_views DESC
+             LIMIT 5"
+        );
+        $clipperLB = $stmt->fetchAll();
+
     } catch (Throwable) {}
 }
 
@@ -169,6 +199,8 @@ renderNav(true, ['username' => $username], $mode);
 
     <?php if ($mode === 'creator'): ?>
       <!-- CREATOR VIEW -->
+      <div class="row g-4">
+        <div class="col-lg-8">
       <div class="row g-3 mb-4">
         <div class="col-6 col-md-4">
           <div class="stat-card">
@@ -255,9 +287,40 @@ renderNav(true, ['username' => $username], $mode);
           <?php endforeach; ?>
         </div>
       <?php endif; ?>
+        </div> <!-- end col-lg-8 -->
+
+        <div class="col-lg-4">
+          <div class="card-dark h-100">
+            <div class="card-header d-flex align-items-center justify-content-between">
+              <h6 class="mb-0 fw-700">🏆 Top Clippers</h6>
+              <a href="/leaderboards" class="text-accent" style="font-size:0.75rem">View All</a>
+            </div>
+            <div class="card-body p-0">
+              <?php if (empty($creatorLB)): ?>
+                <div class="p-4 text-center text-muted" style="font-size:0.85rem">No entries in your contests yet.</div>
+              <?php else: ?>
+                <?php foreach ($creatorLB as $idx => $row): ?>
+                  <div class="d-flex align-items-center justify-content-between p-3 border-bottom border-secondary">
+                    <div class="d-flex align-items-center gap-2">
+                      <span class="fw-700 text-muted" style="font-size:0.8rem"><?= $idx+1 ?>.</span>
+                      <span style="font-size:0.85rem">@<?= e($row['username']) ?></span>
+                    </div>
+                    <div class="text-end">
+                      <div style="font-size:0.85rem; color:var(--accent); font-weight:700"><?= number_format((int)$row['total_views']) ?></div>
+                      <div style="font-size:0.7rem" class="text-muted">views</div>
+                    </div>
+                  </div>
+                <?php endforeach; ?>
+              <?php endif; ?>
+            </div>
+          </div>
+        </div>
+      </div> <!-- end row -->
 
     <?php else: ?>
       <!-- CLIPPER VIEW -->
+      <div class="row g-4">
+        <div class="col-lg-8">
       <div class="row g-3 mb-4">
         <div class="col-6 col-md-4">
           <div class="stat-card">
@@ -327,6 +390,35 @@ renderNav(true, ['username' => $username], $mode);
           <?php endforeach; ?>
         </div>
       <?php endif; ?>
+        </div> <!-- end col-lg-8 -->
+
+        <div class="col-lg-4">
+          <div class="card-dark h-100">
+            <div class="card-header d-flex align-items-center justify-content-between">
+              <h6 class="mb-0 fw-700">🏆 Global Rankings</h6>
+              <a href="/leaderboards" class="text-accent" style="font-size:0.75rem">View All</a>
+            </div>
+            <div class="card-body p-0">
+              <?php if (empty($clipperLB)): ?>
+                <div class="p-4 text-center text-muted" style="font-size:0.85rem">No rankings data yet.</div>
+              <?php else: ?>
+                <?php foreach ($clipperLB as $idx => $row): ?>
+                  <div class="d-flex align-items-center justify-content-between p-3 border-bottom border-secondary">
+                    <div class="d-flex align-items-center gap-2">
+                      <span class="fw-700 text-muted" style="font-size:0.8rem"><?= $idx+1 ?>.</span>
+                      <span style="font-size:0.85rem" class="<?= $row['username'] === $username ? 'text-accent fw-700' : '' ?>">@<?= e($row['username']) ?></span>
+                    </div>
+                    <div class="text-end">
+                      <div style="font-size:0.85rem; color:var(--accent); font-weight:700"><?= number_format((int)$row['total_views']) ?></div>
+                      <div style="font-size:0.7rem" class="text-muted">views</div>
+                    </div>
+                  </div>
+                <?php endforeach; ?>
+              <?php endif; ?>
+            </div>
+          </div>
+        </div>
+      </div> <!-- end row -->
     <?php endif; ?>
 
     <!-- Social handles quick view -->

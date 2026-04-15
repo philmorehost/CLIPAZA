@@ -49,7 +49,8 @@ $siteTagline = 'Earn Money Clipping Videos';
 
 // SEO / branding settings
 $seoTitle       = '';
-$seoDescription = 'Clipaza lets YouTube creators run fan clipping contests with real cash prizes. Clip, share, compete to win — paid straight to your bank. Free to join.';
+$defaultSeoDesc = 'Clipaza lets YouTube creators run fan clipping contests with real cash prizes. Clip, share, compete to win — paid straight to your bank. Free to join.';
+$seoDescription = $defaultSeoDesc;
 $seoKeywords    = '';
 $ogImageUrl     = '';
 $customHeader   = '';
@@ -64,7 +65,7 @@ if (file_exists($configFile)) {
     require_once $root . '/includes/functions.php';
     $siteName       = getSetting('site_name', 'Clipaza');
     $seoTitle       = getSetting('seo_title', '');
-    $seoDescription = getSetting('seo_description', $seoDescription);
+    $seoDescription = getSetting('seo_description', $defaultSeoDesc);
     $seoKeywords    = getSetting('seo_keywords', '');
     $ogImageUrl     = getSetting('og_image_url', '');
     $customHeader   = getSetting('custom_header_code', '');

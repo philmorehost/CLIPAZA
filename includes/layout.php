@@ -51,6 +51,7 @@ function renderNav(bool $isLoggedIn, array $user = [], string $activeMode = ''):
     echo '<div class="collapse navbar-collapse" id="mainNav">';
     echo '<ul class="navbar-nav me-auto">';
     echo '<li class="nav-item"><a class="nav-link" href="/contests" style="font-size:0.9rem;color:var(--text-muted)">Browse Contests</a></li>';
+    echo '<li class="nav-item"><a class="nav-link" href="/leaderboards" style="font-size:0.9rem;color:var(--text-muted)">🏆 Leaderboards</a></li>';
     echo '<li class="nav-item"><a class="nav-link" href="/ads" style="font-size:0.9rem;color:var(--text-muted)">🎬 Movies</a></li>';
     echo '<li class="nav-item"><a class="nav-link" href="/#how-it-works" style="font-size:0.9rem;color:var(--text-muted)">How It Works</a></li>';
     echo '</ul>';
