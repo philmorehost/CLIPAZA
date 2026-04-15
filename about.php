@@ -30,7 +30,7 @@ renderNav($isLoggedIn, ['username' => $username], $userMode);
     <div class="card-dark p-4 mb-4">
       <h2 class="fw-700 mb-3" style="font-size:1.1rem">The Idea</h2>
       <p class="text-muted" style="font-size:0.9rem;line-height:1.8">
-        <?= e($siteName) ?> started with a simple observation: fans already know a creator's content better than anyone. They know which moment will make someone stop scrolling. They know which clip will spread. Why not give them a contest to enter — and a prize to chase — while the creator's best content reaches TikTok, Instagram Reels, and YouTube Shorts at the same time?
+        <?= e($siteName) ?> started with a simple observation: fans already know a creator's content better than anyone. They know which moment will make someone stop scrolling. They know which clip will spread. Why not give them a contest to enter — and a prize to chase — while the creator's best content reaches TikTok and Instagram Reels at the same time?
       </p>
       <p class="text-muted" style="font-size:0.9rem;line-height:1.8">
         That's <?= e($siteName) ?>. A contest platform built for creators who want organic reach and for fans who want to turn a good eye into real money.
@@ -51,7 +51,7 @@ renderNav($isLoggedIn, ['username' => $username], $userMode);
           <div style="font-size:1.5rem;min-width:2rem;line-height:1">✂️</div>
           <div>
             <div class="fw-700 mb-1" style="font-size:0.95rem">Fans clip and post</div>
-            <p class="text-muted mb-0" style="font-size:0.88rem;line-height:1.7">Fans find the moment that's going to stop people mid-scroll, cut it, post it to TikTok, Reels, or Shorts, then submit the link.</p>
+            <p class="text-muted mb-0" style="font-size:0.88rem;line-height:1.7">Fans find the moment that's going to stop people mid-scroll, cut it, post it to TikTok or Reels, then submit the link.</p>
           </div>
         </div>
         <div class="d-flex gap-3 align-items-start">

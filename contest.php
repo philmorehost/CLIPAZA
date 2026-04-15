@@ -123,7 +123,7 @@ $siteName   = getSetting('site_name', 'Clipaza');
 $contestUrl = $siteUrl . '/contest?id=' . $contestId;
 $ogImage    = $contest['youtube_thumbnail'] ?? '';
 $prize      = number_format((float)($contest['prize_pool'] ?? 0), 0);
-$metaDesc   = 'Enter the "' . addslashes($contest['title']) . '" clipping contest on ' . $siteName . ' and compete for a ₦' . $prize . ' prize. Post your best clip on TikTok, Reels, or Shorts — most authentic views wins.';
+$metaDesc   = 'Enter the "' . addslashes($contest['title']) . '" clipping contest on ' . $siteName . ' and compete for a ₦' . $prize . ' prize. Post your best clip on TikTok or Reels — most authentic views wins.';
 
 $extraHead  = '<meta name="csrf" content="' . e($csrf) . '">' . "\n";
 $extraHead .= '  <meta name="description" content="' . e($metaDesc) . '">' . "\n";

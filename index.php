@@ -237,7 +237,7 @@ function fmtStat(int|float $n, string $prefix = '', string $suffix = ''): string
                 <span class="lp-hero-accent"><?= htmlspecialchars(getSetting('lp_hero_accent', 'Their Biggest Fans.')) ?></span>
             </h1>
             <p class="lp-hero-sub">
-                <?= nl2br(htmlspecialchars(getSetting('lp_hero_sub', "Pick a contest from your favourite YouTube creator. Clip their best moment, post it on TikTok, Reels or Shorts, and let the views decide who wins."))) ?>
+                <?= nl2br(htmlspecialchars(getSetting('lp_hero_sub', "Pick a contest from your favourite YouTube creator. Clip their best moment, post it on TikTok or Reels, and let the views decide who wins."))) ?>
             </p>
 
             <div class="d-flex gap-3 justify-content-center flex-wrap mb-5">
@@ -354,7 +354,7 @@ function fmtStat(int|float $n, string $prefix = '', string $suffix = ''): string
                     <div class="lp-step-num">02</div>
                     <div class="lp-step-icon">✂️</div>
                     <h3 class="lp-step-title"><?= htmlspecialchars(getSetting('lp_step2_title', 'Fans clip and post')) ?></h3>
-                    <p class="lp-step-desc"><?= htmlspecialchars(getSetting('lp_step2_desc', "You find the moment that's going to stop people mid-scroll. Cut it, post it wherever you're strongest — TikTok, Reels, Shorts — then drop the link.")) ?></p>
+                    <p class="lp-step-desc"><?= htmlspecialchars(getSetting('lp_step2_desc', "You find the moment that's going to stop people mid-scroll. Cut it, post it wherever you're strongest — TikTok or Reels — then drop the link.")) ?></p>
                 </div>
             </div>
             <div class="col-md-4">
@@ -382,7 +382,7 @@ function fmtStat(int|float $n, string $prefix = '', string $suffix = ''): string
             $defaultFeatures = [
                 ['icon' => '🎬', 'title' => 'Any budget works', 'desc' => 'You set the prize. Contests work at any prize level — from a quick boost to a serious campaign. You decide how much and how long.'],
                 ['icon' => '📊', 'title' => 'Live dashboard', 'desc' => 'Every clip submitted sits on a live leaderboard. View counts update in real time so you — and your fans — always know where things stand.'],
-                ['icon' => '🚀', 'title' => 'Three platforms at once', 'desc' => 'Your video hits TikTok, Instagram Reels, and YouTube Shorts simultaneously — carried by people who genuinely like what you make.'],
+                ['icon' => '🚀', 'title' => 'Multiple platforms at once', 'desc' => 'Your video hits TikTok and Instagram Reels simultaneously — carried by people who genuinely like what you make.'],
                 ['icon' => '🛡', 'title' => 'Brand control', 'desc' => 'Flag any clip that doesn\'t fit your brand. You stay in control of what\'s associated with your channel throughout the contest.'],
                 ['icon' => '💸', 'title' => 'Cash to your bank', 'desc' => 'Winners get paid directly to their bank account. No gift cards, no vouchers, no waiting — just a bank transfer when the contest closes.'],
                 ['icon' => '✅', 'title' => 'Only real views win', 'desc' => 'No purchased traffic. No bot plays. No inflated numbers. If real people watched it, it counts. If they didn\'t, it doesn\'t.'],
@@ -425,7 +425,7 @@ function fmtStat(int|float $n, string $prefix = '', string $suffix = ''): string
                     <ul class="lp-split-list">
                         <li>🎯 <?= htmlspecialchars(getSetting('lp_creators_p1', 'Any budget works — you set the number')) ?></li>
                         <li>📊 <?= htmlspecialchars(getSetting('lp_creators_p2', 'Live dashboard showing every clip submitted')) ?></li>
-                        <li>🚀 <?= htmlspecialchars(getSetting('lp_creators_p3', 'Your video hits TikTok, Reels and Shorts simultaneously')) ?></li>
+                        <li>🚀 <?= htmlspecialchars(getSetting('lp_creators_p3', 'Your video hits TikTok and Reels simultaneously')) ?></li>
                         <li>🛡 <?= htmlspecialchars(getSetting('lp_creators_p4', 'Flag any clip that doesn\'t fit your brand')) ?></li>
                     </ul>
                     <a href="/auth/register?mode=creator" class="btn btn-accent mt-3">Start a Contest →</a>
@@ -442,7 +442,7 @@ function fmtStat(int|float $n, string $prefix = '', string $suffix = ''): string
                         <?= htmlspecialchars(getSetting('lp_fans_extra', 'No fancy equipment. No editing degree. Just a good eye and a phone that works.')) ?>
                     </p>
                     <ul class="lp-split-list lp-split-list--dark">
-                        <li>📱 <?= htmlspecialchars(getSetting('lp_fans_p1', 'Runs on TikTok, Instagram Reels and YouTube Shorts')) ?></li>
+                        <li>📱 <?= htmlspecialchars(getSetting('lp_fans_p1', 'Runs on TikTok and Instagram Reels')) ?></li>
                         <li>✂️ <?= htmlspecialchars(getSetting('lp_fans_p2', 'Submit as many clips as contests allow')) ?></li>
                         <li>📊 <?= htmlspecialchars(getSetting('lp_fans_p3', 'Leaderboard updates in real time so you always know where you stand')) ?></li>
                         <li>💸 <?= htmlspecialchars(getSetting('lp_fans_p4', 'Cash goes straight to your bank when you win')) ?></li>
@@ -461,7 +461,7 @@ function fmtStat(int|float $n, string $prefix = '', string $suffix = ''): string
             <div class="lp-section-eyebrow">Live Rankings</div>
             <h2 class="lp-section-title">Only Real Views <span class="text-accent"><?= htmlspecialchars(getSetting('lp_lb_title_accent', 'Win Here.')) ?></span></h2>
             <p class="lp-section-sub" style="max-width:700px;margin:0 auto">
-                <?= nl2br(htmlspecialchars(getSetting('lp_lb_text', "Every submitted link gets tracked across TikTok, Reels and Shorts — but only authentic views count. No purchased traffic. No bot plays. No inflated numbers. If real people watched it, it counts. If they didn't, it doesn't. No judges, no panels, no back-room decisions. Contest closes and the honest number at the top wins."))) ?>
+                <?= nl2br(htmlspecialchars(getSetting('lp_lb_text', "Every submitted link gets tracked across TikTok and Reels — but only authentic views count. No purchased traffic. No bot plays. No inflated numbers. If real people watched it, it counts. If they didn't, it doesn't. No judges, no panels, no back-room decisions. Contest closes and the honest number at the top wins."))) ?>
             </p>
         </div>
         <div class="lp-leaderboard">

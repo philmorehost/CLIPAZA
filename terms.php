@@ -45,7 +45,7 @@ renderNav($isLoggedIn, ['username' => $username], $userMode);
     <div class="card-dark p-4 mb-4">
       <h2 class="fw-700 mb-3" style="font-size:1.1rem">3. Platform Overview</h2>
       <p class="text-muted" style="font-size:0.9rem;line-height:1.8">
-        <?= e($siteName) ?> allows YouTube creators ("Creators") to fund clipping contests, and fans ("Clippers") to submit short clips of Creator content to TikTok, Instagram Reels, or YouTube Shorts for a chance to win cash prizes based on authentic view counts.
+        <?= e($siteName) ?> allows YouTube creators ("Creators") to fund clipping contests, and fans ("Clippers") to submit short clips of Creator content to TikTok or Instagram Reels for a chance to win cash prizes based on authentic view counts.
       </p>
     </div>
 
@@ -74,7 +74,7 @@ renderNav($isLoggedIn, ['username' => $username], $userMode);
       <h2 class="fw-700 mb-3" style="font-size:1.1rem">6. Contests — Clipper Obligations</h2>
       <ul class="text-muted" style="font-size:0.9rem;line-height:2">
         <li>Submitted clips must be original work created by the submitting user.</li>
-        <li>Clips must be publicly posted on the specified platform (TikTok, Reels, or Shorts).</li>
+        <li>Clips must be publicly posted on the specified platform (TikTok or Reels).</li>
         <li>Purchasing views, using bots, or any form of view manipulation is strictly prohibited and will result in disqualification and account termination.</li>
         <li>Clips must not contain hate speech, explicit content, or material that infringes third-party rights.</li>
         <li>Only authentic views from real users count toward contest rankings.</li>

@@ -77,7 +77,7 @@ try {
 
 $siteUrl    = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'clipaza.com');
 $siteName   = getSetting('site_name', 'Clipaza');
-$metaDesc   = 'Browse active fan clipping contests on ' . $siteName . '. Pick a creator, clip their best moment, post it on TikTok, Reels, or Shorts, and win real cash prizes.';
+$metaDesc   = 'Browse active fan clipping contests on ' . $siteName . '. Pick a creator, clip their best moment, post it on TikTok or Reels, and win real cash prizes.';
 $extraHead  = '  <meta name="description" content="' . e($metaDesc) . '">' . "\n";
 $extraHead .= '  <link rel="canonical" href="' . e($siteUrl . '/contests') . '">' . "\n";
 $extraHead .= '  <meta property="og:type" content="website">' . "\n";
