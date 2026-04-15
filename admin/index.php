@@ -133,15 +133,17 @@ try {
 
     <!-- Quick Actions -->
     <div class="card-dark mb-4 p-3">
-        <div class="d-flex flex-wrap gap-2 align-items-center">
-            <span style="font-size:0.78rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-right:4px">Quick Actions:</span>
-            <a href="users.php" class="btn btn-sm btn-outline-accent">👥 Manage Users</a>
-            <a href="contests.php" class="btn btn-sm btn-outline-accent">🏆 Manage Contests</a>
-            <a href="../leaderboards" class="btn btn-sm btn-outline-accent">🏆 GLB</a>
-            <a href="payouts.php?status=pending" class="btn btn-sm" style="background:rgba(204,255,0,0.1);color:var(--accent);border:1px solid rgba(204,255,0,0.3);font-size:0.85rem;border-radius:8px;padding:6px 14px">💸 Pending Payouts <?php if ($pendingPayouts): ?><span class="badge-accent ms-1" style="font-size:0.65rem"><?= $pendingPayouts ?></span><?php endif; ?></a>
-            <a href="kyc.php?status=pending" class="btn btn-sm" style="background:rgba(255,170,0,0.1);color:var(--warning);border:1px solid rgba(255,170,0,0.3);font-size:0.85rem;border-radius:8px;padding:6px 14px">🪪 KYC Reviews <?php if ($pendingKyc): ?><span class="badge-warning ms-1" style="font-size:0.65rem"><?= $pendingKyc ?></span><?php endif; ?></a>
-            <a href="security.php?tab=blocked" class="btn btn-sm" style="background:rgba(255,68,68,0.1);color:var(--danger);border:1px solid rgba(255,68,68,0.3);font-size:0.85rem;border-radius:8px;padding:6px 14px">🚫 Blocked IPs</a>
-            <a href="settings.php?tab=payment" class="btn btn-sm" style="background:rgba(0,153,255,0.1);color:var(--info);border:1px solid rgba(0,153,255,0.3);font-size:0.85rem;border-radius:8px;padding:6px 14px">⚙ Payment Settings</a>
+        <div class="quick-actions-row">
+            <span class="quick-actions-label">Quick Actions:</span>
+            <div class="quick-actions-btns">
+                <a href="users.php" class="btn btn-sm btn-outline-accent">👥 Manage Users</a>
+                <a href="contests.php" class="btn btn-sm btn-outline-accent">🏆 Manage Contests</a>
+                <a href="../leaderboards" class="btn btn-sm btn-outline-accent">🏆 GLB</a>
+                <a href="payouts.php?status=pending" class="btn btn-sm action-btn-accent">💸 Pending Payouts <?php if ($pendingPayouts): ?><span class="badge-accent ms-1" style="font-size:0.65rem"><?= $pendingPayouts ?></span><?php endif; ?></a>
+                <a href="kyc.php?status=pending" class="btn btn-sm action-btn-warning">🪪 KYC Reviews <?php if ($pendingKyc): ?><span class="badge-warning ms-1" style="font-size:0.65rem"><?= $pendingKyc ?></span><?php endif; ?></a>
+                <a href="security.php?tab=blocked" class="btn btn-sm action-btn-danger">🚫 Blocked IPs</a>
+                <a href="settings.php?tab=payment" class="btn btn-sm action-btn-info">⚙ Payment Settings</a>
+            </div>
         </div>
     </div>
 

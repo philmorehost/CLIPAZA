@@ -66,6 +66,8 @@ function renderNav(bool $isLoggedIn, array $user = [], string $activeMode = ''):
         if (!empty($_SESSION['admin_impersonating'])) {
             $origName = e($_SESSION['original_admin_name'] ?? 'Admin');
             echo '<a href="/auth/return-admin" class="btn btn-sm" style="background:rgba(255,68,68,0.15);color:var(--danger);border:1px solid rgba(255,68,68,0.3);font-size:0.75rem">← Return to Admin (' . $origName . ')</a>';
+        } elseif (($_SESSION['user_role'] ?? '') === 'admin') {
+            echo '<a href="/admin/" class="btn btn-sm" style="background:rgba(204,255,0,0.1);color:var(--accent);border:1px solid rgba(204,255,0,0.3);font-size:0.75rem">🛡 Admin Panel</a>';
         }
         echo '<span class="badge" style="background:var(--accent-dim);color:var(--accent);font-size:0.72rem;border:1px solid rgba(204,255,0,0.3)">' . $modeLabel . ' Mode</span>';
         echo '<a href="/dashboard" class="btn btn-sm btn-outline-accent">Dashboard</a>';

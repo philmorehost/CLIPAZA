@@ -216,6 +216,21 @@ p { color: var(--text-secondary); }
 .input-group-dark .form-control-dark { border-left: none; }
 .input-group-dark .form-control-dark:focus { border-color: var(--accent); }
 
+/* Quick Actions in Admin Dashboard */
+.quick-actions-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.quick-actions-label { font-size: 0.78rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; flex-shrink: 0; }
+.quick-actions-btns { display: flex; flex-wrap: wrap; gap: 8px; flex-grow: 1; }
+.action-btn-accent { background: rgba(204,255,0,0.1) !important; color: var(--accent) !important; border: 1px solid rgba(204,255,0,0.3) !important; font-size: 0.85rem; border-radius: 8px; padding: 6px 14px; }
+.action-btn-warning { background: rgba(255,170,0,0.1) !important; color: var(--warning) !important; border: 1px solid rgba(255,170,0,0.3) !important; font-size: 0.85rem; border-radius: 8px; padding: 6px 14px; }
+.action-btn-danger { background: rgba(255,68,68,0.1) !important; color: var(--danger) !important; border: 1px solid rgba(255,68,68,0.3) !important; font-size: 0.85rem; border-radius: 8px; padding: 6px 14px; }
+.action-btn-info { background: rgba(0,153,255,0.1) !important; color: var(--info) !important; border: 1px solid rgba(0,153,255,0.3) !important; font-size: 0.85rem; border-radius: 8px; padding: 6px 14px; }
+
+@media (max-width: 768px) {
+  .quick-actions-row { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .quick-actions-btns { width: 100%; }
+  .quick-actions-btns .btn { flex-grow: 1; text-align: center; justify-content: center; }
+}
+
 /* ===================== NEW LANDING PAGE STYLES ===================== */
 .nav-text-link { color: var(--text-muted); font-size: 0.875rem; font-weight: 500; transition: var(--transition); }
 .nav-text-link:hover { color: var(--text); }
