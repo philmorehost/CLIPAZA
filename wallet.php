@@ -145,7 +145,7 @@ renderNav(true, ['username' => $username], $userMode);
         <!-- Withdrawal Modal -->
         <div id="withdrawPanel" style="display:none" class="card-dark p-4 mb-4">
           <h6 class="fw-700 mb-3">↑ Request Payout</h6>
-          <?php if (($profile['kyc_status'] ?? 'none') !== 'approved'): ?>
+          <?php if (isKycRequired() && ($profile['kyc_status'] ?? 'none') !== 'approved'): ?>
           <div class="alert-dark-warning mb-3">
             <strong>⚠ KYC Required:</strong> You must complete KYC verification before requesting a payout.
             <a href="/kyc" class="ms-2" style="color:var(--warning)">Complete KYC →</a>

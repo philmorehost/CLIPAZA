@@ -242,6 +242,14 @@ function getPreferredPayoutGateway(): string {
     return getSetting('preferred_payout_gateway', 'paystack');
 }
 
+/**
+ * Checks if KYC is mandatory based on the active payout system.
+ * Mandatory if any automated gateway is active.
+ */
+function isKycRequired(): bool {
+    return getPreferredPayoutGateway() !== 'manual';
+}
+
 function autoArchiveContests(): int {
     try {
         $db   = db();

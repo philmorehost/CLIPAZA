@@ -145,6 +145,17 @@ function handleClaimPrize(): never {
 
     try {
         $db   = db();
+
+        // Check KYC if required
+        if (isKycRequired()) {
+            $stmt = $db->prepare("SELECT kyc_status FROM user_profiles WHERE user_id = ? LIMIT 1");
+            $stmt->execute([$userId]);
+            $prof = $stmt->fetch();
+            if (!$prof || ($prof['kyc_status'] ?? 'none') !== 'approved') {
+                jsonResponse(['success' => false, 'message' => 'KYC verification required before claiming automated payouts.']);
+            }
+        }
+
         $stmt = $db->prepare('SELECT ce.*, c.id AS c_id FROM contest_entries ce INNER JOIN contests c ON c.id = ce.contest_id WHERE ce.id = ? AND ce.user_id = ? LIMIT 1');
         $stmt->execute([$entryId, $userId]);
         $entry = $stmt->fetch();
