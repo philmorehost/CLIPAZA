@@ -1,0 +1,15 @@
+[Wed Apr 15 10:56:48 2026] PHP 8.3.6 Development Server (http://0.0.0.0:8000) started
+[Wed Apr 15 10:59:41 2026] 127.0.0.1:47140 Accepted
+[Wed Apr 15 10:59:41 2026] PHP Fatal error:  Uncaught RuntimeException: Database not configured. in /app/includes/db.php:12
+Stack trace:
+#0 /app/includes/db.php(32): Database::getInstance()
+#1 /app/leaderboards.php(17): db()
+#2 {main}
+  thrown in /app/includes/db.php on line 12
+[Wed Apr 15 10:59:41 2026] 127.0.0.1:47140 [500]: GET /leaderboards.php - Uncaught RuntimeException: Database not configured. in /app/includes/db.php:12
+Stack trace:
+#0 /app/includes/db.php(32): Database::getInstance()
+#1 /app/leaderboards.php(17): db()
+#2 {main}
+  thrown in /app/includes/db.php on line 12
+[Wed Apr 15 10:59:41 2026] 127.0.0.1:47140 Closing

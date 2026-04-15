@@ -101,7 +101,38 @@ renderNav($isLoggedIn, ['username' => $username], $userMode);
             <p class="text-muted">Real-time rankings of our top performing clippers.</p>
         </div>
 
-        <!-- Global Rankings -->
+        <!-- Per-Platform Leaders (NOW TOP) -->
+        <div class="row g-4 mb-5">
+            <?php foreach (['tiktok' => '🎵 TikTok', 'instagram' => '📸 Instagram', 'facebook' => '📘 Facebook'] as $p => $label): ?>
+                <div class="col-lg-4">
+                    <div class="card-dark h-100">
+                        <div class="card-header"><h6 class="mb-0 fw-700"><?= $label ?> Leaders</h6></div>
+                        <div class="card-body p-0">
+                            <?php if (empty($platformLeaders[$p])): ?>
+                                <div class="p-4 text-center text-muted">No entries yet.</div>
+                            <?php else: ?>
+                                <?php foreach ($platformLeaders[$p] as $idx => $row): ?>
+                                    <div class="d-flex align-items-center justify-content-between p-3 border-bottom border-secondary">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <span class="fw-700 text-muted" style="width:20px"><?= $idx+1 ?>.</span>
+                                            <a href="/clipper?username=<?= urlencode($row['username']) ?>" class="text-decoration-none text-theme">
+                                                <span style="font-size:0.9rem">@<?= e($row['username']) ?></span>
+                                            </a>
+                                        </div>
+                                        <div class="text-end">
+                                            <div style="font-size:0.85rem; color:var(--accent); font-weight:700"><?= number_format((int)$row['total_views']) ?></div>
+                                            <div style="font-size:0.7rem" class="text-muted">views</div>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+
+        <!-- Global Rankings (NOW MIDDLE) -->
         <div class="card-dark mb-5">
             <div class="card-header d-flex align-items-center justify-content-between">
                 <h5 class="mb-0 fw-700">🏆 All-Time Top Clippers</h5>
@@ -135,7 +166,11 @@ renderNav($isLoggedIn, ['username' => $username], $userMode);
                                             else echo '#'.$rank;
                                             ?>
                                         </td>
-                                        <td><strong style="color:var(--text)">@<?= e($row['username']) ?></strong></td>
+                                        <td>
+                                            <a href="/clipper?username=<?= urlencode($row['username']) ?>" class="text-decoration-none">
+                                                <strong style="color:var(--text)">@<?= e($row['username']) ?></strong>
+                                            </a>
+                                        </td>
                                         <td><?= number_format((int)$row['clip_count']) ?></td>
                                         <td style="color:var(--accent); font-weight:700"><?= number_format((int)$row['total_views']) ?></td>
                                         <td><?= number_format((int)$row['total_likes']) ?></td>
@@ -147,34 +182,6 @@ renderNav($isLoggedIn, ['username' => $username], $userMode);
                     </table>
                 </div>
             </div>
-        </div>
-
-        <div class="row g-4 mb-5">
-            <?php foreach (['tiktok' => '🎵 TikTok', 'instagram' => '📸 Instagram', 'facebook' => '📘 Facebook'] as $p => $label): ?>
-                <div class="col-lg-4">
-                    <div class="card-dark h-100">
-                        <div class="card-header"><h6 class="mb-0 fw-700"><?= $label ?> Leaders</h6></div>
-                        <div class="card-body p-0">
-                            <?php if (empty($platformLeaders[$p])): ?>
-                                <div class="p-4 text-center text-muted">No entries yet.</div>
-                            <?php else: ?>
-                                <?php foreach ($platformLeaders[$p] as $idx => $row): ?>
-                                    <div class="d-flex align-items-center justify-content-between p-3 border-bottom border-secondary">
-                                        <div class="d-flex align-items-center gap-3">
-                                            <span class="fw-700 text-muted" style="width:20px"><?= $idx+1 ?>.</span>
-                                            <span style="font-size:0.9rem">@<?= e($row['username']) ?></span>
-                                        </div>
-                                        <div class="text-end">
-                                            <div style="font-size:0.85rem; color:var(--accent); font-weight:700"><?= number_format((int)$row['total_views']) ?></div>
-                                            <div style="font-size:0.7rem" class="text-muted">views</div>
-                                        </div>
-                                    </div>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                </div>
-            <?php endforeach; ?>
         </div>
 
         <div class="text-center mb-4">
@@ -203,7 +210,9 @@ renderNav($isLoggedIn, ['username' => $username], $userMode);
                                     <div class="d-flex align-items-center justify-content-between mb-2">
                                         <div class="d-flex align-items-center gap-2">
                                             <span><?= match($l['platform']){'tiktok'=>'🎵','instagram'=>'📸','facebook'=>'📘',default=>'🎬'} ?></span>
-                                            <span style="font-size:0.85rem">@<?= e($l['username']) ?></span>
+                                            <a href="/clipper?username=<?= urlencode($l['username']) ?>" class="text-decoration-none text-theme">
+                                                <span style="font-size:0.85rem">@<?= e($l['username']) ?></span>
+                                            </a>
                                         </div>
                                         <div class="text-end">
                                             <span style="font-size:0.85rem; color:var(--accent); font-weight:700"><?= number_format((int)$l['view_count']) ?></span>
