@@ -201,13 +201,13 @@ renderNav(true, ['username' => $username], 'creator');
             <h6 class="fw-700 mb-3">4. Prize Pool</h6>
             <p class="text-muted mb-3" style="font-size:0.85rem">Enable platforms and set prize amounts. Minimum total: ₦<?= number_format($minPrize, 0) ?>.</p>
 
-            <?php foreach (['tiktok' => ['🎵','TikTok'], 'instagram' => ['📸','Instagram'], 'facebook' => ['📘','Facebook']] as $pKey => [$icon, $label]): ?>
+            <?php foreach (['tiktok' => 'TikTok', 'instagram' => 'Instagram', 'facebook' => 'Facebook'] as $pKey => $label): ?>
               <div class="mb-3 p-3" style="background:var(--input-bg);border:1px solid var(--card-border);border-radius:8px" id="block_<?= $pKey ?>">
                 <div class="d-flex align-items-center gap-2 mb-2">
                   <input type="checkbox" name="enable_<?= $pKey ?>" id="enable_<?= $pKey ?>"
                          class="form-check-input platform-toggle" data-platform="<?= $pKey ?>"
                          style="background:var(--input-bg);border-color:var(--text-placeholder);width:18px;height:18px">
-                  <label for="enable_<?= $pKey ?>" class="fw-600" style="cursor:pointer"><?= $icon ?> <?= $label ?></label>
+                  <label for="enable_<?= $pKey ?>" class="fw-600" style="cursor:pointer"><?= getPlatformIcon($pKey, '1.2rem') ?> <?= $label ?></label>
                 </div>
                 <div class="row g-2 platform-fields" id="fields_<?= $pKey ?>" style="display:none">
                   <div class="col-md-6">

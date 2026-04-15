@@ -285,12 +285,7 @@ function fmtStat(int|float $n, string $prefix = '', string $suffix = ''): string
         <?php if (!empty($trendingContests)): ?>
             <?php foreach ($trendingContests as $tc):
                 $tcPlatforms = array_filter(explode(',', $tc['platforms'] ?? ''));
-                $platformIcons = implode('', array_map(fn($p) => match(trim($p)) {
-                    'tiktok'=>'<span title="TikTok">🎵</span>',
-                    'instagram'=>'<span title="Instagram">📸</span>',
-                    'facebook'=>'<span title="Facebook">📘</span>',
-                    default=>''
-                }, $tcPlatforms));
+                $platformIcons = implode('', array_map(fn($p) => getPlatformIcon(trim($p), '1rem'), $tcPlatforms));
                 $timeLeft = '';
                 if (!empty($tc['end_date'])) {
                     $secs = strtotime($tc['end_date']) - time();
@@ -551,9 +546,9 @@ function fmtStat(int|float $n, string $prefix = '', string $suffix = ''): string
                 <a href="/contact" class="lp-footer-link">Contact</a>
                 <a href="/about" class="lp-footer-link">About</a>
                 <span class="lp-footer-socials">
-                    <a href="#" title="Twitter/X" aria-label="Twitter">𝕏</a>
-                    <a href="#" title="Instagram" aria-label="Instagram">📸</a>
-                    <a href="#" title="TikTok" aria-label="TikTok">🎵</a>
+                    <a href="#" title="Twitter/X" aria-label="Twitter" style="font-size: 1.1rem; color: var(--text-muted);">𝕏</a>
+                    <a href="#" title="Instagram" aria-label="Instagram"><?= getPlatformIcon('instagram', '1.1rem') ?></a>
+                    <a href="#" title="TikTok" aria-label="TikTok"><?= getPlatformIcon('tiktok', '1.1rem') ?></a>
                 </span>
             </div>
         </div>

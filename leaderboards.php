@@ -103,10 +103,10 @@ renderNav($isLoggedIn, ['username' => $username], $userMode);
 
         <!-- Per-Platform Leaders (NOW TOP) -->
         <div class="row g-4 mb-5">
-            <?php foreach (['tiktok' => '🎵 TikTok', 'instagram' => '📸 Instagram', 'facebook' => '📘 Facebook'] as $p => $label): ?>
+            <?php foreach (['tiktok' => 'TikTok', 'instagram' => 'Instagram', 'facebook' => 'Facebook'] as $p => $label): ?>
                 <div class="col-lg-4">
                     <div class="card-dark h-100">
-                        <div class="card-header"><h6 class="mb-0 fw-700"><?= $label ?> Leaders</h6></div>
+                        <div class="card-header"><h6 class="mb-0 fw-700"><?= getPlatformIcon($p, '1rem') ?> <?= $label ?> Leaders</h6></div>
                         <div class="card-body p-0">
                             <?php if (empty($platformLeaders[$p])): ?>
                                 <div class="p-4 text-center text-muted">No entries yet.</div>
@@ -209,7 +209,7 @@ renderNav($isLoggedIn, ['username' => $username], $userMode);
                                 <?php foreach ($cl['leaders'] as $l): ?>
                                     <div class="d-flex align-items-center justify-content-between mb-2">
                                         <div class="d-flex align-items-center gap-2">
-                                            <span><?= match($l['platform']){'tiktok'=>'🎵','instagram'=>'📸','facebook'=>'📘',default=>'🎬'} ?></span>
+                                            <span><?= getPlatformIcon($l['platform'], '1rem') ?></span>
                                             <a href="/clipper?username=<?= urlencode($l['username']) ?>" class="text-decoration-none text-theme">
                                                 <span style="font-size:0.85rem">@<?= e($l['username']) ?></span>
                                             </a>

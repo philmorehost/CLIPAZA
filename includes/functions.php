@@ -80,6 +80,26 @@ function sanitizeInput(string $input): string {
  * Formats site name with a lemon-colored span starting from the second capital letter.
  * Useful for "ClipZaza" -> "Clip<span...>Zaza</span>"
  */
+/**
+ * Renders a platform icon image.
+ */
+function getPlatformIcon(string $platform, string $size = '1.2rem'): string {
+    $src = match(strtolower($platform)) {
+        'tiktok'    => '/assets/img/tiktok.png',
+        'instagram' => '/assets/img/instagram.png',
+        'facebook'  => '/assets/img/facebook.png',
+        default     => ''
+    };
+    if (!$src) return '';
+    return sprintf(
+        '<img src="%s" alt="%s" class="platform-img-icon" style="width:%s; height:%s; vertical-align:middle; object-fit:contain; margin-top:-2px" />',
+        $src,
+        ucfirst($platform),
+        $size,
+        $size
+    );
+}
+
 function formatSiteName(string $siteName): string {
     $len = mb_strlen($siteName);
     $capCount = 0;

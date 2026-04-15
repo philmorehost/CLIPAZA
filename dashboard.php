@@ -358,18 +358,13 @@ renderNav(true, ['username' => $username], $mode);
         <div class="row g-3">
           <?php foreach ($myEntries as $entry): ?>
             <?php
-              $platformIcon = match($entry['platform'] ?? '') {
-                  'tiktok'    => '🎵',
-                  'instagram' => '📸',
-                  'facebook'  => '📘',
-                  default     => '🎬',
-              };
+              $platformIcon = getPlatformIcon($entry['platform'] ?? '', '1.2rem');
               $rankLabel = $entry['rank_position'] ? '#' . $entry['rank_position'] : 'Unranked';
             ?>
             <div class="col-md-6">
               <div class="card-dark p-3">
                 <div class="d-flex align-items-center gap-2 mb-2">
-                  <span style="font-size:1.2rem"><?= $platformIcon ?></span>
+                  <span><?= $platformIcon ?></span>
                   <h6 class="fw-700 mb-0" style="font-size:0.9rem"><?= e($entry['contest_title']) ?></h6>
                 </div>
                 <div class="d-flex gap-3 text-muted mb-2" style="font-size:0.8rem">
@@ -430,10 +425,10 @@ renderNav(true, ['username' => $username], $mode);
             <span style="font-size:0.82rem;color:#ff0000">▶ <?= e($profile['youtube_handle']) ?></span>
           <?php endif; ?>
           <?php if (!empty($profile['tiktok_handle'])): ?>
-            <span style="font-size:0.82rem;color:var(--accent)">🎵 <?= e($profile['tiktok_handle']) ?></span>
+            <span style="font-size:0.82rem;color:var(--accent)"><?= getPlatformIcon('tiktok', '1rem') ?> <?= e($profile['tiktok_handle']) ?></span>
           <?php endif; ?>
           <?php if (!empty($profile['instagram_handle'])): ?>
-            <span style="font-size:0.82rem;color:#e1306c">📸 <?= e($profile['instagram_handle']) ?></span>
+            <span style="font-size:0.82rem;color:#e1306c"><?= getPlatformIcon('instagram', '1rem') ?> <?= e($profile['instagram_handle']) ?></span>
           <?php endif; ?>
           <?php if (empty($profile['youtube_handle']) && empty($profile['tiktok_handle']) && empty($profile['instagram_handle'])): ?>
             <a href="/profile" class="text-accent text-decoration-none" style="font-size:0.82rem">+ Add social handles</a>

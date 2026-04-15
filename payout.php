@@ -71,7 +71,7 @@ renderNav(true, ['username' => $username], $userMode);
         <?php if (!empty($pendingWins)): ?>
           <?php foreach ($pendingWins as $win): ?>
             <?php
-              $pIcon = match($win['platform'] ?? '') { 'tiktok'=>'🎵','instagram'=>'📸','facebook'=>'📘',default=>'🎬' };
+              $pIcon = getPlatformIcon($win['platform'] ?? '', '1.5rem');
               $perWinner = (int)$win['winner_count'] > 0
                   ? round((float)$win['prize_amount'] / (int)$win['winner_count'], 2)
                   : 0;

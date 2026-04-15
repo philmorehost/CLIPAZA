@@ -65,7 +65,7 @@ renderNav(true, ['username' => $username], 'creator');
           <?php if (!empty($platforms)): ?>
             <div class="mb-3">
               <?php foreach ($platforms as $p): ?>
-                <?php $pIcon = match($p['platform']) { 'tiktok'=>'🎵','instagram'=>'📸','facebook'=>'📘',default=>'🎬' }; ?>
+                <?php $pIcon = getPlatformIcon($p['platform'], '1.1rem'); ?>
                 <div class="d-flex justify-content-between py-2" style="border-bottom:1px solid #1a1a1a;font-size:0.88rem">
                   <span><?= $pIcon ?> <?= ucfirst(e($p['platform'])) ?> (<?= (int)$p['winner_count'] ?> winners)</span>
                   <span class="fw-600">₦<?= number_format((float)$p['prize_amount'], 0) ?></span>

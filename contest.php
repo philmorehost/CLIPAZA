@@ -247,12 +247,7 @@ renderNav($isLoggedIn, ['username' => $username], $userMode);
             <div class="row g-2">
               <?php foreach ($platforms as $p): ?>
                 <?php
-                  $pIcon = match($p['platform']) {
-                    'tiktok'    => '🎵',
-                    'instagram' => '📸',
-                    'facebook'  => '📘',
-                    default     => '🎬',
-                  };
+                  $pIcon = getPlatformIcon($p['platform'], '1.5rem');
                   $perWinner = $p['winner_count'] > 0
                       ? number_format((float)$p['prize_amount'] / (int)$p['winner_count'], 0)
                       : '0';
@@ -277,7 +272,7 @@ renderNav($isLoggedIn, ['username' => $username], $userMode);
             <ul class="nav nav-tabs mb-3" id="lbTabs" style="border-bottom:1px solid var(--border)">
               <?php foreach ($platforms as $idx => $p): ?>
                 <?php
-                  $pIcon = match($p['platform']) { 'tiktok'=>'🎵','instagram'=>'📸','facebook'=>'📘',default=>'' };
+                  $pIcon = getPlatformIcon($p['platform'], '1rem');
                 ?>
                 <li class="nav-item">
                   <button class="nav-link <?= $idx===0?'active':'' ?> text-theme"
@@ -385,11 +380,10 @@ renderNav($isLoggedIn, ['username' => $username], $userMode);
                   <option value="">Select platform</option>
                   <?php foreach ($platforms as $p): ?>
                     <?php
-                      $pIcon = match($p['platform']) { 'tiktok'=>'🎵','instagram'=>'📸','facebook'=>'📘',default=>'' };
                       $alreadySubmitted = isset($myEntries[$p['platform']]);
                     ?>
                     <option value="<?= e($p['platform']) ?>" <?= $alreadySubmitted ? 'disabled' : '' ?>>
-                      <?= $pIcon ?> <?= ucfirst(e($p['platform'])) ?> <?= $alreadySubmitted ? '(submitted)' : '' ?>
+                      <?= ucfirst(e($p['platform'])) ?> <?= $alreadySubmitted ? '(submitted)' : '' ?>
                     </option>
                   <?php endforeach; ?>
                 </select>

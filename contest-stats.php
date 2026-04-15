@@ -174,7 +174,7 @@ renderNav(true, ['username' => $username], $userMode);
     <!-- Per-platform breakdown -->
     <?php foreach ($platformStats as $platform => $ps): ?>
     <?php
-      $pIcon = match($platform) { 'tiktok'=>'🎵','instagram'=>'📸','facebook'=>'📘',default=>'' };
+      $pIcon = getPlatformIcon($platform, '1rem');
     ?>
     <div class="card-dark p-4 mb-4">
       <h6 class="fw-700 mb-3"><?= $pIcon ?> <?= ucfirst(e($platform)) ?> Platform</h6>
@@ -317,7 +317,7 @@ renderNav(true, ['username' => $username], $userMode);
                 'rejected' => 'badge-danger',
                 default    => 'badge-muted',
               };
-              $pIcon  = match($entry['platform']) { 'tiktok'=>'🎵','instagram'=>'📸','facebook'=>'📘',default=>'' };
+              $pIcon  = getPlatformIcon($entry['platform'], '1rem');
             ?>
             <tr>
               <td><?= e($entry['username']) ?></td>

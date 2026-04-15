@@ -99,10 +99,10 @@ renderNav($isLoggedIn, ['username' => $username], $userMode);
                             <span title="YouTube" style="color:#ff0000; font-size:1.2rem">▶</span>
                         <?php endif; ?>
                         <?php if (!empty($profile['tiktok_handle'])): ?>
-                            <span title="TikTok" style="color:var(--accent); font-size:1.2rem">🎵</span>
+                            <span title="TikTok"><?= getPlatformIcon('tiktok', '1.2rem') ?></span>
                         <?php endif; ?>
                         <?php if (!empty($profile['instagram_handle'])): ?>
-                            <span title="Instagram" style="color:#e1306c; font-size:1.2rem">📸</span>
+                            <span title="Instagram"><?= getPlatformIcon('instagram', '1.2rem') ?></span>
                         <?php endif; ?>
                     </div>
 
@@ -144,7 +144,7 @@ renderNav($isLoggedIn, ['username' => $username], $userMode);
                                                     </div>
                                                 </td>
                                                 <td>
-                                                    <span style="font-size:0.9rem"><?= match($clip['platform']){'tiktok'=>'🎵','instagram'=>'📸','facebook'=>'📘',default=>'🎬'} ?></span>
+                                                    <span style="font-size:0.9rem"><?= getPlatformIcon($clip['platform'], '1.2rem') ?></span>
                                                 </td>
                                                 <td class="text-accent fw-700"><?= number_format((int)$clip['view_count']) ?></td>
                                                 <td>
