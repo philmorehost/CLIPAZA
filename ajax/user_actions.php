@@ -56,6 +56,7 @@ function handleSwitchMode(int $userId): never {
 function handleUpdateProfile(int $userId): never {
     $displayName     = sanitizeInput($_POST['display_name'] ?? '');
     $bio             = sanitizeInput($_POST['bio'] ?? '');
+    $brandDesc       = sanitizeInput($_POST['brand_description'] ?? '');
     $youtubeHandle   = sanitizeInput($_POST['youtube_handle'] ?? '');
     $tiktokHandle    = sanitizeInput($_POST['tiktok_handle'] ?? '');
     $instagramHandle = sanitizeInput($_POST['instagram_handle'] ?? '');
@@ -67,6 +68,7 @@ function handleUpdateProfile(int $userId): never {
             "UPDATE user_profiles SET
                display_name = ?,
                bio = ?,
+               brand_description = ?,
                youtube_handle = ?,
                tiktok_handle = ?,
                instagram_handle = ?,
@@ -75,6 +77,7 @@ function handleUpdateProfile(int $userId): never {
         )->execute([
             $displayName ?: null,
             $bio ?: null,
+            $brandDesc ?: null,
             $youtubeHandle ?: null,
             $tiktokHandle ?: null,
             $instagramHandle ?: null,

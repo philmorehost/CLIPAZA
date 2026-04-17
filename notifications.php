@@ -60,7 +60,7 @@ renderNav(true, ['username' => $username], $userMode);
           <p class="text-muted" style="font-size:0.9rem">You have no notifications.</p>
         </div>
         <?php else: ?>
-        <div class="d-flex flex-column gap-2">
+        <div class="d-flex flex-column gap-3">
           <?php foreach ($notifications as $n): ?>
           <?php
             $iconMap = [
@@ -78,20 +78,24 @@ renderNav(true, ['username' => $username], $userMode);
             $icon = $iconMap[$n['type']] ?? '🔔';
             $isUnread = !$n['is_read'];
           ?>
-          <div class="card-dark p-4 d-flex align-items-start gap-3" style="<?= $isUnread ? 'border-color:rgba(204,255,0,0.2);' : '' ?>">
-            <div style="font-size:1.6rem;flex-shrink:0;margin-top:2px"><?= $icon ?></div>
+          <div class="card-dark p-3 p-md-4 d-flex align-items-center gap-3 shadow-sm" style="<?= $isUnread ? 'border-left: 5px solid var(--accent); background: rgba(204,255,0,0.03);' : 'border-left: 5px solid #222;' ?> transition: transform 0.2s ease; cursor: default;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+            <div class="notif-icon-wrap d-flex align-items-center justify-content-center" style="width:50px; height:50px; background: var(--bg-secondary); border-radius: 12px; font-size:1.5rem; flex-shrink:0;">
+              <?= $icon ?>
+            </div>
             <div class="flex-grow-1">
-              <div class="d-flex align-items-center justify-content-between">
-                <strong style="font-size:0.92rem;color:<?= $isUnread ? 'var(--accent)' : '#fff' ?>"><?= e($n['title']) ?></strong>
-                <span style="font-size:0.75rem;color:var(--text-muted);white-space:nowrap;margin-left:12px"><?= e(timeAgo($n['created_at'])) ?></span>
+              <div class="d-flex align-items-center justify-content-between mb-1">
+                <h6 class="mb-0 fw-700" style="font-size:0.95rem; color:<?= $isUnread ? 'var(--accent)' : 'var(--text)' ?>"><?= e($n['title']) ?></h6>
+                <span style="font-size:0.75rem; color:var(--text-muted); white-space:nowrap; margin-left:12px;"><?= e(timeAgo($n['created_at'])) ?></span>
               </div>
-              <p style="font-size:0.85rem;color:var(--text-secondary);margin:4px 0 0"><?= e($n['message']) ?></p>
+              <p class="mb-0" style="font-size:0.88rem; color:var(--text-secondary); line-height: 1.5;"><?= e($n['message']) ?></p>
               <?php if (!empty($n['link'])): ?>
-              <a href="<?= e($n['link']) ?>" style="font-size:0.8rem;color:var(--accent);margin-top:4px;display:inline-block">View →</a>
+                <div class="mt-2">
+                  <a href="<?= e($n['link']) ?>" class="btn btn-xs btn-outline-accent" style="font-size:0.75rem; border-radius: 6px; padding: 4px 12px;">View Details →</a>
+                </div>
               <?php endif; ?>
             </div>
             <?php if ($isUnread): ?>
-            <div style="width:8px;height:8px;background:var(--accent);border-radius:50%;flex-shrink:0;margin-top:8px"></div>
+              <div class="ms-2" style="width:10px; height:10px; background:var(--accent); border-radius:50%; box-shadow: 0 0 8px var(--accent); flex-shrink:0;"></div>
             <?php endif; ?>
           </div>
           <?php endforeach; ?>

@@ -328,8 +328,46 @@ function fmtStat(int|float $n, string $prefix = '', string $suffix = ''): string
     </div>
 </section>
 
+<!-- Brands & Creators Section -->
+<section class="lp-section" id="brands">
+    <div class="container">
+        <div class="text-center mb-5">
+            <div class="lp-section-eyebrow">Engagement & Rewards</div>
+            <h2 class="lp-section-title"><?= htmlspecialchars(getSetting('lp_brands_title', 'Where Creators and Brands Rewards their biggest fans')) ?></h2>
+            <p class="lp-section-sub">
+                <?= nl2br(htmlspecialchars(getSetting('lp_brands_sub', "Pick a contest from their favorite youtube creators/favorite musician/favorite artist/favorite brands. Clip their best moments, post it on tiktok reals or shorts and let the views decides who wins."))) ?>
+            </p>
+        </div>
+
+        <div class="card-dark p-4 p-md-5 text-center" style="background: linear-gradient(135deg, rgba(204,255,0,0.05) 0%, rgba(0,0,0,0) 100%); border: 1px solid rgba(204,255,0,0.1); border-radius: 20px;">
+            <div class="row g-4 align-items-center">
+                <div class="col-lg-7 text-lg-start">
+                    <h3 class="fw-800 mb-3" style="font-size: 1.75rem;">Support the brands and creators you love.</h3>
+                    <p class="text-muted mb-4" style="font-size: 1rem; line-height: 1.6;">
+                        <?= nl2br(htmlspecialchars(getSetting('lp_brands_content', "Clipaza connects fans with their idols. Whether it's a breakout musician, a top-tier YouTube creator, or a global brand, you can now turn your fandom into rewards. Find an active contest, showcase your editing skills, and win real cash while helping your favorites grow."))) ?>
+                    </p>
+                    <div class="d-flex flex-wrap gap-3 justify-content-center justify-content-lg-start">
+                        <a href="/contests" class="btn btn-accent px-4 py-2" style="font-weight: 700; border-radius: 10px;">Explore Contests</a>
+                        <a href="/auth/register?mode=creator" class="btn btn-outline-accent px-4 py-2" style="font-weight: 700; border-radius: 10px;">Partner as a Brand</a>
+                    </div>
+                </div>
+                <div class="col-lg-5">
+                    <div class="d-flex flex-wrap justify-content-center gap-3">
+                        <div class="brand-badge p-3" style="background: var(--bg-secondary); border-radius: 15px; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; font-size: 2rem;">🎵</div>
+                        <div class="brand-badge p-3" style="background: var(--bg-secondary); border-radius: 15px; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; font-size: 2rem;">🎸</div>
+                        <div class="brand-badge p-3" style="background: var(--bg-secondary); border-radius: 15px; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; font-size: 2rem;">📺</div>
+                        <div class="brand-badge p-3" style="background: var(--bg-secondary); border-radius: 15px; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; font-size: 2rem;">🎮</div>
+                        <div class="brand-badge p-3" style="background: var(--bg-secondary); border-radius: 15px; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; font-size: 2rem;">👟</div>
+                        <div class="brand-badge p-3" style="background: var(--bg-secondary); border-radius: 15px; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; font-size: 2rem;">🎬</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
 <!-- How It Works -->
-<section class="lp-section" id="how-it-works">
+<section class="lp-section lp-section--alt" id="how-it-works">
     <div class="container">
         <div class="text-center mb-5">
             <div class="lp-section-eyebrow">Simple Process</div>
@@ -365,7 +403,7 @@ function fmtStat(int|float $n, string $prefix = '', string $suffix = ''): string
 </section>
 
 <!-- Features Section -->
-<section class="lp-section lp-section--alt" id="features" style="<?= getSetting('lp_hide_features', '0') === '1' ? 'display:none' : '' ?>">
+<section class="lp-section" id="features" style="<?= getSetting('lp_hide_features', '0') === '1' ? 'display:none' : '' ?>">
     <div class="container">
         <div class="text-center mb-5">
             <div class="lp-section-eyebrow">Platform Features</div>
@@ -400,7 +438,7 @@ function fmtStat(int|float $n, string $prefix = '', string $suffix = ''): string
 </section>
 
 <!-- For Creators / For Fans Split -->
-<section class="lp-section" id="creators">
+<section class="lp-section lp-section--alt" id="creators">
     <div class="container">
         <div class="text-center mb-5">
             <div class="lp-section-eyebrow">Two Sides, One Platform</div>
@@ -450,7 +488,7 @@ function fmtStat(int|float $n, string $prefix = '', string $suffix = ''): string
 </section>
 
 <!-- Leaderboard Preview -->
-<section class="lp-section lp-section--alt">
+<section class="lp-section">
     <div class="container">
         <div class="text-center mb-5">
             <div class="lp-section-eyebrow">Live Rankings</div>

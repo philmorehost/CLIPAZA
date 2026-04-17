@@ -110,6 +110,13 @@ $ini = strtoupper(substr($dn, 0, 1));
               <label class="form-label-dark">Bio</label>
               <textarea name="bio" class="form-control-dark" rows="3" maxlength="500" placeholder="Tell us about yourself…"><?= e($profile['bio'] ?? '') ?></textarea>
             </div>
+            <?php if ($userMode === 'creator'): ?>
+            <div class="mb-3">
+              <label class="form-label-dark">Brand Description / Clipper Instructions</label>
+              <textarea name="brand_description" class="form-control-dark" rows="5" placeholder="Describe your brand and provide specific instructions for clippers…"><?= e($profile['brand_description'] ?? '') ?></textarea>
+              <div class="form-text text-muted" style="font-size:0.75rem">This will be displayed on the Clipper Dashboard for clippers who join your contests.</div>
+            </div>
+            <?php endif; ?>
             <div id="profileFeedback" class="mb-2"></div>
             <button type="submit" class="btn btn-accent">Save Changes</button>
           </form>

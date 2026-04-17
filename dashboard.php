@@ -126,6 +126,19 @@ if ($mode === 'creator') {
         );
         $clipperLB = $stmt->fetchAll();
 
+        // Brand Descriptions / Instructions for clippers
+        $brandInstructions = [];
+        $stmt = $db->prepare(
+            "SELECT DISTINCT u.username, up.brand_description, up.display_name
+             FROM contest_entries ce
+             INNER JOIN contests c ON c.id = ce.contest_id
+             INNER JOIN users u ON u.id = c.creator_id
+             INNER JOIN user_profiles up ON up.user_id = u.id
+             WHERE ce.user_id = ? AND up.brand_description IS NOT NULL AND up.brand_description != ''"
+        );
+        $stmt->execute([$userId]);
+        $brandInstructions = $stmt->fetchAll();
+
     } catch (Throwable) {}
 }
 
@@ -346,6 +359,26 @@ renderNav(true, ['username' => $username], $mode);
         <h6 class="fw-700 mb-0">Your Submissions</h6>
         <a href="/contests" class="btn btn-accent btn-sm">Browse Contests</a>
       </div>
+
+      <?php if (!empty($brandInstructions)): ?>
+        <div class="mb-4">
+          <h6 class="fw-700 mb-3">📢 Brand Instructions</h6>
+          <div class="row g-3">
+            <?php foreach ($brandInstructions as $bi): ?>
+              <div class="col-12">
+                <div class="card-dark p-3" style="border-left: 4px solid var(--accent);">
+                  <div class="fw-700 mb-2" style="font-size:0.9rem; color:var(--accent);">
+                    Instructions from <?= e($bi['display_name'] ?: $bi['username']) ?> (@<?= e($bi['username']) ?>)
+                  </div>
+                  <div class="text-muted" style="font-size:0.85rem; line-height:1.6;">
+                    <?= nl2br(e($bi['brand_description'])) ?>
+                  </div>
+                </div>
+              </div>
+            <?php endforeach; ?>
+          </div>
+        </div>
+      <?php endif; ?>
 
       <?php if (empty($myEntries)): ?>
         <div class="card-dark p-5 text-center">

@@ -238,6 +238,14 @@ function ss(array $settings, string $key, string $default = ''): string {
                     <div class="mb-3"><label class="form-label-dark">Hero Subtext</label><textarea name="lp_hero_sub" class="form-control form-control-dark" rows="3"><?= ss($siteSettings, 'lp_hero_sub') ?></textarea></div>
                 </div>
             </div>
+            <div class="card-dark mb-4">
+                <div class="card-header">Brands & Creators Section</div>
+                <div class="card-body">
+                    <div class="mb-3"><label class="form-label-dark">Brands Section Title</label><input type="text" name="lp_brands_title" class="form-control form-control-dark" value="<?= ss($siteSettings, 'lp_brands_title') ?>"></div>
+                    <div class="mb-3"><label class="form-label-dark">Brands Section Subtitle</label><textarea name="lp_brands_sub" class="form-control form-control-dark" rows="3"><?= ss($siteSettings, 'lp_brands_sub') ?></textarea></div>
+                    <div class="mb-3"><label class="form-label-dark">Brands Section Content</label><textarea name="lp_brands_content" class="form-control form-control-dark" rows="4"><?= ss($siteSettings, 'lp_brands_content') ?></textarea></div>
+                </div>
+            </div>
                     <div class="row g-3">
                         <div class="col-md-6"><label class="form-label-dark">Start Contest Button</label><input type="text" name="lp_hero_btn_creator" class="form-control form-control-dark" value="<?= ss($siteSettings, "lp_hero_btn_creator") ?>"></div>
                         <div class="col-md-6"><label class="form-label-dark">Join as Fan Button</label><input type="text" name="lp_hero_btn_fan" class="form-control form-control-dark" value="<?= ss($siteSettings, "lp_hero_btn_fan") ?>"></div>

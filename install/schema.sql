@@ -270,6 +270,7 @@ CREATE TABLE IF NOT EXISTS `user_profiles` (
   `bank_code` varchar(20) DEFAULT NULL,
   `account_number` varchar(20) DEFAULT NULL,
   `account_name` varchar(200) DEFAULT NULL,
+  `brand_description` text DEFAULT NULL,
   `disclaimer_accepted` tinyint(1) NOT NULL DEFAULT 0,
   `disclaimer_accepted_at` datetime DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,

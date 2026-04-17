@@ -193,6 +193,7 @@ function handleSaveLanding(): never {
         'lp_hero_title'=>200, 'lp_hero_accent'=>200, 'lp_hero_sub'=>1000,
         'lp_hero_btn_creator'=>50, 'lp_hero_btn_fan'=>50,
         'lp_hiw_title'=>200, 'lp_trending_title_accent'=>200,
+        'lp_brands_title'=>200, 'lp_brands_sub'=>1000, 'lp_brands_content'=>1500,
         'lp_lb_title_accent'=>200, 'lp_lb_text'=>1500,
         'lp_step1_title'=>200, 'lp_step1_desc'=>500,
         'lp_step2_title'=>200, 'lp_step2_desc'=>500,
