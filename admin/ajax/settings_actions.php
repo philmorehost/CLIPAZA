@@ -121,6 +121,10 @@ function handleSaveGeneral(): never {
     saveSiteSetting('site_name', $siteName);
     $theme = $_POST['default_theme'] ?? 'dark';
     saveSiteSetting('default_theme', in_array($theme, ['dark', 'light'], true) ? $theme : 'dark');
+
+    saveSiteSetting('google_client_id', sanitizeInput($_POST['google_client_id'] ?? ''));
+    saveSiteSetting('google_client_secret', sanitizeInput($_POST['google_client_secret'] ?? ''));
+
     try {
         $logoPath = processUpload('site_logo', $root . '/uploads/logo', ['png', 'jpg', 'jpeg']);
         if ($logoPath !== '') {

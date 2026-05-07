@@ -126,6 +126,21 @@ function ss(array $settings, string $key, string $default = ''): string {
                             </div>
                         </div>
                     </div>
+
+                    <div class="card-dark mt-4">
+                        <div class="card-header">Google Authentication</div>
+                        <div class="card-body">
+                            <div class="mb-4">
+                                <label class="form-label-dark">Google Client ID</label>
+                                <input type="text" name="google_client_id" class="form-control form-control-dark" value="<?= ss($siteSettings, 'google_client_id') ?>" placeholder="xxxxxxxx.apps.googleusercontent.com">
+                            </div>
+                            <div class="mb-0">
+                                <label class="form-label-dark">Google Client Secret</label>
+                                <input type="password" name="google_client_secret" class="form-control form-control-dark" value="<?= ss($siteSettings, 'google_client_secret') ?>" placeholder="GOCSPX-xxxxxxxx">
+                                <div class="form-text text-muted">Used for Google Social Login. Redirect URI: <code><?= (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') ?>/auth/google-callback.php</code></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="col-md-4">
                     <div class="card-dark mb-4">
