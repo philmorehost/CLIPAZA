@@ -43,13 +43,16 @@ function handleSwitchMode(int $userId): never {
 
         $newMode = ($profile['active_mode'] ?? 'clipper') === 'clipper' ? 'creator' : 'clipper';
 
-        $db->prepare('UPDATE user_profiles SET active_mode = ? WHERE user_id = ?')
-           ->execute([$newMode, $userId]);
+        // Use INSERT ... ON DUPLICATE KEY UPDATE to ensure the profile record exists.
+        $db->prepare(
+            'INSERT INTO user_profiles (user_id, active_mode) VALUES (?, ?)
+             ON DUPLICATE KEY UPDATE active_mode = VALUES(active_mode)'
+        )->execute([$userId, $newMode]);
 
         $_SESSION['user_mode'] = $newMode;
         jsonResponse(['success' => true, 'new_mode' => $newMode]);
-    } catch (Throwable) {
-        jsonResponse(['success' => false, 'message' => 'Failed to switch mode.']);
+    } catch (Throwable $e) {
+        jsonResponse(['success' => false, 'message' => 'Failed to switch mode: ' . $e->getMessage()]);
     }
 }
 

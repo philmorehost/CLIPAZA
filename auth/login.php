@@ -103,8 +103,8 @@ renderHead('Sign In');
           <input type="password" name="password" class="form-control-dark" placeholder="Your password" autocomplete="current-password" required>
         </div>
         <div class="mb-4 d-flex align-items-center gap-2">
-          <input class="form-check-input" type="checkbox" name="remember_me" id="rememberMe" style="background:var(--bg-secondary);border-color:#555">
-          <label class="form-check-label text-muted" for="rememberMe" style="font-size:0.85rem">Remember me</label>
+          <input class="form-check-input" type="checkbox" name="remember_me" id="rememberMe" style="border-color:#555">
+          <label class="form-check-label text-muted" for="rememberMe" style="font-size:0.85rem; cursor:pointer">Remember me</label>
         </div>
         <button type="submit" class="btn btn-accent w-100">Sign In</button>
       </form>

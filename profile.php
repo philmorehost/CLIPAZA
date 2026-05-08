@@ -226,14 +226,27 @@ submitAjaxForm('profileForm', 'profileFeedback');
 submitAjaxForm('socialForm', 'socialFeedback');
 
 document.getElementById('modeSwitchBtn')?.addEventListener('click', async function() {
-  this.disabled = true;
-  const r = await fetch('/ajax/user_actions.php', {
-    method:'POST',
-    body: new URLSearchParams({ action:'switch_mode', csrf_token: csrf })
-  });
-  const d = await r.json();
-  if (d.success) location.reload();
-  else this.disabled = false;
+  const btn = this;
+  btn.disabled = true;
+  const originalText = btn.textContent;
+  btn.textContent = 'Switching...';
+  try {
+    const r = await fetch('/ajax/user_actions.php', {
+      method:'POST',
+      body: new URLSearchParams({ action:'switch_mode', csrf_token: csrf })
+    });
+    const d = await r.json();
+    if (d.success) location.reload();
+    else {
+        btn.disabled = false;
+        btn.textContent = originalText;
+        alert(d.message || 'Failed to switch mode.');
+    }
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = originalText;
+    alert('Network error.');
+  }
 });
 
 document.getElementById('notifToggle')?.addEventListener('click', async function() {

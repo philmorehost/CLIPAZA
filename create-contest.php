@@ -170,7 +170,7 @@ renderNav(true, ['username' => $username], 'creator');
             <div class="d-flex flex-wrap gap-3">
               <?php foreach (['must_subscribe' => 'Must Subscribe', 'must_like' => 'Must Like', 'must_comment' => 'Must Comment'] as $name => $label): ?>
                 <label class="d-flex align-items-center gap-2 cursor-pointer">
-                  <input type="checkbox" name="<?= $name ?>" class="form-check-input" style="background:var(--input-bg);border-color:var(--text-placeholder);width:18px;height:18px">
+                  <input type="checkbox" name="<?= $name ?>" id="<?= $name ?>" class="form-check-input" style="border-color:var(--text-placeholder);width:18px;height:18px">
                   <span style="font-size:0.9rem"><?= $label ?></span>
                 </label>
               <?php endforeach; ?>
@@ -206,7 +206,7 @@ renderNav(true, ['username' => $username], 'creator');
                 <div class="d-flex align-items-center gap-2 mb-2">
                   <input type="checkbox" name="enable_<?= $pKey ?>" id="enable_<?= $pKey ?>"
                          class="form-check-input platform-toggle" data-platform="<?= $pKey ?>"
-                         style="background:var(--input-bg);border-color:var(--text-placeholder);width:18px;height:18px">
+                         style="border-color:var(--text-placeholder);width:18px;height:18px">
                   <label for="enable_<?= $pKey ?>" class="fw-600" style="cursor:pointer"><?= getPlatformIcon($pKey, '1.2rem') ?> <?= $label ?></label>
                 </div>
                 <div class="row g-2 platform-fields" id="fields_<?= $pKey ?>" style="display:none">
@@ -224,7 +224,7 @@ renderNav(true, ['username' => $username], 'creator');
                     <div class="form-check d-flex align-items-center gap-2">
                       <input type="checkbox" name="<?= $pKey ?>_winner_takes_all" id="wta_<?= $pKey ?>"
                              class="form-check-input winner-takes-all-toggle" data-platform="<?= $pKey ?>"
-                             style="background:var(--input-bg);border-color:var(--text-placeholder);width:16px;height:16px">
+                             style="border-color:var(--text-placeholder);width:16px;height:16px">
                       <label for="wta_<?= $pKey ?>" class="text-muted" style="cursor:pointer;font-size:0.8rem">
                         Winner Takes All (1 winner gets full platform prize)
                       </label>
