@@ -64,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <div style="width:100%;max-width:400px;padding:24px;">
     <div class="text-center mb-4">
         <div style="font-size:1.8rem;font-weight:900;letter-spacing:-1px;">Clipa<span style="color:#CCFF00;">za</span></div>
-        <p style="color:#555;font-size:0.875rem;margin-top:4px;">Admin Panel</p>
+        <p style="color:#888;font-size:0.875rem;margin-top:4px;">Admin Panel</p>
     </div>
 
     <div class="card-dark">
@@ -96,8 +96,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </div>
 
-    <p class="text-center mt-3" style="font-size:0.8rem;color:#555;">
-        <a href="../" style="color:#555;">← Back to site</a>
+    <p class="text-center mt-3" style="font-size:0.8rem;color:#888;">
+        <a href="../" style="color:#888;">← Back to site</a>
     </p>
 </div>
 

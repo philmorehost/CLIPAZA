@@ -25,7 +25,7 @@ if (version_compare(PHP_VERSION, '8.0.0', '<')) {
         .box{background:#fff;border-left:4px solid #e74c3c;border-radius:4px;
              padding:2rem 2.5rem;max-width:480px;box-shadow:0 2px 8px rgba(0,0,0,.1)}
         h2{margin-top:0;color:#e74c3c}
-        p{line-height:1.6;color:#555}
+        p{line-height:1.6;color:#888}
         code{background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:.9em}
     </style>
 </head>
@@ -177,7 +177,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['waitlist_email'])) {
                 <?php if (file_exists($configFile) && !empty($_SESSION['user_id'])): ?>
                     <a href="/dashboard" class="btn btn-sm btn-outline-accent" style="padding:8px 16px;font-size:0.85rem">Dashboard</a>
                 <?php else: ?>
-                    <a href="/auth/login" class="btn btn-sm" style="padding:8px 16px;font-size:0.85rem;background:transparent;color:#aaa;border:1px solid #333">Login</a>
+                    <a href="/auth/login" class="btn btn-sm" style="padding:8px 16px;font-size:0.85rem;background:transparent;color:#ccc;border:1px solid #333">Login</a>
                     <a href="/auth/register" class="btn btn-accent" style="padding:10px 22px;font-size:0.875rem;">Sign Up Free</a>
                 <?php endif; ?>
             </div>
@@ -479,7 +479,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['waitlist_email'])) {
             </div>
             <?php endforeach; ?>
             <div class="lp-lb-footer">
-                <em style="color:#555;font-size:0.8rem;">* Sample data for illustration purposes</em>
+                <em style="color:#888;font-size:0.8rem;">* Sample data for illustration purposes</em>
             </div>
         </div>
     </div>
@@ -517,7 +517,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['waitlist_email'])) {
                 Clipa<span>za</span>
                 <?php endif; ?>
             </div>
-            <p style="font-size:0.8rem;color:#555;margin:0;">© <?= date('Y') ?> <?= htmlspecialchars($siteName) ?>. All rights reserved.</p>
+            <p style="font-size:0.8rem;color:#888;margin:0;">© <?= date('Y') ?> <?= htmlspecialchars($siteName) ?>. All rights reserved.</p>
             <div class="d-flex gap-4 align-items-center flex-wrap justify-content-center">
                 <a href="#" class="lp-footer-link">Privacy</a>
                 <a href="#" class="lp-footer-link">Terms</a>

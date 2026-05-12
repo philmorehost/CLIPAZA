@@ -1,3 +1,4 @@
+:root { --text-muted: #aaaaaa; --text-secondary: #cccccc; }
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
 :root {
@@ -533,4 +534,8 @@ select.form-control-dark option { background: #111; color: #fff; }
   .stat-value { font-size: 1.4rem; }
   .lb-stat { display: none; }
   .contest-thumb { height: 130px; }
+}
+:root {
+  --text-muted: #aaaaaa;
+  --text-secondary: #cccccc;
 }

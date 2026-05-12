@@ -94,7 +94,7 @@ try {
             <button id="sidebarToggle" class="btn d-lg-none" style="color:#888;background:rgba(255,255,255,0.05);border-radius:8px;padding:6px 10px;">☰</button>
             <h1>Dashboard</h1>
         </div>
-        <div style="font-size:0.875rem;color:#555;">
+        <div style="font-size:0.875rem;color:#888;">
             Welcome, <strong style="color:#fff;"><?= htmlspecialchars($_SESSION['username'] ?? '') ?></strong>
         </div>
     </div>
@@ -151,7 +151,7 @@ try {
                     </thead>
                     <tbody>
                         <?php if (empty($loginHistory)): ?>
-                        <tr><td colspan="5" class="text-center py-4" style="color:#555;">No login history yet.</td></tr>
+                        <tr><td colspan="5" class="text-center py-4" style="color:#888;">No login history yet.</td></tr>
                         <?php else: ?>
                         <?php foreach ($loginHistory as $entry): ?>
                         <tr>
@@ -161,7 +161,7 @@ try {
                                 <span class="badge-accent ms-1" style="font-size:0.65rem;">admin</span>
                                 <?php endif; ?>
                             </td>
-                            <td><code style="color:#aaa;font-size:0.8rem;"><?= htmlspecialchars($entry['ip_address']) ?></code></td>
+                            <td><code style="color:#ccc;font-size:0.8rem;"><?= htmlspecialchars($entry['ip_address']) ?></code></td>
                             <td>
                                 <?php
                                 $actionClass = match($entry['action']) {
@@ -197,15 +197,15 @@ try {
                     $userEnabled = getSecuritySetting('username_protection_enabled', '1') === '1';
                     ?>
                     <div class="d-flex align-items-center justify-content-between py-2 border-bottom" style="border-color:#222!important;">
-                        <span style="color:#aaa;font-size:0.875rem;">IP Brute Force Protection</span>
+                        <span style="color:#ccc;font-size:0.875rem;">IP Brute Force Protection</span>
                         <span class="<?= $ipEnabled ? 'badge-success' : 'badge-danger' ?>"><?= $ipEnabled ? 'Active' : 'Disabled' ?></span>
                     </div>
                     <div class="d-flex align-items-center justify-content-between py-2 border-bottom" style="border-color:#222!important;">
-                        <span style="color:#aaa;font-size:0.875rem;">Username Protection</span>
+                        <span style="color:#ccc;font-size:0.875rem;">Username Protection</span>
                         <span class="<?= $userEnabled ? 'badge-success' : 'badge-danger' ?>"><?= $userEnabled ? 'Active' : 'Disabled' ?></span>
                     </div>
                     <div class="d-flex align-items-center justify-content-between py-2">
-                        <span style="color:#aaa;font-size:0.875rem;">Blocked IPs</span>
+                        <span style="color:#ccc;font-size:0.875rem;">Blocked IPs</span>
                         <span class="<?= $blockedIps > 0 ? 'badge-warning' : 'badge-success' ?>"><?= $blockedIps ?></span>
                     </div>
                     <div class="mt-3">

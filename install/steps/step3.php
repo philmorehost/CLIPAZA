@@ -165,7 +165,7 @@ $siteUrl = $_SESSION['site_config']['siteUrl'] ?? (isset($_SERVER['HTTPS']) && $
     </div>
 
     <hr class="divider-dark">
-    <p style="font-size:0.8rem;color:#555;margin-bottom:16px;">SMTP Settings (optional — leave blank to use PHP mail)</p>
+    <p style="font-size:0.8rem;color:#888;margin-bottom:16px;">SMTP Settings (optional — leave blank to use PHP mail)</p>
 
     <div class="row g-3">
         <div class="col-md-8">

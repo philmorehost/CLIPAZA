@@ -25,7 +25,7 @@ if (version_compare(PHP_VERSION, '8.0.0', '<')) {
         .box{background:#fff;border-left:4px solid #e74c3c;border-radius:4px;
              padding:2rem 2.5rem;max-width:480px;box-shadow:0 2px 8px rgba(0,0,0,.1)}
         h2{margin-top:0;color:#e74c3c}
-        p{line-height:1.6;color:#555}
+        p{line-height:1.6;color:#888}
         code{background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:.9em}
     </style>
 </head>
@@ -81,7 +81,7 @@ function stepLine(int $s, int $current): string {
 <body>
 <div class="installer-wrapper">
     <div class="installer-logo">Clipa<span>za</span></div>
-    <p style="color:#555;font-size:0.875rem;">Installation Wizard</p>
+    <p style="color:#888;font-size:0.875rem;">Installation Wizard</p>
 
     <div class="installer-card">
         <div class="installer-header">
