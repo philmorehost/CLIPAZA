@@ -81,7 +81,7 @@ class Mailer {
             <p><strong>IP Address:</strong> " . htmlspecialchars($ip, ENT_QUOTES) . "</p>
             <p><strong>Time:</strong> " . htmlspecialchars(date('Y-m-d H:i:s T'), ENT_QUOTES) . "</p>
             <p>If this was not you, please contact support immediately.</p>
-            <hr style='border-color:#333;margin:24px 0;'>
+            <hr style='border-color:#555;margin:24px 0;'>
             <p style='color:#888;font-size:0.85em;'>This is an automated message from {$site}.</p>
         </div>";
         return $this->send($to, $subject, $html);

@@ -62,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admin_next'])) {
     <a href="../admin/login.php" class="btn btn-accent btn-lg pulse-accent">
         Go to Admin Panel →
     </a>
-    <p style="color:#555;font-size:0.8rem;margin-top:16px;">
+    <p style="color:#888;font-size:0.8rem;margin-top:16px;">
         ⚠️ For security, please delete the <code style="color:#CCFF00;">/install</code> directory from your server.
     </p>
 </div>

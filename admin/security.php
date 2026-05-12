@@ -128,7 +128,7 @@ function checked(array $settings, string $key, string $trueVal = '1'): string {
             <button id="sidebarToggle" class="btn d-lg-none" style="color:#888;background:rgba(255,255,255,0.05);border-radius:8px;padding:6px 10px;">☰</button>
             <h1>Security Management</h1>
         </div>
-        <a href="index.php" style="font-size:0.8rem;color:#555;">← Dashboard</a>
+        <a href="index.php" style="font-size:0.8rem;color:#888;">← Dashboard</a>
     </div>
 
     <!-- Tabs -->
@@ -167,7 +167,7 @@ function checked(array $settings, string $key, string $trueVal = '1'): string {
                         <div class="d-flex align-items-center justify-content-between mb-3">
                             <div>
                                 <div style="font-weight:600;font-size:0.875rem;">Enable IP Protection</div>
-                                <div style="font-size:0.8rem;color:#555;">Block IPs with too many failures</div>
+                                <div style="font-size:0.8rem;color:#888;">Block IPs with too many failures</div>
                             </div>
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" name="ip_protection_enabled"
@@ -196,7 +196,7 @@ function checked(array $settings, string $key, string $trueVal = '1'): string {
                         <div class="d-flex align-items-center justify-content-between mb-3">
                             <div>
                                 <div style="font-weight:600;font-size:0.875rem;">Enable Username Protection</div>
-                                <div style="font-size:0.8rem;color:#555;">Lock accounts with too many failures</div>
+                                <div style="font-size:0.8rem;color:#888;">Lock accounts with too many failures</div>
                             </div>
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" name="username_protection_enabled"
@@ -217,7 +217,7 @@ function checked(array $settings, string $key, string $trueVal = '1'): string {
                         <div class="d-flex align-items-center justify-content-between mb-3">
                             <div>
                                 <div style="font-weight:600;font-size:0.875rem;">Apply protection to local addresses only</div>
-                                <div style="font-size:0.8rem;color:#555;">Only enforce username protection for local/private IPs</div>
+                                <div style="font-size:0.8rem;color:#888;">Only enforce username protection for local/private IPs</div>
                             </div>
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" name="protect_local_only"
@@ -226,8 +226,8 @@ function checked(array $settings, string $key, string $trueVal = '1'): string {
                         </div>
                         <div class="d-flex align-items-center justify-content-between">
                             <div>
-                                <div style="font-weight:600;font-size:0.875rem;">Allow username protection to lock the <code style="font-size:0.8rem;color:#aaa;">admin</code> / <code style="font-size:0.8rem;color:#aaa;">administrator</code> user</div>
-                                <div style="font-size:0.8rem;color:#555;">Enable locking of privileged accounts on brute force</div>
+                                <div style="font-weight:600;font-size:0.875rem;">Allow username protection to lock the <code style="font-size:0.8rem;color:#ccc;">admin</code> / <code style="font-size:0.8rem;color:#ccc;">administrator</code> user</div>
+                                <div style="font-size:0.8rem;color:#888;">Enable locking of privileged accounts on brute force</div>
                             </div>
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" name="allow_lock_admin"
@@ -299,7 +299,7 @@ function checked(array $settings, string $key, string $trueVal = '1'): string {
                         <div class="d-flex align-items-center justify-content-between mb-3">
                             <div>
                                 <div style="font-weight:600;font-size:0.875rem;">Notify on IP Block</div>
-                                <div style="font-size:0.8rem;color:#555;">Send admin email when IP is blocked</div>
+                                <div style="font-size:0.8rem;color:#888;">Send admin email when IP is blocked</div>
                             </div>
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" name="notify_on_block"
@@ -309,7 +309,7 @@ function checked(array $settings, string $key, string $trueVal = '1'): string {
                         <div class="d-flex align-items-center justify-content-between mb-3">
                             <div>
                                 <div style="font-weight:600;font-size:0.875rem;">Notify on Account Lock</div>
-                                <div style="font-size:0.8rem;color:#555;">Send admin email when account is locked</div>
+                                <div style="font-size:0.8rem;color:#888;">Send admin email when account is locked</div>
                             </div>
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" name="notify_on_lock"
@@ -319,7 +319,7 @@ function checked(array $settings, string $key, string $trueVal = '1'): string {
                         <div class="d-flex align-items-center justify-content-between mb-3">
                             <div>
                                 <div style="font-weight:600;font-size:0.875rem;">Notify on admin login from unknown IP</div>
-                                <div style="font-size:0.8rem;color:#555;">Send notification when admin logs in from a non-whitelisted IP</div>
+                                <div style="font-size:0.8rem;color:#888;">Send notification when admin logs in from a non-whitelisted IP</div>
                             </div>
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" name="notify_admin_login_unknown_ip"
@@ -329,7 +329,7 @@ function checked(array $settings, string $key, string $trueVal = '1'): string {
                         <div class="d-flex align-items-center justify-content-between mb-3">
                             <div>
                                 <div style="font-weight:600;font-size:0.875rem;">Include username in brute force notifications</div>
-                                <div style="font-size:0.8rem;color:#555;">Include the targeted username in brute force alert emails</div>
+                                <div style="font-size:0.8rem;color:#888;">Include the targeted username in brute force alert emails</div>
                             </div>
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" name="notify_brute_force_with_username"
@@ -373,7 +373,7 @@ function checked(array $settings, string $key, string $trueVal = '1'): string {
                             </thead>
                             <tbody>
                                 <?php if (empty($blockedIps)): ?>
-                                <tr><td colspan="6" class="text-center py-4" style="color:#555;">No blocked IPs.</td></tr>
+                                <tr><td colspan="6" class="text-center py-4" style="color:#888;">No blocked IPs.</td></tr>
                                 <?php else: ?>
                                 <?php foreach ($blockedIps as $block): ?>
                                 <tr>
@@ -458,7 +458,7 @@ function checked(array $settings, string $key, string $trueVal = '1'): string {
                     </thead>
                     <tbody>
                         <?php if (empty($lockedAccounts)): ?>
-                        <tr><td colspan="5" class="text-center py-4" style="color:#555;">No locked accounts.</td></tr>
+                        <tr><td colspan="5" class="text-center py-4" style="color:#888;">No locked accounts.</td></tr>
                         <?php else: ?>
                         <?php foreach ($lockedAccounts as $lock): ?>
                         <tr>
@@ -505,7 +505,7 @@ function checked(array $settings, string $key, string $trueVal = '1'): string {
                             data-country="<?= htmlspecialchars(strtolower($country['country_name'])) ?>"
                             data-code="<?= htmlspecialchars(strtolower($country['country_code'])) ?>">
                             <td>
-                                <code style="color:#aaa;"><?= htmlspecialchars($country['country_code']) ?></code>
+                                <code style="color:#ccc;"><?= htmlspecialchars($country['country_code']) ?></code>
                             </td>
                             <td><?= htmlspecialchars($country['country_name']) ?></td>
                             <td>
@@ -583,12 +583,12 @@ function checked(array $settings, string $key, string $trueVal = '1'): string {
                     </thead>
                     <tbody>
                         <?php if (empty($loginHistory)): ?>
-                        <tr><td colspan="6" class="text-center py-4" style="color:#555;">No records found.</td></tr>
+                        <tr><td colspan="6" class="text-center py-4" style="color:#888;">No records found.</td></tr>
                         <?php else: ?>
                         <?php foreach ($loginHistory as $entry): ?>
                         <tr>
                             <td><strong style="color:#fff;"><?= htmlspecialchars($entry['username']) ?></strong></td>
-                            <td><code style="color:#aaa;font-size:0.8rem;"><?= htmlspecialchars($entry['ip_address']) ?></code></td>
+                            <td><code style="color:#ccc;font-size:0.8rem;"><?= htmlspecialchars($entry['ip_address']) ?></code></td>
                             <td>
                                 <?php
                                 $ac = match($entry['action']) {
@@ -601,7 +601,7 @@ function checked(array $settings, string $key, string $trueVal = '1'): string {
                                 <span class="<?= $ac ?>"><?= htmlspecialchars($entry['action']) ?></span>
                             </td>
                             <td><?= htmlspecialchars($entry['details'] ?? '') ?></td>
-                            <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:0.75rem;color:#555;">
+                            <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:0.75rem;color:#888;">
                                 <?= htmlspecialchars(substr($entry['user_agent'] ?? '', 0, 80)) ?>
                             </td>
                             <td style="white-space:nowrap;font-size:0.8rem;"><?= htmlspecialchars(formatDate($entry['created_at'], 'M j H:i')) ?></td>

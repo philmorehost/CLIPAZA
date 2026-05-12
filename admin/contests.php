@@ -115,7 +115,7 @@ try {
                                 <span class="badge" style="background:rgba(34,197,94,0.1);color:#4ade80;font-size:0.68rem"><?= e(ucfirst($c['escrow_status'])) ?></span>
                             <?php endif; ?>
                         </td>
-                        <td style="font-size:0.85rem;color:#aaa"><?= e($c['creator_name'] ?? '—') ?></td>
+                        <td style="font-size:0.85rem;color:#ccc"><?= e($c['creator_name'] ?? '—') ?></td>
                         <td style="font-size:0.88rem;font-weight:600">₦<?= number_format((float)$c['prize_pool'], 0) ?></td>
                         <td>
                             <?php $sc = $c['status']==='active' ? 'badge-success' : ($c['status']==='cancelled' ? 'badge-danger' : 'badge-muted'); ?>

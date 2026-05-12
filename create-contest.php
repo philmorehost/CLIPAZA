@@ -164,7 +164,7 @@ renderNav(true, ['username' => $username], 'creator');
             <div class="d-flex flex-wrap gap-3">
               <?php foreach (['must_subscribe' => 'Must Subscribe', 'must_like' => 'Must Like', 'must_comment' => 'Must Comment'] as $name => $label): ?>
                 <label class="d-flex align-items-center gap-2 cursor-pointer">
-                  <input type="checkbox" name="<?= $name ?>" class="form-check-input" style="background:#111;border-color:#333;width:18px;height:18px">
+                  <input type="checkbox" name="<?= $name ?>" class="form-check-input" style="background:#111;border-color:#555;width:18px;height:18px">
                   <span style="font-size:0.9rem"><?= $label ?></span>
                 </label>
               <?php endforeach; ?>
@@ -200,7 +200,7 @@ renderNav(true, ['username' => $username], 'creator');
                 <div class="d-flex align-items-center gap-2 mb-2">
                   <input type="checkbox" name="enable_<?= $pKey ?>" id="enable_<?= $pKey ?>"
                          class="form-check-input platform-toggle" data-platform="<?= $pKey ?>"
-                         style="background:#111;border-color:#333;width:18px;height:18px">
+                         style="background:#111;border-color:#555;width:18px;height:18px">
                   <label for="enable_<?= $pKey ?>" class="fw-600" style="cursor:pointer"><?= $icon ?> <?= $label ?></label>
                 </div>
                 <div class="row g-2 platform-fields" id="fields_<?= $pKey ?>" style="display:none">
