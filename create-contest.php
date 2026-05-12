@@ -38,10 +38,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $totalPrize   = 0.0;
         foreach (['tiktok', 'instagram', 'facebook'] as $p) {
             if (!empty($_POST['enable_' . $p])) {
-                $amt    = (float)($_POST[$p . '_prize'] ?? 0);
-                $count  = min(10, max(1, (int)($_POST[$p . '_winners'] ?? 3)));
+                $amt          = (float)($_POST[$p . '_prize'] ?? 0);
+                $winnerTakesAll = !empty($_POST[$p . '_winner_takes_all']) ? 1 : 0;
+                $count        = $winnerTakesAll ? 1 : min(10, max(1, (int)($_POST[$p . '_winners'] ?? 3)));
                 if ($amt > 0) {
-                    $platformData[$p] = ['amount' => $amt, 'winners' => $count];
+                    $platformData[$p] = ['amount' => $amt, 'winners' => $count, 'winner_takes_all' => $winnerTakesAll];
                     $totalPrize += $amt;
                 }
             }
@@ -70,19 +71,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $platformFee = round($totalPrize * $feePercent / 100, 2);
                 $totalAmount = round($totalPrize + $platformFee, 2);
 
+                $contestWinnerTakesAll = 0;
+                foreach ($platformData as $pd) {
+                    if ($pd['winner_takes_all']) { $contestWinnerTakesAll = 1; break; }
+                }
+
                 $stmt = $db->prepare(
                     "INSERT INTO contests
                         (creator_id, title, description, youtube_url, youtube_video_id, youtube_title,
                          youtube_thumbnail, must_subscribe, must_like, must_comment,
                          clip_start_time, clip_end_time, clip_instructions,
-                         prize_pool, platform_fee, total_amount, status, escrow_status, end_date)
-                     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'draft','unfunded',?)"
+                         prize_pool, platform_fee, total_amount, winner_takes_all, status, escrow_status, end_date)
+                     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'draft','unfunded',?)"
                 );
                 $stmt->execute([
                     $userId, $title, '', $youtubeUrl, $youtubeVideoId, $youtubeTitle,
                     $youtubeThumbnail, $mustSubscribe, $mustLike, $mustComment,
                     $clipStart ?: null, $clipEnd ?: null, $clipInstructions ?: null,
-                    $totalPrize, $platformFee, $totalAmount,
+                    $totalPrize, $platformFee, $totalAmount, $contestWinnerTakesAll,
                     $endDate,
                 ]);
                 $contestId = (int)$db->lastInsertId();
@@ -146,7 +152,7 @@ renderNav(true, ['username' => $username], 'creator');
               </div>
             </div>
             <div id="ytPreview" class="d-none">
-              <div class="d-flex gap-3 align-items-center p-3" style="background:#0d0d0d;border:1px solid #222;border-radius:8px">
+              <div class="d-flex gap-3 align-items-center p-3" style="background:var(--input-bg);border:1px solid var(--border);border-radius:8px">
                 <img id="ytThumb" src="" alt="" style="width:80px;height:56px;object-fit:cover;border-radius:6px">
                 <div>
                   <div id="ytTitleText" class="fw-600" style="font-size:0.9rem"></div>
@@ -164,7 +170,7 @@ renderNav(true, ['username' => $username], 'creator');
             <div class="d-flex flex-wrap gap-3">
               <?php foreach (['must_subscribe' => 'Must Subscribe', 'must_like' => 'Must Like', 'must_comment' => 'Must Comment'] as $name => $label): ?>
                 <label class="d-flex align-items-center gap-2 cursor-pointer">
-                  <input type="checkbox" name="<?= $name ?>" class="form-check-input" style="background:#111;border-color:#555;width:18px;height:18px">
+                  <input type="checkbox" name="<?= $name ?>" id="<?= $name ?>" class="form-check-input" style="border-color:var(--text-placeholder);width:18px;height:18px">
                   <span style="font-size:0.9rem"><?= $label ?></span>
                 </label>
               <?php endforeach; ?>
@@ -195,13 +201,13 @@ renderNav(true, ['username' => $username], 'creator');
             <h6 class="fw-700 mb-3">4. Prize Pool</h6>
             <p class="text-muted mb-3" style="font-size:0.85rem">Enable platforms and set prize amounts. Minimum total: ₦<?= number_format($minPrize, 0) ?>.</p>
 
-            <?php foreach (['tiktok' => ['🎵','TikTok'], 'instagram' => ['📸','Instagram'], 'facebook' => ['📘','Facebook']] as $pKey => [$icon, $label]): ?>
-              <div class="mb-3 p-3" style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:8px" id="block_<?= $pKey ?>">
+            <?php foreach (['tiktok' => 'TikTok', 'instagram' => 'Instagram', 'facebook' => 'Facebook'] as $pKey => $label): ?>
+              <div class="mb-3 p-3" style="background:var(--input-bg);border:1px solid var(--card-border);border-radius:8px" id="block_<?= $pKey ?>">
                 <div class="d-flex align-items-center gap-2 mb-2">
                   <input type="checkbox" name="enable_<?= $pKey ?>" id="enable_<?= $pKey ?>"
                          class="form-check-input platform-toggle" data-platform="<?= $pKey ?>"
-                         style="background:#111;border-color:#555;width:18px;height:18px">
-                  <label for="enable_<?= $pKey ?>" class="fw-600" style="cursor:pointer"><?= $icon ?> <?= $label ?></label>
+                         style="border-color:var(--text-placeholder);width:18px;height:18px">
+                  <label for="enable_<?= $pKey ?>" class="fw-600" style="cursor:pointer"><?= getPlatformIcon($pKey, '1.2rem') ?> <?= $label ?></label>
                 </div>
                 <div class="row g-2 platform-fields" id="fields_<?= $pKey ?>" style="display:none">
                   <div class="col-md-6">
@@ -211,8 +217,18 @@ renderNav(true, ['username' => $username], 'creator');
                   </div>
                   <div class="col-md-6">
                     <label class="form-label-dark" style="font-size:0.8rem">Number of Winners</label>
-                    <input type="number" name="<?= $pKey ?>_winners" class="form-control-dark"
+                    <input type="number" name="<?= $pKey ?>_winners" class="form-control-dark <?= $pKey ?>-winners-input"
                            min="1" max="10" value="3">
+                  </div>
+                  <div class="col-12 mt-1">
+                    <div class="form-check d-flex align-items-center gap-2">
+                      <input type="checkbox" name="<?= $pKey ?>_winner_takes_all" id="wta_<?= $pKey ?>"
+                             class="form-check-input winner-takes-all-toggle" data-platform="<?= $pKey ?>"
+                             style="border-color:var(--text-placeholder);width:16px;height:16px">
+                      <label for="wta_<?= $pKey ?>" class="text-muted" style="cursor:pointer;font-size:0.8rem">
+                        Winner Takes All (1 winner gets full platform prize)
+                      </label>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -283,6 +299,18 @@ function recalcPrize() {
   document.getElementById('platformFee').textContent = '₦' + fee.toLocaleString();
   document.getElementById('totalToPay').textContent  = '₦' + grand.toLocaleString();
 }
+
+// Winner takes all toggle
+document.querySelectorAll('.winner-takes-all-toggle').forEach(cb => {
+  cb.addEventListener('change', function() {
+    const platform = this.dataset.platform;
+    const winnersInput = document.querySelector('.' + platform + '-winners-input');
+    if (winnersInput) {
+      winnersInput.value = this.checked ? 1 : 3;
+      winnersInput.disabled = this.checked;
+    }
+  });
+});
 
 // YouTube fetch
 document.getElementById('fetchYtBtn').addEventListener('click', async function() {

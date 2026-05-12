@@ -52,17 +52,27 @@ try {
     <meta name="csrf" content="<?= e($csrf) ?>">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="../assets/css/style.css" rel="stylesheet">
+  <script>
+    (function() {
+      var t = localStorage.getItem('clipaza_theme') || 'dark';
+      document.documentElement.dataset.theme = t;
+    })();
+  </script>
 </head>
 <body>
 <nav class="admin-sidebar">
-    <div class="sidebar-brand">Clipa<span>za</span></div>
+    <?php $sn = getSetting("site_name", "Clipaza"); $sl = getSetting("site_logo", ""); if ($sl): ?><div class="sidebar-brand"><img src="<?= e($sl) ?>" alt="<?= e($sn) ?>" style="height:28px"></div><?php else: ?><div class="sidebar-brand"><?= formatSiteName($sn) ?></div><?php endif; ?>
     <div class="sidebar-nav">
         <ul class="nav flex-column">
             <li class="nav-item"><a href="index.php" class="nav-link"><span class="nav-icon">⊞</span> Dashboard</a></li>
             <li class="nav-item"><a href="users.php" class="nav-link"><span class="nav-icon">👥</span> Users</a></li>
             <li class="nav-item"><a href="contests.php" class="nav-link active"><span class="nav-icon">🏆</span> Contests</a></li>
+            <li class="nav-item"><a href="featured-contests.php" class="nav-link"><span class="nav-icon">⭐</span> Featured</a></li>
+            <li class="nav-item"><a href="ad-packages.php" class="nav-link"><span class="nav-icon">📦</span> Ad Packages</a></li>
+            <li class="nav-item"><a href="movie-ads.php" class="nav-link"><span class="nav-icon">🎞</span> Movie Ads</a></li>
             <li class="nav-item"><a href="security.php" class="nav-link"><span class="nav-icon">🛡</span> Security</a></li>
             <li class="nav-item"><a href="settings.php" class="nav-link"><span class="nav-icon">⚙</span> Settings</a></li>
+            <li class="nav-item"><a href="profile.php" class="nav-link"><span class="nav-icon">👤</span> Profile</a></li>
         </ul>
         <hr class="divider-dark mx-3">
         <ul class="nav flex-column">
@@ -73,8 +83,9 @@ try {
 <main class="admin-main">
     <div class="admin-topbar">
         <div class="d-flex align-items-center gap-3">
-            <button id="sidebarToggle" class="btn d-lg-none" style="color:#888;background:rgba(255,255,255,0.05);border-radius:8px;padding:6px 10px;">☰</button>
-            <span style="color:#888;font-size:0.9rem">Welcome, <strong style="color:#fff"><?= e($_SESSION['username'] ?? '') ?></strong></span>
+            <button id="sidebarToggle" class="btn d-lg-none" style="color:var(--text-muted);background:var(--subtle-bg);border-radius:8px;padding:6px 10px;">☰</button>
+            <button id="adminThemeToggle" class="btn-theme-toggle" title="Toggle light/dark mode" aria-label="Toggle theme" style="margin-left:4px">☀️</button>
+            <span style="color:var(--text-muted);font-size:0.9rem">Welcome, <strong style="color:var(--text)"><?= e($_SESSION['username'] ?? '') ?></strong></span>
         </div>
     </div>
     <div class="p-4">
@@ -115,17 +126,18 @@ try {
                                 <span class="badge" style="background:rgba(34,197,94,0.1);color:#4ade80;font-size:0.68rem"><?= e(ucfirst($c['escrow_status'])) ?></span>
                             <?php endif; ?>
                         </td>
-                        <td style="font-size:0.85rem;color:#ccc"><?= e($c['creator_name'] ?? '—') ?></td>
+                        <td style="font-size:0.85rem;color:var(--text-secondary)"><?= e($c['creator_name'] ?? '—') ?></td>
                         <td style="font-size:0.88rem;font-weight:600">₦<?= number_format((float)$c['prize_pool'], 0) ?></td>
                         <td>
                             <?php $sc = $c['status']==='active' ? 'badge-success' : ($c['status']==='cancelled' ? 'badge-danger' : 'badge-muted'); ?>
                             <span class="<?= $sc ?>" style="font-size:0.72rem"><?= e(ucfirst($c['status'])) ?></span>
                         </td>
                         <td style="font-size:0.85rem;text-align:center"><?= (int)$c['entry_count'] ?></td>
-                        <td style="font-size:0.8rem;color:#888"><?= !empty($c['end_date']) ? e(formatDate($c['end_date'],'M j, Y')) : '—' ?></td>
+                        <td style="font-size:0.8rem;color:var(--text-muted)"><?= !empty($c['end_date']) ? e(formatDate($c['end_date'],'M j, Y')) : '—' ?></td>
                         <td>
                             <div class="d-flex gap-1 flex-wrap">
                                 <a href="/contest?id=<?= $c['id'] ?>" target="_blank" class="btn btn-xs btn-outline-accent">View</a>
+                                <a href="contest-analytics.php?id=<?= $c['id'] ?>" class="btn btn-xs" style="background:rgba(99,102,241,0.12);color:#a5b4fc;font-size:0.72rem;border:1px solid rgba(99,102,241,0.25);border-radius:6px;padding:2px 8px">Analytics</a>
                                 <?php if ($c['status']==='draft'): ?>
                                     <button class="btn btn-xs cab" style="background:rgba(34,197,94,0.1);color:#4ade80;font-size:0.72rem;border:1px solid rgba(34,197,94,0.2)"
                                             data-id="<?= $c['id'] ?>" data-st="active" data-csrf="<?= e($csrf) ?>">Activate</button>
@@ -169,4 +181,5 @@ document.querySelectorAll('.cab').forEach(btn => {
     });
 });
 </script>
+<script src="assets/js/theme_sync.js"></script>
 </body></html>

@@ -59,12 +59,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <title>Admin Login — Clipaza</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="../assets/css/style.css" rel="stylesheet">
+  <script>
+    (function() {
+      var t = localStorage.getItem('clipaza_theme') || 'dark';
+      document.documentElement.dataset.theme = t;
+    })();
+  </script>
 </head>
-<body style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#000;">
+<body style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--bg);">
 <div style="width:100%;max-width:400px;padding:24px;">
+    <?php $sn = getSetting("site_name", "Clipaza"); $sl = getSetting("site_logo", ""); ?>
     <div class="text-center mb-4">
-        <div style="font-size:1.8rem;font-weight:900;letter-spacing:-1px;">Clipa<span style="color:#CCFF00;">za</span></div>
-        <p style="color:#888;font-size:0.875rem;margin-top:4px;">Admin Panel</p>
+        <?php if ($sl): ?>
+            <img src="../<?= ltrim($sl, '/') ?>" alt="<?= e($sn) ?>" style="height:60px;max-width:100%;object-fit:contain">
+        <?php else: ?>
+            <div style="font-size:1.8rem;font-weight:900;letter-spacing:-1px;"><?= formatSiteName($sn) ?></div>
+        <?php endif; ?>
+        <p style="color:var(--text-muted);font-size:0.875rem;margin-top:8px;">Admin Panel</p>
     </div>
 
     <div class="card-dark">
@@ -96,8 +107,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </div>
 
-    <p class="text-center mt-3" style="font-size:0.8rem;color:#888;">
-        <a href="../" style="color:#888;">← Back to site</a>
+    <p class="text-center mt-3" style="font-size:0.8rem;color:var(--text-muted);">
+        <a href="../" style="color:var(--text-muted);">← Back to site</a>
     </p>
 </div>
 
