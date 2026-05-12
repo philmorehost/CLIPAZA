@@ -77,7 +77,7 @@ try {
 
 $siteUrl    = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'clipaza.com');
 $siteName   = getSetting('site_name', 'Clipaza');
-$metaDesc   = 'Browse active fan clipping contests on ' . $siteName . '. Pick a creator, clip their best moment, post it on TikTok, Reels, or Shorts, and win real cash prizes.';
+$metaDesc   = 'Browse active fan clipping contests on ' . $siteName . '. Pick a creator, clip their best moment, post it on TikTok or Reels, and win real cash prizes.';
 $extraHead  = '  <meta name="description" content="' . e($metaDesc) . '">' . "\n";
 $extraHead .= '  <link rel="canonical" href="' . e($siteUrl . '/contests') . '">' . "\n";
 $extraHead .= '  <meta property="og:type" content="website">' . "\n";
@@ -108,9 +108,12 @@ renderNav($isLoggedIn, ['username' => $username], $userMode);
 
     <!-- Platform filter tabs -->
     <div class="d-flex gap-2 mb-4 flex-wrap">
-      <?php foreach (['all' => 'All', 'tiktok' => '🎵 TikTok', 'instagram' => '📸 Instagram', 'facebook' => '📘 Facebook'] as $val => $label): ?>
+      <?php foreach (['all' => ['','All'], 'tiktok' => ['tiktok','TikTok'], 'instagram' => ['instagram','Instagram'], 'facebook' => ['facebook','Facebook']] as $val => [$p, $label]): ?>
         <button class="btn btn-sm <?= $filter === $val ? 'btn-accent' : 'btn-outline-accent' ?>"
-                onclick="setFilter('<?= $val ?>')"><?= $label ?></button>
+                onclick="setFilter('<?= $val ?>')">
+                <?php if($p) echo getPlatformIcon($p, '0.9rem') . ' '; ?>
+                <?= $label ?>
+        </button>
       <?php endforeach; ?>
     </div>
 
@@ -136,12 +139,7 @@ renderNav($isLoggedIn, ['username' => $username], $userMode);
             }
             $fcPlatformIcons = '';
             foreach ($fcPlatforms as $p2) {
-                $fcPlatformIcons .= match(trim($p2)) {
-                    'tiktok'    => '<span class="platform-icon" title="TikTok">🎵</span>',
-                    'instagram' => '<span class="platform-icon" title="Instagram">📸</span>',
-                    'facebook'  => '<span class="platform-icon" title="Facebook">📘</span>',
-                    default     => '',
-                };
+                $fcPlatformIcons .= getPlatformIcon(trim($p2), '1rem');
             }
           ?>
           <div class="featured-contest-card">
@@ -207,12 +205,7 @@ renderNav($isLoggedIn, ['username' => $username], $userMode);
             }
             $platformIcons = '';
             foreach ($platformList as $p) {
-                $platformIcons .= match(trim($p)) {
-                    'tiktok'    => '<span class="platform-icon" title="TikTok">🎵</span>',
-                    'instagram' => '<span class="platform-icon" title="Instagram">📸</span>',
-                    'facebook'  => '<span class="platform-icon" title="Facebook">📘</span>',
-                    default     => '',
-                };
+                $platformIcons .= getPlatformIcon(trim($p), '1rem');
             }
           ?>
           <div class="col-12 col-md-6 col-lg-4">

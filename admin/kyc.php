@@ -68,7 +68,7 @@ $siteUrl = rtrim(getSetting('site_url', ''), '/');
 </head>
 <body>
 <nav class="admin-sidebar">
-    <div class="sidebar-brand">Clipa<span>za</span></div>
+    <?php $sn = getSetting("site_name", "Clipaza"); $sl = getSetting("site_logo", ""); if ($sl): ?><div class="sidebar-brand"><img src="<?= e($sl) ?>" alt="<?= e($sn) ?>" style="height:28px"></div><?php else: ?><div class="sidebar-brand"><?= formatSiteName($sn) ?></div><?php endif; ?>
     <div class="sidebar-nav">
         <ul class="nav flex-column">
             <li class="nav-item"><a href="index.php" class="nav-link"><span class="nav-icon">⊞</span> Dashboard</a></li>
@@ -92,7 +92,7 @@ $siteUrl = rtrim(getSetting('site_url', ''), '/');
 <main class="admin-main">
     <div class="admin-topbar">
         <div class="d-flex align-items-center gap-3">
-            <button id="sidebarToggle" class="btn d-lg-none" style="color:#888;background:rgba(255,255,255,0.05);border-radius:8px;padding:6px 10px;">☰</button>
+            <button id="sidebarToggle" class="btn d-lg-none" style="color:var(--text-muted);background:var(--subtle-bg);border-radius:8px;padding:6px 10px;">☰</button>
             <button id="adminThemeToggle" class="btn-theme-toggle" title="Toggle light/dark mode" aria-label="Toggle theme" style="margin-left:4px">☀️</button>
             <h1>KYC Review</h1>
         </div>
@@ -130,13 +130,13 @@ $siteUrl = rtrim(getSetting('site_url', ''), '/');
             <div class="row g-3 align-items-start">
                 <!-- User info -->
                 <div class="col-md-3">
-                    <div class="fw-700" style="font-size:0.95rem;color:#fff"><?= e($s['username'] ?? '—') ?></div>
-                    <div style="font-size:0.8rem;color:#888"><?= e($s['email'] ?? '') ?></div>
+                    <div class="fw-700" style="font-size:0.95rem;color:var(--text)"><?= e($s['username'] ?? '—') ?></div>
+                    <div style="font-size:0.8rem;color:var(--text-muted)"><?= e($s['email'] ?? '') ?></div>
                     <div class="mt-2">
                         <span class="<?= $stClass ?>" style="font-size:0.72rem"><?= e(ucfirst($s['kyc_status'])) ?></span>
                     </div>
                     <?php if (!empty($s['bank_name'])): ?>
-                    <div class="mt-2" style="font-size:0.78rem;color:#aaa">
+                    <div class="mt-2" style="font-size:0.78rem;color:var(--text-muted)">
                         Bank: <?= e($s['bank_name']) ?><br>
                         Acct: <?= e($s['account_number'] ?? '') ?><br>
                         Name: <?= e($s['account_name'] ?? '') ?>
@@ -146,7 +146,7 @@ $siteUrl = rtrim(getSetting('site_url', ''), '/');
 
                 <!-- ID Info -->
                 <div class="col-md-4">
-                    <div style="font-size:0.75rem;color:#888;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Identity Document</div>
+                    <div style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Identity Document</div>
                     <div class="mb-2">
                         <span class="badge-info" style="font-size:0.75rem"><?= e(str_replace('_', ' ', ucfirst($s['kyc_id_type'] ?? 'N/A'))) ?></span>
                         <?php if ($isExpired): ?>
@@ -167,20 +167,20 @@ $siteUrl = rtrim(getSetting('site_url', ''), '/');
 
                 <!-- Snapshot -->
                 <div class="col-md-3">
-                    <div style="font-size:0.75rem;color:#888;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Live Snapshot</div>
+                    <div style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Live Snapshot</div>
                     <?php if (!empty($s['kyc_snapshot_path'])): ?>
                     <a href="<?= e($siteUrl . $s['kyc_snapshot_path']) ?>" target="_blank">
                         <img src="<?= e($siteUrl . $s['kyc_snapshot_path']) ?>" alt="Snapshot"
-                             style="width:100%;max-width:140px;border-radius:8px;border:1px solid #333;object-fit:cover;aspect-ratio:3/4">
+                             style="width:100%;max-width:140px;border-radius:8px;border:1px solid var(--border);object-fit:cover;aspect-ratio:3/4">
                     </a>
                     <?php else: ?>
-                    <span style="font-size:0.82rem;color:#555">No snapshot uploaded</span>
+                    <span style="font-size:0.82rem;color:var(--text-muted)">No snapshot uploaded</span>
                     <?php endif; ?>
                 </div>
 
                 <!-- Actions -->
                 <div class="col-md-2">
-                    <div style="font-size:0.75rem;color:#888;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Actions</div>
+                    <div style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Actions</div>
                     <?php if ($s['kyc_status'] === 'pending'): ?>
                     <div class="d-flex flex-column gap-2">
                         <button class="btn btn-sm kyc-action-btn" style="background:rgba(0,204,102,0.1);color:#4ade80;border:1px solid rgba(0,204,102,0.2)"
@@ -298,20 +298,6 @@ document.getElementById('kycActionForm').addEventListener('submit', async functi
     }
 });
 </script>
-<script>
-(function() {
-  var btn = document.getElementById('adminThemeToggle');
-  if (!btn) return;
-  function current() { return document.documentElement.dataset.theme || 'dark'; }
-  function setIcon() { btn.textContent = current() === 'dark' ? '☀️' : '🌙'; }
-  setIcon();
-  btn.addEventListener('click', function() {
-    var next = current() === 'dark' ? 'light' : 'dark';
-    document.documentElement.dataset.theme = next;
-    localStorage.setItem('clipaza_theme', next);
-    setIcon();
-  });
-})();
-</script>
+<script src="assets/js/theme_sync.js"></script>
 </body>
 </html>

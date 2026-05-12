@@ -91,15 +91,15 @@ renderNav($isLoggedIn, $user);
             }
         ?>
         <div class="col-md-6 col-lg-4">
-            <div class="card-dark h-100 d-flex flex-column" style="border:1px solid #1a1a1a;border-radius:12px;overflow:hidden">
+            <div class="card-dark h-100 d-flex flex-column" style="border:1px solid var(--border);border-radius:12px;overflow:hidden">
                 <!-- Poster -->
                 <?php if ($ad['poster_path']): ?>
-                <div style="aspect-ratio:2/3;overflow:hidden;background:#0d0d0d">
+                <div style="aspect-ratio:2/3;overflow:hidden;background:var(--input-bg)">
                     <img src="<?= e($siteUrl . $ad['poster_path']) ?>" alt="<?= e($ad['movie_title']) ?>"
                          style="width:100%;height:100%;object-fit:cover">
                 </div>
                 <?php else: ?>
-                <div style="aspect-ratio:2/3;background:#0d0d0d;display:flex;align-items:center;justify-content:center">
+                <div style="aspect-ratio:2/3;background:var(--input-bg);display:flex;align-items:center;justify-content:center">
                     <span style="font-size:4rem">🎬</span>
                 </div>
                 <?php endif; ?>
@@ -121,7 +121,7 @@ renderNav($isLoggedIn, $user);
                     </div>
                     <?php endif; ?>
                     <?php if ($ad['description']): ?>
-                    <div style="font-size:0.82rem;color:#aaa;margin-bottom:10px;line-height:1.5">
+                    <div style="font-size:0.82rem;color:var(--text-muted);margin-bottom:10px;line-height:1.5">
                         <?= e(mb_strimwidth($ad['description'], 0, 120, '…')) ?>
                     </div>
                     <?php endif; ?>
@@ -129,9 +129,9 @@ renderNav($isLoggedIn, $user);
                     <!-- Contact info -->
                     <div class="mt-auto">
                         <?php if ($ad['contact_email'] || $ad['contact_phone'] || $ad['website_url']): ?>
-                        <div class="mb-2" style="font-size:0.78rem;color:#888">
+                        <div class="mb-2" style="font-size:0.78rem;color:var(--text-muted)">
                             <?php if ($ad['contact_email']): ?>
-                            <div>📧 <a href="mailto:<?= e($ad['contact_email']) ?>" style="color:#aaa"><?= e($ad['contact_email']) ?></a></div>
+                            <div>📧 <a href="mailto:<?= e($ad['contact_email']) ?>" style="color:var(--text-muted)"><?= e($ad['contact_email']) ?></a></div>
                             <?php endif; ?>
                             <?php if ($ad['contact_phone']): ?>
                             <div>📞 <?= e($ad['contact_phone']) ?></div>

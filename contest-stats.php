@@ -174,7 +174,7 @@ renderNav(true, ['username' => $username], $userMode);
     <!-- Per-platform breakdown -->
     <?php foreach ($platformStats as $platform => $ps): ?>
     <?php
-      $pIcon = match($platform) { 'tiktok'=>'🎵','instagram'=>'📸','facebook'=>'📘',default=>'' };
+      $pIcon = getPlatformIcon($platform, '1rem');
     ?>
     <div class="card-dark p-4 mb-4">
       <h6 class="fw-700 mb-3"><?= $pIcon ?> <?= ucfirst(e($platform)) ?> Platform</h6>
@@ -317,7 +317,7 @@ renderNav(true, ['username' => $username], $userMode);
                 'rejected' => 'badge-danger',
                 default    => 'badge-muted',
               };
-              $pIcon  = match($entry['platform']) { 'tiktok'=>'🎵','instagram'=>'📸','facebook'=>'📘',default=>'' };
+              $pIcon  = getPlatformIcon($entry['platform'], '1rem');
             ?>
             <tr>
               <td><?= e($entry['username']) ?></td>
@@ -352,13 +352,13 @@ renderNav(true, ['username' => $username], $userMode);
 <!-- Disqualify Modal -->
 <div class="modal fade" id="disqualifyModal" tabindex="-1" style="display:none" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered" style="max-width:420px">
-    <div class="modal-content" style="background:#111;border:1px solid #222;border-radius:12px">
+    <div class="modal-content" style="background:var(--card-bg);border:1px solid #222;border-radius:12px">
       <div class="modal-header" style="border-bottom:1px solid #222">
-        <h6 class="modal-title fw-700 text-white">Disqualify Entry</h6>
-        <button type="button" class="btn-close btn-close-white" id="disqualifyModalClose"></button>
+        <h6 class="modal-title fw-700 text-theme">Disqualify Entry</h6>
+        <button type="button" class="btn-close " id="disqualifyModalClose"></button>
       </div>
       <div class="modal-body">
-        <p class="text-muted mb-3" style="font-size:0.85rem">Disqualify entry for <strong id="disqualifyUsername" style="color:#fff"></strong>?</p>
+        <p class="text-muted mb-3" style="font-size:0.85rem">Disqualify entry for <strong id="disqualifyUsername" style="color:var(--text)"></strong>?</p>
         <div class="mb-3">
           <label class="form-label-dark">Reason (optional)</label>
           <input type="text" id="disqualifyReason" class="form-control-dark" placeholder="e.g. Bot activity detected">

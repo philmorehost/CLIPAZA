@@ -39,6 +39,8 @@ try {
         'save_payment' => handleSavePayment(),
         'save_code'    => handleSaveCode(),
         'save_ads'     => handleSaveAds(),
+        'save_landing' => handleSaveLanding(),
+        'update_default_theme' => handleUpdateDefaultTheme(),
         default        => jsonResponse(['success' => false, 'message' => 'Unknown action.']),
     };
 } catch (\UnhandledMatchError $e) {
@@ -62,72 +64,50 @@ function saveSiteSetting(string $key, string $value): bool {
     }
 }
 
-/**
- * Validate and move an uploaded file.
- * Returns the web-accessible path on success or throws RuntimeException on failure.
- */
 function processUpload(string $inputName, string $destDir, array $allowedExts, int $maxBytes = 2097152): string {
     if (!isset($_FILES[$inputName]) || $_FILES[$inputName]['error'] === UPLOAD_ERR_NO_FILE) {
         return '';
     }
-
     $file = $_FILES[$inputName];
-
     if ($file['error'] !== UPLOAD_ERR_OK) {
         throw new \RuntimeException('Upload error code ' . $file['error']);
     }
-
     if ($file['size'] > $maxBytes) {
         throw new \RuntimeException('File too large (max 2 MB).');
     }
-
-    $origName = (string)$file['name'];
-    $ext      = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
-
+    $ext = strtolower(pathinfo((string)$file['name'], PATHINFO_EXTENSION));
     if (!in_array($ext, $allowedExts, true)) {
         throw new \RuntimeException('Invalid file type. Allowed: ' . implode(', ', $allowedExts));
     }
-
-    // Validate MIME via finfo for images (not for .ico which lacks a reliable MIME)
     if (in_array($ext, ['png', 'jpg', 'jpeg'], true)) {
-        $finfo    = finfo_open(FILEINFO_MIME_TYPE);
-        $mime     = finfo_file($finfo, $file['tmp_name']);
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mime = finfo_file($finfo, $file['tmp_name']);
         finfo_close($finfo);
-        $okMimes  = ['image/png', 'image/jpeg'];
-        if (!in_array($mime, $okMimes, true)) {
-            throw new \RuntimeException('File content does not match a valid image type (PNG or JPEG required).');
+        if (!in_array($mime, ['image/png', 'image/jpeg'], true)) {
+            throw new \RuntimeException('File content does not match a valid image type.');
         }
     }
-
+    if (!is_dir($destDir)) {
+        mkdir($destDir, 0755, true);
+    }
     $filename = bin2hex(random_bytes(12)) . '.' . $ext;
-    $destDir  = rtrim($destDir, '/\\');
-    $fullDest = $destDir . DIRECTORY_SEPARATOR . $filename;
-
+    $fullDest = rtrim($destDir, '/\\') . DIRECTORY_SEPARATOR . $filename;
     if (!move_uploaded_file($file['tmp_name'], $fullDest)) {
         throw new \RuntimeException('Failed to move uploaded file.');
     }
-
-    // Return web path relative to document root, using forward slashes for URLs
     $webRoot = str_replace('\\', '/', rtrim(dirname(__DIR__, 2), '/\\'));
     $webPath = str_replace('\\', '/', $fullDest);
     if (str_starts_with($webPath, $webRoot)) {
         return substr($webPath, strlen($webRoot));
     }
-    // Fallback: derive path from destDir name relative to uploads/
     $uploadsPos = strrpos($webPath, '/uploads/');
     return $uploadsPos !== false ? substr($webPath, $uploadsPos) : '/' . $filename;
 }
 
-/**
- * Remove a previously stored file from disk (silent fail).
- */
 function deleteOldFile(string $webPath, string $webRoot): void {
     if ($webPath === '') return;
-    $normalized = str_replace('\\', '/', $webRoot);
-    $fullPath   = rtrim($normalized, '/') . '/' . ltrim($webPath, '/');
-    if (file_exists($fullPath) && is_file($fullPath)) {
-        @unlink($fullPath);
-    }
+    $fullPath = rtrim(str_replace('\\', '/', $webRoot), '/') . '/' . ltrim($webPath, '/');
+    if (file_exists($fullPath) && is_file($fullPath)) @unlink($fullPath);
 }
 
 // ---------------------------------------------------------------------------
@@ -136,42 +116,29 @@ function deleteOldFile(string $webPath, string $webRoot): void {
 
 function handleSaveGeneral(): never {
     $root = dirname(__DIR__, 2);
-
     $siteName = sanitizeInput($_POST['site_name'] ?? '');
-    if ($siteName === '') {
-        jsonResponse(['success' => false, 'message' => 'Site name cannot be empty.']);
-    }
-
+    if ($siteName === '') jsonResponse(['success' => false, 'message' => 'Site name cannot be empty.']);
     saveSiteSetting('site_name', $siteName);
-
-    // Default theme
     $theme = $_POST['default_theme'] ?? 'dark';
     saveSiteSetting('default_theme', in_array($theme, ['dark', 'light'], true) ? $theme : 'dark');
 
-    // Logo upload
+    saveSiteSetting('google_client_id', sanitizeInput($_POST['google_client_id'] ?? ''));
+    saveSiteSetting('google_client_secret', sanitizeInput($_POST['google_client_secret'] ?? ''));
+
     try {
         $logoPath = processUpload('site_logo', $root . '/uploads/logo', ['png', 'jpg', 'jpeg']);
         if ($logoPath !== '') {
-            // Clean up old logo file
             deleteOldFile(getSetting('site_logo', ''), $root);
             saveSiteSetting('site_logo', $logoPath);
         }
-    } catch (\RuntimeException $e) {
-        jsonResponse(['success' => false, 'message' => 'Logo: ' . $e->getMessage()]);
-    }
-
-    // Favicon upload
+    } catch (\RuntimeException $e) { jsonResponse(['success' => false, 'message' => 'Logo: ' . $e->getMessage()]); }
     try {
         $faviconPath = processUpload('site_favicon', $root . '/uploads/favicon', ['png', 'jpg', 'jpeg', 'ico']);
         if ($faviconPath !== '') {
-            // Clean up old favicon file
             deleteOldFile(getSetting('site_favicon', ''), $root);
             saveSiteSetting('site_favicon', $faviconPath);
         }
-    } catch (\RuntimeException $e) {
-        jsonResponse(['success' => false, 'message' => 'Favicon: ' . $e->getMessage()]);
-    }
-
+    } catch (\RuntimeException $e) { jsonResponse(['success' => false, 'message' => 'Favicon: ' . $e->getMessage()]); }
     jsonResponse(['success' => true, 'message' => 'General settings saved.']);
 }
 
@@ -183,83 +150,83 @@ function handleSavePayment(): never {
         'payhub_api_key'           => 200,
         'payhub_merchant_id'       => 200,
         'preferred_payout_gateway' => 20,
-        'platform_fee_percent'     => 10,
-        'min_contest_prize'        => 20,
         'min_withdrawal_amount'    => 20,
         'max_withdrawal_amount'    => 20,
-        'withdrawal_fee_percent'   => 10,
+        'platform_fee_percent'     => 20,
+        'min_contest_prize'        => 20,
+        'max_contest_days'         => 20,
+        'withdrawal_fee_percent'   => 20,
         'withdrawal_fee_flat'      => 20,
         'ad_bank_name'             => 200,
         'ad_bank_account'          => 200,
         'ad_bank_number'           => 20,
     ];
     foreach ($fields as $key => $maxLen) {
-        $value = substr(trim($_POST[$key] ?? ''), 0, $maxLen);
-        saveSiteSetting($key, $value);
+        saveSiteSetting($key, substr(trim((string)($_POST[$key] ?? '')), 0, $maxLen));
     }
     jsonResponse(['success' => true, 'message' => 'Payment settings saved.']);
 }
 
 function handleSaveSeo(): never {
-    $fields = [
-        'seo_title'       => 200,
-        'seo_description' => 500,
-        'seo_keywords'    => 500,
-        'og_image_url'    => 500,
-    ];
-
+    $fields = ['seo_title'=>200, 'seo_description'=>500, 'seo_keywords'=>500, 'og_image_url'=>500];
     foreach ($fields as $key => $maxLen) {
-        $value = substr(trim($_POST[$key] ?? ''), 0, $maxLen);
-        // og_image_url: only allow empty or valid URL
-        if ($key === 'og_image_url' && $value !== '') {
-            if (!filter_var($value, FILTER_VALIDATE_URL)) {
-                jsonResponse(['success' => false, 'message' => 'OG Image URL is not a valid URL.']);
-            }
+        $val = substr(trim((string)($_POST[$key] ?? '')), 0, $maxLen);
+        if ($key === 'og_image_url' && $val !== '' && !filter_var($val, FILTER_VALIDATE_URL)) {
+            jsonResponse(['success' => false, 'message' => 'Invalid OG Image URL.']);
         }
-        saveSiteSetting($key, $value);
+        saveSiteSetting($key, $val);
     }
-
     jsonResponse(['success' => true, 'message' => 'SEO settings saved.']);
 }
 
 function handleSaveCode(): never {
-    // WARNING: These values are intentionally stored and output as raw HTML/JS.
-    // They are injected into every public page. Only trusted admins should edit these.
-    // If an admin account is compromised, these fields are a potential XSS vector.
-    $headerCode  = $_POST['custom_header_code'] ?? '';
-    $adsenseCode = $_POST['adsense_code'] ?? '';
-
-    saveSiteSetting('custom_header_code', $headerCode);
-    saveSiteSetting('adsense_code', $adsenseCode);
-
+    saveSiteSetting('custom_header_code', $_POST['custom_header_code'] ?? '');
+    saveSiteSetting('adsense_code', $_POST['adsense_code'] ?? '');
     jsonResponse(['success' => true, 'message' => 'Code injection settings saved.']);
 }
 
-function handleSaveAds(): never {
-    $root = dirname(__DIR__, 2);
+function handleUpdateDefaultTheme(): never {
+    $theme = $_POST['default_theme'] ?? 'dark';
+    if (!in_array($theme, ['dark', 'light'], true)) jsonResponse(['success' => false, 'message' => 'Invalid theme.']);
+    if (saveSiteSetting('default_theme', $theme)) jsonResponse(['success' => true, 'message' => 'Default theme updated to ' . $theme]);
+    jsonResponse(['success' => false, 'message' => 'Failed to update default theme.']);
+}
 
-    // If a file was uploaded, use its contents; otherwise use the textarea
+function handleSaveLanding(): never {
+    $fields = [
+        'lp_hero_title'=>200, 'lp_hero_accent'=>200, 'lp_hero_sub'=>1000,
+        'lp_hero_btn_creator'=>50, 'lp_hero_btn_fan'=>50,
+        'lp_hiw_title'=>200, 'lp_trending_title_accent'=>200,
+        'lp_brands_title'=>200, 'lp_brands_sub'=>1000, 'lp_brands_content'=>1500,
+        'lp_lb_title_accent'=>200, 'lp_lb_text'=>1500,
+        'lp_step1_title'=>200, 'lp_step1_desc'=>500,
+        'lp_step2_title'=>200, 'lp_step2_desc'=>500,
+        'lp_step3_title'=>200, 'lp_step3_desc'=>500,
+        'lp_features_title'=>200, 'lp_features_sub'=>500, 'lp_hide_features'=>1,
+        'lp_cta_title'=>200, 'lp_cta_sub'=>500,
+        'lp_creators_title'=>200, 'lp_creators_sub'=>1000, 'lp_creators_extra'=>500,
+        'lp_creators_p1'=>200, 'lp_creators_p2'=>200, 'lp_creators_p3'=>200, 'lp_creators_p4'=>200,
+        'lp_fans_title'=>200, 'lp_fans_sub'=>1000, 'lp_fans_extra'=>500,
+        'lp_fans_p1'=>200, 'lp_fans_p2'=>200, 'lp_fans_p3'=>200, 'lp_fans_p4'=>200,
+    ];
+    for ($i = 1; $i <= 6; $i++) { $fields["lp_f{$i}_title"] = 200; $fields["lp_f{$i}_desc"] = 500; }
+    foreach ($fields as $key => $maxLen) {
+        $val = substr(trim((string)($_POST[$key] ?? '')), 0, $maxLen);
+        if ($key === 'lp_hide_features') $val = !empty($_POST[$key]) ? '1' : '0';
+        saveSiteSetting($key, $val);
+    }
+    jsonResponse(['success' => true, 'message' => 'Landing page settings saved.']);
+}
+
+function handleSaveAds(): never {
     if (isset($_FILES['ads_txt_file']) && $_FILES['ads_txt_file']['error'] === UPLOAD_ERR_OK) {
         $file = $_FILES['ads_txt_file'];
-
-        if ($file['size'] > 2097152) {
-            jsonResponse(['success' => false, 'message' => 'ads.txt file too large (max 2 MB).']);
-        }
-
-        $ext = strtolower(pathinfo((string)$file['name'], PATHINFO_EXTENSION));
-        if ($ext !== 'txt') {
-            jsonResponse(['success' => false, 'message' => 'Only .txt files are allowed for ads.txt.']);
-        }
-
+        if ($file['size'] > 2097152) jsonResponse(['success' => false, 'message' => 'File too large.']);
+        if (strtolower(pathinfo((string)$file['name'], PATHINFO_EXTENSION)) !== 'txt') jsonResponse(['success' => false, 'message' => 'TXT files only.']);
         $content = file_get_contents($file['tmp_name']);
-        if ($content === false) {
-            jsonResponse(['success' => false, 'message' => 'Could not read uploaded file.']);
-        }
-        saveSiteSetting('ads_txt_content', $content);
+        if ($content !== false) saveSiteSetting('ads_txt_content', $content);
     } else {
-        $content = $_POST['ads_txt_content'] ?? '';
-        saveSiteSetting('ads_txt_content', $content);
+        saveSiteSetting('ads_txt_content', $_POST['ads_txt_content'] ?? '');
     }
-
     jsonResponse(['success' => true, 'message' => 'Ads settings saved.']);
 }

@@ -76,6 +76,52 @@ function sanitizeInput(string $input): string {
     return trim(strip_tags($input));
 }
 
+/**
+ * Formats site name with a lemon-colored span starting from the second capital letter.
+ * Useful for "ClipZaza" -> "Clip<span...>Zaza</span>"
+ */
+/**
+ * Renders a platform icon image.
+ */
+function getPlatformIcon(string $platform, string $size = '1.2rem'): string {
+    $src = match(strtolower($platform)) {
+        'tiktok'    => '/assets/img/tiktok.png',
+        'instagram' => '/assets/img/instagram.png',
+        'facebook'  => '/assets/img/facebook.png',
+        default     => ''
+    };
+    if (!$src) return '';
+    return sprintf(
+        '<img src="%s" alt="%s" class="platform-img-icon" style="width:%s; height:%s; vertical-align:middle; object-fit:contain; margin-top:-2px" />',
+        $src,
+        ucfirst($platform),
+        $size,
+        $size
+    );
+}
+
+function formatSiteName(string $siteName): string {
+    $len = mb_strlen($siteName);
+    $capCount = 0;
+    $breakIndex = -1;
+
+    for ($i = 0; $i < $len; $i++) {
+        $char = mb_substr($siteName, $i, 1);
+        if ($char >= 'A' && $char <= 'Z') {
+            $capCount++;
+            if ($capCount === 2) {
+                $breakIndex = $i;
+                break;
+            }
+        }
+    }
+
+    if ($breakIndex !== -1) {
+        return e(mb_substr($siteName, 0, $breakIndex)) . '<span style="color:var(--accent)">' . e(mb_substr($siteName, $breakIndex)) . '</span>';
+    }
+    return e($siteName);
+}
+
 function isValidEmail(string $email): bool {
     return (bool)filter_var($email, FILTER_VALIDATE_EMAIL);
 }
@@ -214,6 +260,14 @@ function paystackGet(string $endpoint): array {
 
 function getPreferredPayoutGateway(): string {
     return getSetting('preferred_payout_gateway', 'paystack');
+}
+
+/**
+ * Checks if KYC is mandatory based on the active payout system.
+ * Mandatory if any automated gateway is active.
+ */
+function isKycRequired(): bool {
+    return getPreferredPayoutGateway() !== 'manual';
 }
 
 function autoArchiveContests(): int {

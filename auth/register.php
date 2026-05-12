@@ -6,6 +6,7 @@ require_once $root . '/includes/db.php';
 require_once $root . '/includes/functions.php';
 require_once $root . '/includes/auth.php';
 require_once $root . '/includes/layout.php';
+require_once $root . '/includes/google_auth_helper.php';
 
 if (session_status() === PHP_SESSION_NONE) session_start();
 if (!empty($_SESSION['user_id'])) redirect('/dashboard');
@@ -13,6 +14,8 @@ if (!empty($_SESSION['user_id'])) redirect('/dashboard');
 $errors  = [];
 $success = false;
 $formData = ['display_name' => '', 'email' => '', 'username' => ''];
+
+$googleHelper = new GoogleAuthHelper();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) {
@@ -92,13 +95,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $csrf = generateCsrfToken();
+$siteName = getSetting('site_name', 'Clipaza');
+$siteLogo = getSetting('site_logo', '');
+
 renderHead('Create Account');
 ?>
 <div class="public-page d-flex align-items-center justify-content-center" style="min-height:100vh;background:var(--bg);padding:40px 16px">
   <div class="w-100" style="max-width:420px">
     <div class="text-center mb-4">
       <a href="/" class="text-decoration-none">
-        <span style="font-size:1.5rem;font-weight:900;color:var(--text);letter-spacing:-0.5px">Clipaza<span style="color:var(--accent)">.</span></span>
+        <?php if ($siteLogo): ?>
+          <img src="<?= e($siteLogo) ?>" alt="<?= e($siteName) ?>" style="height:48px;max-width:100%;object-fit:contain">
+        <?php else: ?>
+          <span style="font-size:1.5rem;font-weight:900;color:var(--text);letter-spacing:-0.5px"><?= formatSiteName($siteName) ?></span>
+        <?php endif; ?>
       </a>
       <p class="text-muted mt-2 mb-0" style="font-size:0.9rem">Join as a creator or clipper</p>
     </div>
@@ -109,6 +119,18 @@ renderHead('Create Account');
       <?php foreach ($errors as $err): ?>
         <div class="alert-dark-danger mb-3" role="alert"><?= e($err) ?></div>
       <?php endforeach; ?>
+
+      <?php if ($googleHelper->isConfigured()): ?>
+        <a href="<?= e($googleHelper->getAuthUrl()) ?>" class="btn btn-outline-light w-100 mb-3 d-flex align-items-center justify-content-center gap-2" style="border-color: #555; background: #fff; color: #333; font-weight: 600;">
+          <img src="https://www.gstatic.com/images/branding/product/1x/gsa_48dp.png" alt="" style="width:18px;height:18px">
+          Continue with Google
+        </a>
+        <div class="d-flex align-items-center gap-2 mb-3">
+          <hr class="flex-grow-1 border-secondary">
+          <span class="text-muted" style="font-size:0.75rem">OR</span>
+          <hr class="flex-grow-1 border-secondary">
+        </div>
+      <?php endif; ?>
 
       <form method="POST" novalidate>
         <input type="hidden" name="csrf_token" value="<?= e($csrf) ?>">

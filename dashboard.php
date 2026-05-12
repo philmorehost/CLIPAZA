@@ -73,6 +73,22 @@ if ($mode === 'creator') {
         );
         $stmt->execute([$userId]);
         $recentContests = $stmt->fetchAll();
+
+        // Top clippers summary for creator
+        $creatorLB = [];
+        $stmt = $db->prepare(
+            "SELECT u.username, SUM(ce.view_count) AS total_views, COUNT(ce.id) AS clip_count
+             FROM contest_entries ce
+             INNER JOIN contests c ON c.id = ce.contest_id
+             INNER JOIN users u ON u.id = ce.user_id
+             WHERE c.creator_id = ? AND ce.status = 'approved' AND ce.disqualified = 0
+             GROUP BY ce.user_id
+             ORDER BY total_views DESC
+             LIMIT 5"
+        );
+        $stmt->execute([$userId]);
+        $creatorLB = $stmt->fetchAll();
+
     } catch (Throwable) {}
 } else {
     try {
@@ -96,6 +112,33 @@ if ($mode === 'creator') {
         );
         $stmt->execute([$userId]);
         $myEntries = $stmt->fetchAll();
+
+        // Top 5 Global leaderboard for clipper dashboard
+        $clipperLB = [];
+        $stmt = $db->query(
+            "SELECT u.username, SUM(ce.view_count) AS total_views
+             FROM contest_entries ce
+             INNER JOIN users u ON u.id = ce.user_id
+             WHERE ce.status = 'approved' AND ce.disqualified = 0
+             GROUP BY ce.user_id
+             ORDER BY total_views DESC
+             LIMIT 5"
+        );
+        $clipperLB = $stmt->fetchAll();
+
+        // Brand Descriptions / Instructions for clippers
+        $brandInstructions = [];
+        $stmt = $db->prepare(
+            "SELECT DISTINCT u.username, up.brand_description, up.display_name
+             FROM contest_entries ce
+             INNER JOIN contests c ON c.id = ce.contest_id
+             INNER JOIN users u ON u.id = c.creator_id
+             INNER JOIN user_profiles up ON up.user_id = u.id
+             WHERE ce.user_id = ? AND up.brand_description IS NOT NULL AND up.brand_description != ''"
+        );
+        $stmt->execute([$userId]);
+        $brandInstructions = $stmt->fetchAll();
+
     } catch (Throwable) {}
 }
 
@@ -169,6 +212,8 @@ renderNav(true, ['username' => $username], $mode);
 
     <?php if ($mode === 'creator'): ?>
       <!-- CREATOR VIEW -->
+      <div class="row g-4">
+        <div class="col-lg-8">
       <div class="row g-3 mb-4">
         <div class="col-6 col-md-4">
           <div class="stat-card">
@@ -255,9 +300,40 @@ renderNav(true, ['username' => $username], $mode);
           <?php endforeach; ?>
         </div>
       <?php endif; ?>
+        </div> <!-- end col-lg-8 -->
+
+        <div class="col-lg-4">
+          <div class="card-dark h-100">
+            <div class="card-header d-flex align-items-center justify-content-between">
+              <h6 class="mb-0 fw-700">🏆 Top Clippers</h6>
+              <a href="/leaderboards" class="text-accent" style="font-size:0.75rem">View All</a>
+            </div>
+            <div class="card-body p-0">
+              <?php if (empty($creatorLB)): ?>
+                <div class="p-4 text-center text-muted" style="font-size:0.85rem">No entries in your contests yet.</div>
+              <?php else: ?>
+                <?php foreach ($creatorLB as $idx => $row): ?>
+                  <div class="d-flex align-items-center justify-content-between p-3 border-bottom border-secondary">
+                    <div class="d-flex align-items-center gap-2">
+                      <span class="fw-700 text-muted" style="font-size:0.8rem"><?= $idx+1 ?>.</span>
+                      <span style="font-size:0.85rem">@<?= e($row['username']) ?></span>
+                    </div>
+                    <div class="text-end">
+                      <div style="font-size:0.85rem; color:var(--accent); font-weight:700"><?= number_format((int)$row['total_views']) ?></div>
+                      <div style="font-size:0.7rem" class="text-muted">views</div>
+                    </div>
+                  </div>
+                <?php endforeach; ?>
+              <?php endif; ?>
+            </div>
+          </div>
+        </div>
+      </div> <!-- end row -->
 
     <?php else: ?>
       <!-- CLIPPER VIEW -->
+      <div class="row g-4">
+        <div class="col-lg-8">
       <div class="row g-3 mb-4">
         <div class="col-6 col-md-4">
           <div class="stat-card">
@@ -284,6 +360,26 @@ renderNav(true, ['username' => $username], $mode);
         <a href="/contests" class="btn btn-accent btn-sm">Browse Contests</a>
       </div>
 
+      <?php if (!empty($brandInstructions)): ?>
+        <div class="mb-4">
+          <h6 class="fw-700 mb-3">📢 Brand Instructions</h6>
+          <div class="row g-3">
+            <?php foreach ($brandInstructions as $bi): ?>
+              <div class="col-12">
+                <div class="card-dark p-3" style="border-left: 4px solid var(--accent);">
+                  <div class="fw-700 mb-2" style="font-size:0.9rem; color:var(--accent);">
+                    Instructions from <?= e($bi['display_name'] ?: $bi['username']) ?> (@<?= e($bi['username']) ?>)
+                  </div>
+                  <div class="text-muted" style="font-size:0.85rem; line-height:1.6;">
+                    <?= nl2br(e($bi['brand_description'])) ?>
+                  </div>
+                </div>
+              </div>
+            <?php endforeach; ?>
+          </div>
+        </div>
+      <?php endif; ?>
+
       <?php if (empty($myEntries)): ?>
         <div class="card-dark p-5 text-center">
           <div style="font-size:2.5rem;margin-bottom:12px">✂️</div>
@@ -295,18 +391,13 @@ renderNav(true, ['username' => $username], $mode);
         <div class="row g-3">
           <?php foreach ($myEntries as $entry): ?>
             <?php
-              $platformIcon = match($entry['platform'] ?? '') {
-                  'tiktok'    => '🎵',
-                  'instagram' => '📸',
-                  'facebook'  => '📘',
-                  default     => '🎬',
-              };
+              $platformIcon = getPlatformIcon($entry['platform'] ?? '', '1.2rem');
               $rankLabel = $entry['rank_position'] ? '#' . $entry['rank_position'] : 'Unranked';
             ?>
             <div class="col-md-6">
               <div class="card-dark p-3">
                 <div class="d-flex align-items-center gap-2 mb-2">
-                  <span style="font-size:1.2rem"><?= $platformIcon ?></span>
+                  <span><?= $platformIcon ?></span>
                   <h6 class="fw-700 mb-0" style="font-size:0.9rem"><?= e($entry['contest_title']) ?></h6>
                 </div>
                 <div class="d-flex gap-3 text-muted mb-2" style="font-size:0.8rem">
@@ -327,6 +418,35 @@ renderNav(true, ['username' => $username], $mode);
           <?php endforeach; ?>
         </div>
       <?php endif; ?>
+        </div> <!-- end col-lg-8 -->
+
+        <div class="col-lg-4">
+          <div class="card-dark h-100">
+            <div class="card-header d-flex align-items-center justify-content-between">
+              <h6 class="mb-0 fw-700">🏆 Global Rankings</h6>
+              <a href="/leaderboards" class="text-accent" style="font-size:0.75rem">View All</a>
+            </div>
+            <div class="card-body p-0">
+              <?php if (empty($clipperLB)): ?>
+                <div class="p-4 text-center text-muted" style="font-size:0.85rem">No rankings data yet.</div>
+              <?php else: ?>
+                <?php foreach ($clipperLB as $idx => $row): ?>
+                  <div class="d-flex align-items-center justify-content-between p-3 border-bottom border-secondary">
+                    <div class="d-flex align-items-center gap-2">
+                      <span class="fw-700 text-muted" style="font-size:0.8rem"><?= $idx+1 ?>.</span>
+                      <span style="font-size:0.85rem" class="<?= $row['username'] === $username ? 'text-accent fw-700' : '' ?>">@<?= e($row['username']) ?></span>
+                    </div>
+                    <div class="text-end">
+                      <div style="font-size:0.85rem; color:var(--accent); font-weight:700"><?= number_format((int)$row['total_views']) ?></div>
+                      <div style="font-size:0.7rem" class="text-muted">views</div>
+                    </div>
+                  </div>
+                <?php endforeach; ?>
+              <?php endif; ?>
+            </div>
+          </div>
+        </div>
+      </div> <!-- end row -->
     <?php endif; ?>
 
     <!-- Social handles quick view -->
@@ -338,10 +458,10 @@ renderNav(true, ['username' => $username], $mode);
             <span style="font-size:0.82rem;color:#ff0000">▶ <?= e($profile['youtube_handle']) ?></span>
           <?php endif; ?>
           <?php if (!empty($profile['tiktok_handle'])): ?>
-            <span style="font-size:0.82rem;color:var(--accent)">🎵 <?= e($profile['tiktok_handle']) ?></span>
+            <span style="font-size:0.82rem;color:var(--accent)"><?= getPlatformIcon('tiktok', '1rem') ?> <?= e($profile['tiktok_handle']) ?></span>
           <?php endif; ?>
           <?php if (!empty($profile['instagram_handle'])): ?>
-            <span style="font-size:0.82rem;color:#e1306c">📸 <?= e($profile['instagram_handle']) ?></span>
+            <span style="font-size:0.82rem;color:#e1306c"><?= getPlatformIcon('instagram', '1rem') ?> <?= e($profile['instagram_handle']) ?></span>
           <?php endif; ?>
           <?php if (empty($profile['youtube_handle']) && empty($profile['tiktok_handle']) && empty($profile['instagram_handle'])): ?>
             <a href="/profile" class="text-accent text-decoration-none" style="font-size:0.82rem">+ Add social handles</a>

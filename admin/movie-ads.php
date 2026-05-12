@@ -74,7 +74,7 @@ $siteUrl = rtrim(getSetting('site_url', ''), '/');
 </head>
 <body>
 <nav class="admin-sidebar">
-    <div class="sidebar-brand">Clipa<span>za</span></div>
+    <?php $sn = getSetting("site_name", "Clipaza"); $sl = getSetting("site_logo", ""); if ($sl): ?><div class="sidebar-brand"><img src="<?= e($sl) ?>" alt="<?= e($sn) ?>" style="height:28px"></div><?php else: ?><div class="sidebar-brand"><?= formatSiteName($sn) ?></div><?php endif; ?>
     <div class="sidebar-nav">
         <ul class="nav flex-column">
             <li class="nav-item"><a href="index.php" class="nav-link"><span class="nav-icon">⊞</span> Dashboard</a></li>
@@ -98,7 +98,7 @@ $siteUrl = rtrim(getSetting('site_url', ''), '/');
 <main class="admin-main">
     <div class="admin-topbar">
         <div class="d-flex align-items-center gap-3">
-            <button id="sidebarToggle" class="btn d-lg-none" style="color:#888;background:rgba(255,255,255,0.05);border-radius:8px;padding:6px 10px;">☰</button>
+            <button id="sidebarToggle" class="btn d-lg-none" style="color:var(--text-muted);background:var(--subtle-bg);border-radius:8px;padding:6px 10px;">☰</button>
             <button id="adminThemeToggle" class="btn-theme-toggle" title="Toggle light/dark mode" aria-label="Toggle theme" style="margin-left:4px">☀️</button>
             <h1>Movie Ads</h1>
         </div>
@@ -165,12 +165,12 @@ $siteUrl = rtrim(getSetting('site_url', ''), '/');
                 <td>
                     <div class="fw-700" style="font-size:0.9rem"><?= e($ad['movie_title']) ?></div>
                     <?php if ($ad['genre']): ?>
-                    <div style="font-size:0.78rem;color:#888"><?= e($ad['genre']) ?></div>
+                    <div style="font-size:0.78rem;color:var(--text-muted)"><?= e($ad['genre']) ?></div>
                     <?php endif; ?>
                 </td>
                 <td>
                     <div style="font-size:0.88rem"><?= e($ad['username'] ?? '—') ?></div>
-                    <div style="font-size:0.75rem;color:#888"><?= e($ad['email'] ?? '') ?></div>
+                    <div style="font-size:0.75rem;color:var(--text-muted)"><?= e($ad['email'] ?? '') ?></div>
                 </td>
                 <td>
                     <div style="font-size:0.85rem"><?= e($ad['package_name'] ?? '—') ?></div>
@@ -182,14 +182,14 @@ $siteUrl = rtrim(getSetting('site_url', ''), '/');
                     <span class="<?= $payClass ?>" style="font-size:0.72rem">
                         <?= e(str_replace('_', ' ', ucfirst($ad['payment_status']))) ?>
                     </span>
-                    <div style="font-size:0.72rem;color:#888"><?= e(ucfirst($ad['payment_method'])) ?></div>
+                    <div style="font-size:0.72rem;color:var(--text-muted)"><?= e(ucfirst($ad['payment_method'])) ?></div>
                 </td>
                 <td>
                     <span class="<?= $statusClass ?>" style="font-size:0.72rem">
                         <?= e(str_replace('_', ' ', ucfirst($ad['status']))) ?>
                     </span>
                 </td>
-                <td style="font-size:0.78rem;color:#888"><?= e(formatDate($ad['created_at'], 'M j, Y')) ?></td>
+                <td style="font-size:0.78rem;color:var(--text-muted)"><?= e(formatDate($ad['created_at'], 'M j, Y')) ?></td>
                 <td>
                     <div class="d-flex gap-1 flex-wrap">
                         <button class="btn btn-sm btn-outline-accent view-ad-btn"
@@ -215,36 +215,36 @@ $siteUrl = rtrim(getSetting('site_url', ''), '/');
             <!-- Detail row (hidden) -->
             <tr class="ad-detail-row" id="detail-<?= (int)$ad['id'] ?>" style="display:none">
                 <td colspan="7">
-                    <div class="p-3" style="background:#0d0d0d;border-radius:8px">
+                    <div class="p-3" style="background:var(--input-bg);border-radius:8px">
                         <div class="row g-3">
                             <?php if ($ad['poster_path']): ?>
                             <div class="col-md-2">
-                                <div style="font-size:0.72rem;color:#888;margin-bottom:4px;text-transform:uppercase">Poster</div>
+                                <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase">Poster</div>
                                 <a href="<?= e($siteUrl . $ad['poster_path']) ?>" target="_blank">
                                     <img src="<?= e($siteUrl . $ad['poster_path']) ?>" alt="Poster"
-                                         style="width:100%;max-width:120px;border-radius:6px;border:1px solid #222">
+                                         style="width:100%;max-width:120px;border-radius:6px;border:1px solid var(--border)">
                                 </a>
                             </div>
                             <?php endif; ?>
                             <?php if ($ad['flyer_path']): ?>
                             <div class="col-md-2">
-                                <div style="font-size:0.72rem;color:#888;margin-bottom:4px;text-transform:uppercase">E-Flyer</div>
+                                <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase">E-Flyer</div>
                                 <a href="<?= e($siteUrl . $ad['flyer_path']) ?>" target="_blank">
                                     <img src="<?= e($siteUrl . $ad['flyer_path']) ?>" alt="Flyer"
-                                         style="width:100%;max-width:120px;border-radius:6px;border:1px solid #222">
+                                         style="width:100%;max-width:120px;border-radius:6px;border:1px solid var(--border)">
                                 </a>
                             </div>
                             <?php endif; ?>
                             <div class="col-md-4">
-                                <div style="font-size:0.72rem;color:#888;text-transform:uppercase;margin-bottom:8px">Movie Details</div>
+                                <div style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;margin-bottom:8px">Movie Details</div>
                                 <?php if ($ad['tagline']): ?>
                                 <div style="font-size:0.85rem;color:#ddd;font-style:italic;margin-bottom:4px">"<?= e($ad['tagline']) ?>"</div>
                                 <?php endif; ?>
                                 <?php if ($ad['description']): ?>
-                                <div style="font-size:0.8rem;color:#aaa;margin-bottom:6px"><?= e($ad['description']) ?></div>
+                                <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:6px"><?= e($ad['description']) ?></div>
                                 <?php endif; ?>
                                 <?php if ($ad['release_date']): ?>
-                                <div style="font-size:0.78rem;color:#888">Release: <?= e(formatDate($ad['release_date'], 'M j, Y')) ?></div>
+                                <div style="font-size:0.78rem;color:var(--text-muted)">Release: <?= e(formatDate($ad['release_date'], 'M j, Y')) ?></div>
                                 <?php endif; ?>
                                 <?php if ($ad['trailer_url']): ?>
                                 <a href="<?= e($ad['trailer_url']) ?>" target="_blank" class="btn btn-sm btn-outline-accent mt-2" style="font-size:0.75rem">
@@ -253,27 +253,27 @@ $siteUrl = rtrim(getSetting('site_url', ''), '/');
                                 <?php endif; ?>
                             </div>
                             <div class="col-md-4">
-                                <div style="font-size:0.72rem;color:#888;text-transform:uppercase;margin-bottom:8px">Contact & Payment</div>
+                                <div style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;margin-bottom:8px">Contact & Payment</div>
                                 <?php if ($ad['contact_email']): ?>
-                                <div style="font-size:0.8rem;color:#aaa">📧 <?= e($ad['contact_email']) ?></div>
+                                <div style="font-size:0.8rem;color:var(--text-muted)">📧 <?= e($ad['contact_email']) ?></div>
                                 <?php endif; ?>
                                 <?php if ($ad['contact_phone']): ?>
-                                <div style="font-size:0.8rem;color:#aaa">📞 <?= e($ad['contact_phone']) ?></div>
+                                <div style="font-size:0.8rem;color:var(--text-muted)">📞 <?= e($ad['contact_phone']) ?></div>
                                 <?php endif; ?>
                                 <?php if ($ad['website_url']): ?>
                                 <div style="font-size:0.8rem"><a href="<?= e($ad['website_url']) ?>" target="_blank" style="color:var(--accent)">🌐 Website</a></div>
                                 <?php endif; ?>
                                 <?php if ($ad['manual_deposit_proof']): ?>
                                 <div class="mt-2">
-                                    <div style="font-size:0.72rem;color:#888;margin-bottom:4px">Deposit Proof</div>
+                                    <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:4px">Deposit Proof</div>
                                     <a href="<?= e($siteUrl . $ad['manual_deposit_proof']) ?>" target="_blank" class="btn btn-sm btn-outline-accent" style="font-size:0.75rem">
                                         📄 View Proof
                                     </a>
                                     <?php if ($ad['manual_deposit_amount']): ?>
-                                    <div style="font-size:0.78rem;color:#aaa;margin-top:4px">Amount: ₦<?= number_format((float)$ad['manual_deposit_amount'], 2) ?></div>
+                                    <div style="font-size:0.78rem;color:var(--text-muted);margin-top:4px">Amount: ₦<?= number_format((float)$ad['manual_deposit_amount'], 2) ?></div>
                                     <?php endif; ?>
                                     <?php if ($ad['manual_deposit_note']): ?>
-                                    <div style="font-size:0.78rem;color:#888"><?= e($ad['manual_deposit_note']) ?></div>
+                                    <div style="font-size:0.78rem;color:var(--text-muted)"><?= e($ad['manual_deposit_note']) ?></div>
                                     <?php endif; ?>
                                 </div>
                                 <?php endif; ?>
@@ -417,20 +417,6 @@ function showFeedback(msg, type) {
     setTimeout(() => { fb.innerHTML = ''; }, 4000);
 }
 </script>
-<script>
-(function() {
-  var btn = document.getElementById('adminThemeToggle');
-  if (!btn) return;
-  function current() { return document.documentElement.dataset.theme || 'dark'; }
-  function setIcon() { btn.textContent = current() === 'dark' ? '☀️' : '🌙'; }
-  setIcon();
-  btn.addEventListener('click', function() {
-    var next = current() === 'dark' ? 'light' : 'dark';
-    document.documentElement.dataset.theme = next;
-    localStorage.setItem('clipaza_theme', next);
-    setIcon();
-  });
-})();
-</script>
+<script src="assets/js/theme_sync.js"></script>
 </body>
 </html>

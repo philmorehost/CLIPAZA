@@ -45,7 +45,8 @@ try {
         'bank_name' => "VARCHAR(100) DEFAULT NULL",
         'bank_code' => "VARCHAR(20) DEFAULT NULL",
         'account_number' => "VARCHAR(20) DEFAULT NULL",
-        'account_name' => "VARCHAR(200) DEFAULT NULL"
+        'account_name' => "VARCHAR(200) DEFAULT NULL",
+        'brand_description' => "TEXT DEFAULT NULL"
     ];
 
     foreach ($columns as $col => $def) {

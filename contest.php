@@ -73,7 +73,7 @@ function getLeaderboard(PDO $db, int $contestId, string $platform, int $limit = 
             "SELECT ce.*, u.username FROM contest_entries ce
              INNER JOIN users u ON u.id = ce.user_id
              WHERE ce.contest_id = ? AND ce.platform = ? AND ce.disqualified = 0
-             ORDER BY ce.view_count DESC, ce.like_count DESC
+             ORDER BY ce.view_count DESC, ce.like_count DESC, ce.comment_count DESC
              LIMIT ?"
         );
         $stmt->bindValue(1, $contestId, PDO::PARAM_INT);
@@ -123,7 +123,7 @@ $siteName   = getSetting('site_name', 'Clipaza');
 $contestUrl = $siteUrl . '/contest?id=' . $contestId;
 $ogImage    = $contest['youtube_thumbnail'] ?? '';
 $prize      = number_format((float)($contest['prize_pool'] ?? 0), 0);
-$metaDesc   = 'Enter the "' . addslashes($contest['title']) . '" clipping contest on ' . $siteName . ' and compete for a ₦' . $prize . ' prize. Post your best clip on TikTok, Reels, or Shorts — most authentic views wins.';
+$metaDesc   = 'Enter the "' . addslashes($contest['title']) . '" clipping contest on ' . $siteName . ' and compete for a ₦' . $prize . ' prize. Post your best clip on TikTok or Reels — most authentic views wins.';
 
 $extraHead  = '<meta name="csrf" content="' . e($csrf) . '">' . "\n";
 $extraHead .= '  <meta name="description" content="' . e($metaDesc) . '">' . "\n";
@@ -247,12 +247,7 @@ renderNav($isLoggedIn, ['username' => $username], $userMode);
             <div class="row g-2">
               <?php foreach ($platforms as $p): ?>
                 <?php
-                  $pIcon = match($p['platform']) {
-                    'tiktok'    => '🎵',
-                    'instagram' => '📸',
-                    'facebook'  => '📘',
-                    default     => '🎬',
-                  };
+                  $pIcon = getPlatformIcon($p['platform'], '1.5rem');
                   $perWinner = $p['winner_count'] > 0
                       ? number_format((float)$p['prize_amount'] / (int)$p['winner_count'], 0)
                       : '0';
@@ -277,10 +272,10 @@ renderNav($isLoggedIn, ['username' => $username], $userMode);
             <ul class="nav nav-tabs mb-3" id="lbTabs" style="border-bottom:1px solid var(--border)">
               <?php foreach ($platforms as $idx => $p): ?>
                 <?php
-                  $pIcon = match($p['platform']) { 'tiktok'=>'🎵','instagram'=>'📸','facebook'=>'📘',default=>'' };
+                  $pIcon = getPlatformIcon($p['platform'], '1rem');
                 ?>
                 <li class="nav-item">
-                  <button class="nav-link <?= $idx===0?'active':'' ?> text-white"
+                  <button class="nav-link <?= $idx===0?'active':'' ?> text-theme"
                           data-bs-toggle="tab"
                           data-bs-target="#lb-<?= e($p['platform']) ?>"
                           style="background:none;border:none;border-bottom:2px solid transparent;font-size:0.85rem;padding:8px 16px">
@@ -385,11 +380,10 @@ renderNav($isLoggedIn, ['username' => $username], $userMode);
                   <option value="">Select platform</option>
                   <?php foreach ($platforms as $p): ?>
                     <?php
-                      $pIcon = match($p['platform']) { 'tiktok'=>'🎵','instagram'=>'📸','facebook'=>'📘',default=>'' };
                       $alreadySubmitted = isset($myEntries[$p['platform']]);
                     ?>
                     <option value="<?= e($p['platform']) ?>" <?= $alreadySubmitted ? 'disabled' : '' ?>>
-                      <?= $pIcon ?> <?= ucfirst(e($p['platform'])) ?> <?= $alreadySubmitted ? '(submitted)' : '' ?>
+                      <?= ucfirst(e($p['platform'])) ?> <?= $alreadySubmitted ? '(submitted)' : '' ?>
                     </option>
                   <?php endforeach; ?>
                 </select>

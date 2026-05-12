@@ -204,14 +204,14 @@ renderNav(true, $user);
                             <div class="form-check mb-2">
                                 <input class="form-check-input" type="radio" name="payment_method" id="pmOnline"
                                        value="online" checked>
-                                <label class="form-check-label text-white" for="pmOnline">
+                                <label class="form-check-label text-theme" for="pmOnline">
                                     💳 Pay Online (Paystack)
                                 </label>
                             </div>
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="payment_method" id="pmManual"
                                        value="manual">
-                                <label class="form-check-label text-white" for="pmManual">
+                                <label class="form-check-label text-theme" for="pmManual">
                                     🏦 Manual Bank Transfer
                                 </label>
                             </div>

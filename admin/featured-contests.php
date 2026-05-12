@@ -45,7 +45,7 @@ try {
 </head>
 <body>
 <nav class="admin-sidebar">
-    <div class="sidebar-brand">Clipa<span>za</span></div>
+    <?php $sn = getSetting("site_name", "Clipaza"); $sl = getSetting("site_logo", ""); if ($sl): ?><div class="sidebar-brand"><img src="<?= e($sl) ?>" alt="<?= e($sn) ?>" style="height:28px"></div><?php else: ?><div class="sidebar-brand"><?= formatSiteName($sn) ?></div><?php endif; ?>
     <div class="sidebar-nav">
         <ul class="nav flex-column">
             <li class="nav-item"><a href="index.php" class="nav-link"><span class="nav-icon">⊞</span> Dashboard</a></li>
@@ -69,7 +69,7 @@ try {
 <main class="admin-main">
     <div class="admin-topbar">
         <div class="d-flex align-items-center gap-3">
-            <button id="sidebarToggle" class="btn d-lg-none" style="color:#888;background:rgba(255,255,255,0.05);border-radius:8px;padding:6px 10px;">☰</button>
+            <button id="sidebarToggle" class="btn d-lg-none" style="color:var(--text-muted);background:var(--subtle-bg);border-radius:8px;padding:6px 10px;">☰</button>
             <button id="adminThemeToggle" class="btn-theme-toggle" title="Toggle light/dark mode" aria-label="Toggle theme" style="margin-left:4px">☀️</button>
             <h1>Featured Contests</h1>
         </div>
@@ -126,7 +126,7 @@ try {
             <tbody>
             <?php foreach ($featured as $fc): ?>
             <tr>
-                <td><a href="/contest?id=<?= (int)$fc['id'] ?>" class="text-white text-decoration-none fw-600" target="_blank"><?= e($fc['title']) ?></a></td>
+                <td><a href="/contest?id=<?= (int)$fc['id'] ?>" class="text-theme text-decoration-none fw-600" target="_blank"><?= e($fc['title']) ?></a></td>
                 <td class="text-muted">@<?= e($fc['creator_username'] ?? '') ?></td>
                 <td>₦<?= number_format((float)$fc['prize_pool'], 0) ?></td>
                 <td class="text-muted" style="font-size:0.85rem"><?= !empty($fc['featured_until']) ? date('M j, Y g:i A', strtotime($fc['featured_until'])) : 'Indefinite' ?></td>
@@ -148,7 +148,7 @@ try {
         <div class="modal-content modal-dark">
             <div class="modal-header" style="border-bottom:1px solid #1a1a1a">
                 <h5 class="modal-title fw-700" id="planModalTitle">Create Plan</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(1)"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" style=""></button>
             </div>
             <div class="modal-body">
                 <div id="planModalFeedback" class="mb-3"></div>
@@ -269,20 +269,6 @@ document.querySelectorAll('.unfeature-btn').forEach(btn => {
     });
 });
 </script>
-<script>
-(function() {
-  var btn = document.getElementById('adminThemeToggle');
-  if (!btn) return;
-  function current() { return document.documentElement.dataset.theme || 'dark'; }
-  function setIcon() { btn.textContent = current() === 'dark' ? '☀️' : '🌙'; }
-  setIcon();
-  btn.addEventListener('click', function() {
-    var next = current() === 'dark' ? 'light' : 'dark';
-    document.documentElement.dataset.theme = next;
-    localStorage.setItem('clipaza_theme', next);
-    setIcon();
-  });
-})();
-</script>
+<script src="assets/js/theme_sync.js"></script>
 </body>
 </html>

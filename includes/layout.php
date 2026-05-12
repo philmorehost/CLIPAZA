@@ -42,7 +42,7 @@ function renderNav(bool $isLoggedIn, array $user = [], string $activeMode = ''):
     $siteLogo = function_exists('getSetting') ? getSetting('site_logo', '') : '';
     $logoHtml = $siteLogo
         ? '<img src="' . e($siteLogo) . '" alt="' . e($siteName) . '" style="height:32px">'
-        : '<span class="fw-900" style="font-size:1.25rem;letter-spacing:-0.5px">' . e($siteName) . '<span style="color:var(--accent)">.</span></span>';
+        : '<span class="fw-900" style="font-size:1.25rem;letter-spacing:-0.5px">' . formatSiteName($siteName) . '</span>';
 
     echo '<nav class="navbar navbar-expand-lg navbar-themed" style="background:var(--nav-bg);border-bottom:1px solid var(--nav-border);position:sticky;top:0;z-index:1000">';
     echo '<div class="container">';
@@ -51,6 +51,7 @@ function renderNav(bool $isLoggedIn, array $user = [], string $activeMode = ''):
     echo '<div class="collapse navbar-collapse" id="mainNav">';
     echo '<ul class="navbar-nav me-auto">';
     echo '<li class="nav-item"><a class="nav-link" href="/contests" style="font-size:0.9rem;color:var(--text-muted)">Browse Contests</a></li>';
+    echo '<li class="nav-item"><a class="nav-link" href="/leaderboards" style="font-size:0.9rem;color:var(--text-muted)">🏆 Leaderboards</a></li>';
     echo '<li class="nav-item"><a class="nav-link" href="/ads" style="font-size:0.9rem;color:var(--text-muted)">🎬 Movies</a></li>';
     echo '<li class="nav-item"><a class="nav-link" href="/#how-it-works" style="font-size:0.9rem;color:var(--text-muted)">How It Works</a></li>';
     echo '</ul>';
@@ -65,6 +66,8 @@ function renderNav(bool $isLoggedIn, array $user = [], string $activeMode = ''):
         if (!empty($_SESSION['admin_impersonating'])) {
             $origName = e($_SESSION['original_admin_name'] ?? 'Admin');
             echo '<a href="/auth/return-admin" class="btn btn-sm" style="background:rgba(255,68,68,0.15);color:var(--danger);border:1px solid rgba(255,68,68,0.3);font-size:0.75rem">← Return to Admin (' . $origName . ')</a>';
+        } elseif (($_SESSION['user_role'] ?? '') === 'admin') {
+            echo '<a href="/admin/" class="btn btn-sm" style="background:rgba(204,255,0,0.1);color:var(--accent);border:1px solid rgba(204,255,0,0.3);font-size:0.75rem">🛡 Admin Panel</a>';
         }
         echo '<span class="badge" style="background:var(--accent-dim);color:var(--accent);font-size:0.72rem;border:1px solid rgba(204,255,0,0.3)">' . $modeLabel . ' Mode</span>';
         echo '<a href="/dashboard" class="btn btn-sm btn-outline-accent">Dashboard</a>';

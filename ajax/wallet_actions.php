@@ -236,7 +236,7 @@ function handleRequestPayout(): never {
         $stmt->execute([$userId]);
         $profile = $stmt->fetch();
 
-        if (!$profile || ($profile['kyc_status'] ?? 'none') !== 'approved') {
+        if (isKycRequired() && (!$profile || ($profile['kyc_status'] ?? 'none') !== 'approved')) {
             jsonResponse(['success' => false, 'message' => 'KYC verification required before requesting payouts.']);
         }
 

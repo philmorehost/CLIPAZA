@@ -71,7 +71,7 @@ renderNav(true, ['username' => $username], $userMode);
         <?php if (!empty($pendingWins)): ?>
           <?php foreach ($pendingWins as $win): ?>
             <?php
-              $pIcon = match($win['platform'] ?? '') { 'tiktok'=>'🎵','instagram'=>'📸','facebook'=>'📘',default=>'🎬' };
+              $pIcon = getPlatformIcon($win['platform'] ?? '', '1.5rem');
               $perWinner = (int)$win['winner_count'] > 0
                   ? round((float)$win['prize_amount'] / (int)$win['winner_count'], 2)
                   : 0;
@@ -85,6 +85,13 @@ renderNav(true, ['username' => $username], $userMode);
                 </div>
               </div>
 
+              <?php if (isKycRequired() && ($profile['kyc_status'] ?? 'none') !== 'approved'): ?>
+                <div class="alert-dark-warning mb-0">
+                  <div class="fw-700" style="font-size:0.9rem">KYC Verification Required</div>
+                  <p class="mb-2" style="font-size:0.8rem;opacity:0.8">You must complete KYC verification before claiming automated payouts.</p>
+                  <a href="/kyc" class="btn btn-xs btn-accent">Complete KYC →</a>
+                </div>
+              <?php else: ?>
               <form class="claim-form" data-entry="<?= (int)$win['id'] ?>">
                 <input type="hidden" name="action" value="claim_prize">
                 <input type="hidden" name="csrf_token" value="<?= e($csrf) ?>">
@@ -114,6 +121,7 @@ renderNav(true, ['username' => $username], $userMode);
                 <div class="claim-feedback mb-2"></div>
                 <button type="submit" class="btn btn-accent claim-submit-btn" disabled>Claim ₦<?= number_format($perWinner, 0) ?></button>
               </form>
+              <?php endif; ?>
             </div>
           <?php endforeach; ?>
         <?php elseif (empty($payouts)): ?>
