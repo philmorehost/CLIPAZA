@@ -22,6 +22,16 @@ renderHead('About', $extraHead);
 renderNav($isLoggedIn, ['username' => $username], $userMode);
 ?>
 
+<?php
+$dynamicAbout = getSetting('page_about', '');
+if ($dynamicAbout !== ''):
+?>
+<div class="public-page">
+  <div class="container py-5">
+    <?= $dynamicAbout ?>
+  </div>
+</div>
+<?php else: ?>
 <div class="public-page">
   <div class="container py-5" style="max-width:820px">
     <h1 class="fw-900 mb-2" style="letter-spacing:-0.5px">About <?= e($siteName) ?></h1>
@@ -87,5 +97,6 @@ renderNav($isLoggedIn, ['username' => $username], $userMode);
 
   </div>
 </div>
+<?php endif; ?>
 
 <?php renderFooter(); ?>

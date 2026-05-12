@@ -25,7 +25,8 @@ try {
 } catch (Throwable) {}
 
 function ss(array $settings, string $key, string $default = ''): string {
-    return htmlspecialchars($settings[$key] ?? $default, ENT_QUOTES, 'UTF-8');
+    $val = $settings[$key] ?? '';
+    return htmlspecialchars($val !== '' ? $val : $default, ENT_QUOTES, 'UTF-8');
 }
 ?>
 <!DOCTYPE html>
@@ -89,6 +90,7 @@ function ss(array $settings, string $key, string $default = ''): string {
             'seo'     => '🔍 SEO',
             'payment' => '💳 Payment',
             'landing' => '🏠 Landing Page',
+            'pages'   => '📄 Public Pages',
             'code'    => '💻 Code Injection',
             'ads'     => '📢 Ads',
         ];
@@ -248,23 +250,23 @@ function ss(array $settings, string $key, string $default = ''): string {
             <div class="card-dark mb-4">
                 <div class="card-header">Hero Section</div>
                 <div class="card-body">
-                    <div class="mb-3"><label class="form-label-dark">Hero Title</label><input type="text" name="lp_hero_title" class="form-control form-control-dark" value="<?= ss($siteSettings, 'lp_hero_title') ?>"></div>
-                    <div class="mb-3"><label class="form-label-dark">Hero Accent Title</label><input type="text" name="lp_hero_accent" class="form-control form-control-dark" value="<?= ss($siteSettings, 'lp_hero_accent') ?>"></div>
-                    <div class="mb-3"><label class="form-label-dark">Hero Subtext</label><textarea name="lp_hero_sub" class="form-control form-control-dark" rows="3"><?= ss($siteSettings, 'lp_hero_sub') ?></textarea></div>
+                    <div class="mb-3"><label class="form-label-dark">Hero Title</label><input type="text" name="lp_hero_title" class="form-control form-control-dark" value="<?= ss($siteSettings, 'lp_hero_title', 'Where Creators Reward') ?>"></div>
+                    <div class="mb-3"><label class="form-label-dark">Hero Accent Title</label><input type="text" name="lp_hero_accent" class="form-control form-control-dark" value="<?= ss($siteSettings, 'lp_hero_accent', 'Their Biggest Fans.') ?>"></div>
+                    <div class="mb-3"><label class="form-label-dark">Hero Subtext</label><textarea name="lp_hero_sub" class="form-control form-control-dark" rows="3"><?= ss($siteSettings, 'lp_hero_sub', 'Pick a contest from your favourite YouTube creator. Clip their best moment, post it on TikTok or Reels, and let the views decide who wins.') ?></textarea></div>
+                    <div class="row g-3">
+                        <div class="col-md-6"><label class="form-label-dark">Start Contest Button</label><input type="text" name="lp_hero_btn_creator" class="form-control form-control-dark" value="<?= ss($siteSettings, "lp_hero_btn_creator", "Start a Contest →") ?>"></div>
+                        <div class="col-md-6"><label class="form-label-dark">Join as Fan Button</label><input type="text" name="lp_hero_btn_fan" class="form-control form-control-dark" value="<?= ss($siteSettings, "lp_hero_btn_fan", "Join as a Fan →") ?>"></div>
+                    </div>
                 </div>
             </div>
             <div class="card-dark mb-4">
                 <div class="card-header">Brands & Creators Section</div>
                 <div class="card-body">
-                    <div class="mb-3"><label class="form-label-dark">Brands Section Title</label><input type="text" name="lp_brands_title" class="form-control form-control-dark" value="<?= ss($siteSettings, 'lp_brands_title') ?>"></div>
-                    <div class="mb-3"><label class="form-label-dark">Brands Section Subtitle</label><textarea name="lp_brands_sub" class="form-control form-control-dark" rows="3"><?= ss($siteSettings, 'lp_brands_sub') ?></textarea></div>
-                    <div class="mb-3"><label class="form-label-dark">Brands Section Content</label><textarea name="lp_brands_content" class="form-control form-control-dark" rows="4"><?= ss($siteSettings, 'lp_brands_content') ?></textarea></div>
+                    <div class="mb-3"><label class="form-label-dark">Brands Section Title</label><input type="text" name="lp_brands_title" class="form-control form-control-dark" value="<?= ss($siteSettings, 'lp_brands_title', 'Where Creators and Brands Rewards their biggest fans') ?>"></div>
+                    <div class="mb-3"><label class="form-label-dark">Brands Section Subtitle</label><textarea name="lp_brands_sub" class="form-control form-control-dark" rows="3"><?= ss($siteSettings, 'lp_brands_sub', 'Pick a contest from their favorite youtube creators/favorite musician/favorite artist/favorite brands. Clip their best moments, post it on tiktok reals or shorts and let the views decides who wins.') ?></textarea></div>
+                    <div class="mb-3"><label class="form-label-dark">Brands Section Content</label><textarea name="lp_brands_content" class="form-control form-control-dark" rows="4"><?= ss($siteSettings, 'lp_brands_content', 'Clipaza connects fans with their idols. Whether it\'s a breakout musician, a top-tier YouTube creator, or a global brand, you can now turn your fandom into rewards. Find an active contest, showcase your editing skills, and win real cash while helping your favorites grow.') ?></textarea></div>
                 </div>
             </div>
-                    <div class="row g-3">
-                        <div class="col-md-6"><label class="form-label-dark">Start Contest Button</label><input type="text" name="lp_hero_btn_creator" class="form-control form-control-dark" value="<?= ss($siteSettings, "lp_hero_btn_creator") ?>"></div>
-                        <div class="col-md-6"><label class="form-label-dark">Join as Fan Button</label><input type="text" name="lp_hero_btn_fan" class="form-control form-control-dark" value="<?= ss($siteSettings, "lp_hero_btn_fan") ?>"></div>
-                    </div>
             <div class="card-dark mb-4">
                 <div class="card-header">Features Section (Why Clipaza?)</div>
                 <div class="card-body">
@@ -272,13 +274,22 @@ function ss(array $settings, string $key, string $default = ''): string {
                         <input class="form-check-input" type="checkbox" name="lp_hide_features" id="hideFeatures" value="1" <?= ($siteSettings['lp_hide_features'] ?? '0') === '1' ? 'checked' : '' ?>>
                         <label class="form-check-label text-theme" for="hideFeatures">Hide Features Section</label>
                     </div>
-                    <div class="mb-3"><label class="form-label-dark">Features Section Title</label><input type="text" name="lp_features_title" class="form-control form-control-dark" value="<?= ss($siteSettings, 'lp_features_title') ?>"></div>
-                    <div class="mb-4"><label class="form-label-dark">Features Subtext</label><input type="text" name="lp_features_sub" class="form-control form-control-dark" value="<?= ss($siteSettings, 'lp_features_sub') ?>"></div>
+                    <div class="mb-3"><label class="form-label-dark">Features Section Title</label><input type="text" name="lp_features_title" class="form-control form-control-dark" value="<?= ss($siteSettings, 'lp_features_title', 'Clipaza') ?>"></div>
+                    <div class="mb-4"><label class="form-label-dark">Features Subtext</label><input type="text" name="lp_features_sub" class="form-control form-control-dark" value="<?= ss($siteSettings, 'lp_features_sub', "Everything a creator or fan needs — nothing they don't") ?>"></div>
                     <div class="row g-3">
-                        <?php for($i=1;$i<=6;$i++): ?>
+                        <?php
+                        $df = [
+                            ['t' => 'Any budget works', 'd' => 'You set the prize. Contests work at any prize level — from a quick boost to a serious campaign. You decide how much and how long.'],
+                            ['t' => 'Live dashboard', 'd' => 'Every clip submitted sits on a live leaderboard. View counts update in real time so you — and your fans — always know where things stand.'],
+                            ['t' => 'Multiple platforms at once', 'd' => 'Your video hits TikTok and Instagram Reels simultaneously — carried by people who genuinely like what you make.'],
+                            ['t' => 'Brand control', 'd' => 'Flag any clip that doesn\'t fit your brand. You stay in control of what\'s associated with your channel throughout the contest.'],
+                            ['t' => 'Cash to your bank', 'd' => 'Winners get paid directly to their bank account. No gift cards, no vouchers, no waiting — just a bank transfer when the contest closes.'],
+                            ['t' => 'Only real views win', 'd' => 'No purchased traffic. No bot plays. No inflated numbers. If real people watched it, it counts. If they didn\'t, it doesn\'t.'],
+                        ];
+                        for($i=1;$i<=6;$i++): ?>
                         <div class="col-md-4 mb-3">
-                            <label class="form-label-dark">Feature <?= $i ?> Title</label><input type="text" name="lp_f<?= $i ?>_title" class="form-control form-control-dark mb-2" value="<?= ss($siteSettings, "lp_f{$i}_title") ?>">
-                            <label class="form-label-dark">Feature <?= $i ?> Desc</label><textarea name="lp_f<?= $i ?>_desc" class="form-control form-control-dark" rows="3"><?= ss($siteSettings, "lp_f{$i}_desc") ?></textarea>
+                            <label class="form-label-dark">Feature <?= $i ?> Title</label><input type="text" name="lp_f<?= $i ?>_title" class="form-control form-control-dark mb-2" value="<?= ss($siteSettings, "lp_f{$i}_title", $df[$i-1]['t']) ?>">
+                            <label class="form-label-dark">Feature <?= $i ?> Desc</label><textarea name="lp_f<?= $i ?>_desc" class="form-control form-control-dark" rows="3"><?= ss($siteSettings, "lp_f{$i}_desc", $df[$i-1]['d']) ?></textarea>
                         </div>
                         <?php endfor; ?>
                     </div>
@@ -287,12 +298,18 @@ function ss(array $settings, string $key, string $default = ''): string {
             <div class="card-dark mb-4">
                 <div class="card-header">How It Works Section</div>
                 <div class="card-body">
-                    <div class="mb-3"><label class="form-label-dark">Section Title</label><input type="text" name="lp_hiw_title" class="form-control form-control-dark" value="<?= ss($siteSettings, "lp_hiw_title") ?>"></div>
+                    <div class="mb-3"><label class="form-label-dark">Section Title</label><input type="text" name="lp_hiw_title" class="form-control form-control-dark" value="<?= ss($siteSettings, "lp_hiw_title", 'Works') ?>"></div>
                     <div class="row g-3">
-                        <?php for($i=1;$i<=3;$i++): ?>
+                        <?php
+                        $ds = [
+                            ['t' => 'Creator launches a contest', 'd' => 'They pick a video, set a prize, and open it to their fanbase. The contest goes live on Clipaza and anyone can join.'],
+                            ['t' => 'Fans clip and post', 'd' => 'You find the moment that\'s going to stop people mid-scroll. Cut it, post it wherever you\'re strongest — TikTok or Reels — then drop the link.'],
+                            ['t' => 'Views decide the winner', 'd' => 'Every clip sits on a live leaderboard. Watch your rank move in real time. When the contest closes, whoever has the most views takes the money home.'],
+                        ];
+                        for($i=1;$i<=3;$i++): ?>
                         <div class="col-md-4">
-                            <label class="form-label-dark">Step <?= $i ?> Title</label><input type="text" name="lp_step<?= $i ?>_title" class="form-control form-control-dark mb-2" value="<?= ss($siteSettings, "lp_step{$i}_title") ?>">
-                            <label class="form-label-dark">Step <?= $i ?> Desc</label><textarea name="lp_step<?= $i ?>_desc" class="form-control form-control-dark" rows="3"><?= ss($siteSettings, "lp_step{$i}_desc") ?></textarea>
+                            <label class="form-label-dark">Step <?= $i ?> Title</label><input type="text" name="lp_step<?= $i ?>_title" class="form-control form-control-dark mb-2" value="<?= ss($siteSettings, "lp_step{$i}_title", $ds[$i-1]['t']) ?>">
+                            <label class="form-label-dark">Step <?= $i ?> Desc</label><textarea name="lp_step<?= $i ?>_desc" class="form-control form-control-dark" rows="3"><?= ss($siteSettings, "lp_step{$i}_desc", $ds[$i-1]['d']) ?></textarea>
                         </div>
                         <?php endfor; ?>
                     </div>
@@ -304,17 +321,23 @@ function ss(array $settings, string $key, string $default = ''): string {
                     <div class="row g-4">
                         <div class="col-md-6">
                             <h6>Creators Side</h6>
-                            <input type="text" name="lp_creators_title" class="form-control form-control-dark mb-2" value="<?= ss($siteSettings, 'lp_creators_title') ?>" placeholder="Title">
-                            <textarea name="lp_creators_sub" class="form-control form-control-dark mb-2" rows="3" placeholder="Subtext"><?= ss($siteSettings, 'lp_creators_sub') ?></textarea>
-                            <input type="text" name="lp_creators_extra" class="form-control form-control-dark mb-2" value="<?= ss($siteSettings, 'lp_creators_extra') ?>" placeholder="Extra note">
-                            <?php for($i=1;$i<=4;$i++): ?><input type="text" name="lp_creators_p<?= $i ?>" class="form-control form-control-dark mb-1" value="<?= ss($siteSettings, "lp_creators_p{$i}") ?>" placeholder="Point <?= $i ?>"><?php endfor; ?>
+                            <input type="text" name="lp_creators_title" class="form-control form-control-dark mb-2" value="<?= ss($siteSettings, 'lp_creators_title', 'Your fans will promote you better than any ad ever will.') ?>" placeholder="Title">
+                            <textarea name="lp_creators_sub" class="form-control form-control-dark mb-2" rows="3" placeholder="Subtext"><?= ss($siteSettings, 'lp_creators_sub', 'They already know your content. They already have opinions about it. Clipaza gives them a contest to enter and a prize to chase — and the side effect is your video spreading across three platforms at once, carried by people who genuinely like what you make.') ?></textarea>
+                            <input type="text" name="lp_creators_extra" class="form-control form-control-dark mb-2" value="<?= ss($siteSettings, 'lp_creators_extra', 'You set the prize. You pick the video. You decide how long the contest runs. After that, your fans handle the rest.') ?>" placeholder="Extra note">
+                            <input type="text" name="lp_creators_p1" class="form-control form-control-dark mb-1" value="<?= ss($siteSettings, "lp_creators_p1", "Any budget works — you set the number") ?>" placeholder="Point 1">
+                            <input type="text" name="lp_creators_p2" class="form-control form-control-dark mb-1" value="<?= ss($siteSettings, "lp_creators_p2", "Live dashboard showing every clip submitted") ?>" placeholder="Point 2">
+                            <input type="text" name="lp_creators_p3" class="form-control form-control-dark mb-1" value="<?= ss($siteSettings, "lp_creators_p3", "Your video hits TikTok and Reels simultaneously") ?>" placeholder="Point 3">
+                            <input type="text" name="lp_creators_p4" class="form-control form-control-dark mb-1" value="<?= ss($siteSettings, "lp_creators_p4", "Flag any clip that doesn't fit your brand") ?>" placeholder="Point 4">
                         </div>
                         <div class="col-md-6">
                             <h6>Fans Side</h6>
-                            <input type="text" name="lp_fans_title" class="form-control form-control-dark mb-2" value="<?= ss($siteSettings, 'lp_fans_title') ?>" placeholder="Title">
-                            <textarea name="lp_fans_sub" class="form-control form-control-dark mb-2" rows="3" placeholder="Subtext"><?= ss($siteSettings, 'lp_fans_sub') ?></textarea>
-                            <input type="text" name="lp_fans_extra" class="form-control form-control-dark mb-2" value="<?= ss($siteSettings, 'lp_fans_extra') ?>" placeholder="Extra note">
-                            <?php for($i=1;$i<=4;$i++): ?><input type="text" name="lp_fans_p<?= $i ?>" class="form-control form-control-dark mb-1" value="<?= ss($siteSettings, "lp_fans_p{$i}") ?>" placeholder="Point <?= $i ?>"><?php endfor; ?>
+                            <input type="text" name="lp_fans_title" class="form-control form-control-dark mb-2" value="<?= ss($siteSettings, 'lp_fans_title', 'You were going to watch it. Might as well win something.') ?>" placeholder="Title">
+                            <textarea name="lp_fans_sub" class="form-control form-control-dark mb-2" rows="3" placeholder="Subtext"><?= ss($siteSettings, 'lp_fans_sub', 'Find a contest for a creator you follow. Watch the video. Pull out the clip that nobody else will think to cut. Post it. Then check the leaderboard obsessively for the next two weeks like the rest of us.') ?></textarea>
+                            <input type="text" name="lp_fans_extra" class="form-control form-control-dark mb-2" value="<?= ss($siteSettings, 'lp_fans_extra', 'No fancy equipment. No editing degree. Just a good eye and a phone that works.') ?>" placeholder="Extra note">
+                            <input type="text" name="lp_fans_p1" class="form-control form-control-dark mb-1" value="<?= ss($siteSettings, "lp_fans_p1", "Runs on TikTok and Instagram Reels") ?>" placeholder="Point 1">
+                            <input type="text" name="lp_fans_p2" class="form-control form-control-dark mb-1" value="<?= ss($siteSettings, "lp_fans_p2", "Submit as many clips as contests allow") ?>" placeholder="Point 2">
+                            <input type="text" name="lp_fans_p3" class="form-control form-control-dark mb-1" value="<?= ss($siteSettings, "lp_fans_p3", "Leaderboard updates in real time so you always know where you stand") ?>" placeholder="Point 3">
+                            <input type="text" name="lp_fans_p4" class="form-control form-control-dark mb-1" value="<?= ss($siteSettings, "lp_fans_p4", "Cash goes straight to your bank when you win") ?>" placeholder="Point 4">
                         </div>
                     </div>
                 </div>
@@ -322,10 +345,34 @@ function ss(array $settings, string $key, string $default = ''): string {
             <div class="card-dark mb-4">
                 <div class="card-header">Leaderboard & CTA</div>
                 <div class="card-body">
-                    <div class="mb-3"><label class="form-label-dark">Leaderboard Title (Accent)</label><input type="text" name="lp_lb_title_accent" class="form-control form-control-dark" value="<?= ss($siteSettings, "lp_lb_title_accent") ?>"></div>
-                    <div class="mb-3"><label class="form-label-dark">Leaderboard Text</label><textarea name="lp_lb_text" class="form-control form-control-dark" rows="3"><?= ss($siteSettings, "lp_lb_text") ?></textarea></div>
-                    <div class="mb-3"><label class="form-label-dark">Footer CTA Title</label><input type="text" name="lp_cta_title" class="form-control form-control-dark" value="<?= ss($siteSettings, "lp_cta_title") ?>"></div>
-                    <div class="mb-3"><label class="form-label-dark">Footer CTA Subtext</label><input type="text" name="lp_cta_sub" class="form-control form-control-dark" value="<?= ss($siteSettings, "lp_cta_sub") ?>"></div>
+                    <div class="mb-3"><label class="form-label-dark">Leaderboard Title (Accent)</label><input type="text" name="lp_lb_title_accent" class="form-control form-control-dark" value="<?= ss($siteSettings, "lp_lb_title_accent", 'Win Here.') ?>"></div>
+                    <div class="mb-3"><label class="form-label-dark">Leaderboard Text</label><textarea name="lp_lb_text" class="form-control form-control-dark" rows="3"><?= ss($siteSettings, "lp_lb_text", "Every submitted link gets tracked across TikTok and Reels — but only authentic views count. No purchased traffic. No bot plays. No inflated numbers. If real people watched it, it counts. If they didn't, it doesn't. No judges, no panels, no back-room decisions. Contest closes and the honest number at the top wins.") ?></textarea></div>
+                    <div class="mb-3"><label class="form-label-dark">Footer CTA Title</label><input type="text" name="lp_cta_title" class="form-control form-control-dark" value="<?= ss($siteSettings, "lp_cta_title", "Creator or fan — there's a spot for you.") ?>"></div>
+                    <div class="mb-3"><label class="form-label-dark">Footer CTA Subtext</label><input type="text" name="lp_cta_sub" class="form-control form-control-dark" value="<?= ss($siteSettings, "lp_cta_sub", "Contests are live right now. Sign up free and see what's running.") ?>"></div>
+                </div>
+            </div>
+
+        <?php elseif ($activeTab === 'pages'): ?>
+            <input type="hidden" name="action" value="save_pages">
+            <div class="card-dark mb-4">
+                <div class="card-header">About Us Page</div>
+                <div class="card-body">
+                    <textarea name="page_about" class="form-control form-control-dark" rows="15"><?= ss($siteSettings, 'page_about') ?></textarea>
+                    <div class="form-text text-muted mt-2">Enter the HTML content for the About Us page. If empty, the default seeded content will be used.</div>
+                </div>
+            </div>
+            <div class="card-dark mb-4">
+                <div class="card-header">Terms of Service Page</div>
+                <div class="card-body">
+                    <textarea name="page_terms" class="form-control form-control-dark" rows="15"><?= ss($siteSettings, 'page_terms') ?></textarea>
+                    <div class="form-text text-muted mt-2">Enter the HTML content for the Terms of Service page.</div>
+                </div>
+            </div>
+            <div class="card-dark mb-4">
+                <div class="card-header">Privacy Policy Page</div>
+                <div class="card-body">
+                    <textarea name="page_privacy" class="form-control form-control-dark" rows="15"><?= ss($siteSettings, 'page_privacy') ?></textarea>
+                    <div class="form-text text-muted mt-2">Enter the HTML content for the Privacy Policy page.</div>
                 </div>
             </div>
 

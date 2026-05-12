@@ -41,7 +41,8 @@ function getSetting(string $key, string $default = ''): string {
         $stmt = $db->prepare('SELECT setting_value FROM site_settings WHERE setting_key = ? LIMIT 1');
         $stmt->execute([$key]);
         $row = $stmt->fetch();
-        return $row ? (string)$row['setting_value'] : $default;
+        $val = $row ? (string)$row['setting_value'] : '';
+        return ($val !== '') ? $val : $default;
     } catch (Throwable) {
         return $default;
     }

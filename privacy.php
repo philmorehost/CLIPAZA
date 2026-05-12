@@ -23,6 +23,16 @@ renderHead('Privacy Policy', $extraHead);
 renderNav($isLoggedIn, ['username' => $username], $userMode);
 ?>
 
+<?php
+$dynamicPrivacy = getSetting('page_privacy', '');
+if ($dynamicPrivacy !== ''):
+?>
+<div class="public-page">
+  <div class="container py-5">
+    <?= $dynamicPrivacy ?>
+  </div>
+</div>
+<?php else: ?>
 <div class="public-page">
   <div class="container py-5" style="max-width:820px">
     <h1 class="fw-900 mb-1" style="letter-spacing:-0.5px">Privacy Policy</h1>
@@ -115,5 +125,6 @@ renderNav($isLoggedIn, ['username' => $username], $userMode);
 
   </div>
 </div>
+<?php endif; ?>
 
 <?php renderFooter(); ?>

@@ -40,6 +40,7 @@ try {
         'save_code'    => handleSaveCode(),
         'save_ads'     => handleSaveAds(),
         'save_landing' => handleSaveLanding(),
+        'save_pages'   => handleSavePages(),
         'update_default_theme' => handleUpdateDefaultTheme(),
         default        => jsonResponse(['success' => false, 'message' => 'Unknown action.']),
     };
@@ -229,4 +230,12 @@ function handleSaveAds(): never {
         saveSiteSetting('ads_txt_content', $_POST['ads_txt_content'] ?? '');
     }
     jsonResponse(['success' => true, 'message' => 'Ads settings saved.']);
+}
+
+function handleSavePages(): never {
+    $keys = ['page_about', 'page_terms', 'page_privacy'];
+    foreach ($keys as $key) {
+        saveSiteSetting($key, $_POST[$key] ?? '');
+    }
+    jsonResponse(['success' => true, 'message' => 'Public page content saved.']);
 }
