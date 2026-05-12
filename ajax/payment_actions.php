@@ -5,6 +5,7 @@ $root = dirname(__DIR__);
 require_once $root . '/includes/db.php';
 require_once $root . '/includes/functions.php';
 require_once $root . '/includes/auth.php';
+require_once $root . '/includes/payhub.php';
 
 if (session_status() === PHP_SESSION_NONE) session_start();
 
@@ -13,6 +14,9 @@ $action = sanitizeInput($_POST['action'] ?? '');
 switch ($action) {
     case 'init_payment':
         handleInitPayment();
+        break;
+    case 'init_payment_payhub':
+        handleInitPaymentPayhub();
         break;
     case 'verify_payment':
         handleVerifyPayment();
@@ -170,5 +174,60 @@ function handleVerifyPayment(): never {
         jsonResponse(['success' => true, 'message' => 'Payment verified. Contest is now live!']);
     } catch (Throwable) {
         jsonResponse(['success' => false, 'message' => 'Database update failed.']);
+    }
+}
+
+function handleInitPaymentPayhub(): never {
+    if (empty($_SESSION['user_id'])) {
+        jsonResponse(['success' => false, 'message' => 'Authentication required.'], 401);
+    }
+    if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) {
+        jsonResponse(['success' => false, 'message' => 'Invalid request.'], 403);
+    }
+    if (!payhubEnabled()) {
+        jsonResponse(['success' => false, 'message' => 'PayHub is not configured.'], 503);
+    }
+
+    $userId    = (int)$_SESSION['user_id'];
+    $userEmail = $_SESSION['user_email'] ?? '';
+    $contestId = (int)($_POST['contest_id'] ?? 0);
+
+    try {
+        $db   = db();
+        $stmt = $db->prepare(
+            "SELECT * FROM contests WHERE id = ? AND creator_id = ? AND status = 'draft' AND escrow_status = 'unfunded' LIMIT 1"
+        );
+        $stmt->execute([$contestId, $userId]);
+        $contest = $stmt->fetch();
+        if (!$contest) {
+            jsonResponse(['success' => false, 'message' => 'Contest not found or already funded.']);
+        }
+
+        $amountNaira = (float)$contest['total_amount'];
+        $reference   = 'CLPZ_PHB_' . $contestId . '_' . time() . '_' . bin2hex(random_bytes(4));
+        $callbackUrl = rtrim(getSetting('site_url', ''), '/') . '/payment/payhub-verify.php?type=contest&reference=' . urlencode($reference);
+
+        $result = payhubInitCheckout($userEmail, $amountNaira, $reference, $callbackUrl, [
+            'contest_id' => $contestId,
+            'user_id'    => $userId,
+        ]);
+
+        if (!empty($result['error'])) {
+            jsonResponse(['success' => false, 'message' => $result['error']]);
+        }
+        if (empty($result['status']) || !$result['status']) {
+            jsonResponse(['success' => false, 'message' => $result['message'] ?? 'PayHub error.']);
+        }
+
+        $db->prepare('UPDATE contests SET payhub_reference = ? WHERE id = ?')
+           ->execute([$reference, $contestId]);
+
+        jsonResponse([
+            'success'      => true,
+            'checkout_url' => $result['data']['checkout_url'] ?? '',
+            'reference'    => $reference,
+        ]);
+    } catch (Throwable) {
+        jsonResponse(['success' => false, 'message' => 'Payment initialization failed.']);
     }
 }

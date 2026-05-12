@@ -110,6 +110,13 @@ $ini = strtoupper(substr($dn, 0, 1));
               <label class="form-label-dark">Bio</label>
               <textarea name="bio" class="form-control-dark" rows="3" maxlength="500" placeholder="Tell us about yourself…"><?= e($profile['bio'] ?? '') ?></textarea>
             </div>
+            <?php if ($userMode === 'creator'): ?>
+            <div class="mb-3">
+              <label class="form-label-dark">Brand Description / Clipper Instructions</label>
+              <textarea name="brand_description" class="form-control-dark" rows="5" placeholder="Describe your brand and provide specific instructions for clippers…"><?= e($profile['brand_description'] ?? '') ?></textarea>
+              <div class="form-text text-muted" style="font-size:0.75rem">This will be displayed on the Clipper Dashboard for clippers who join your contests.</div>
+            </div>
+            <?php endif; ?>
             <div id="profileFeedback" class="mb-2"></div>
             <button type="submit" class="btn btn-accent">Save Changes</button>
           </form>
@@ -219,14 +226,27 @@ submitAjaxForm('profileForm', 'profileFeedback');
 submitAjaxForm('socialForm', 'socialFeedback');
 
 document.getElementById('modeSwitchBtn')?.addEventListener('click', async function() {
-  this.disabled = true;
-  const r = await fetch('/ajax/user_actions.php', {
-    method:'POST',
-    body: new URLSearchParams({ action:'switch_mode', csrf_token: csrf })
-  });
-  const d = await r.json();
-  if (d.success) location.reload();
-  else this.disabled = false;
+  const btn = this;
+  btn.disabled = true;
+  const originalText = btn.textContent;
+  btn.textContent = 'Switching...';
+  try {
+    const r = await fetch('/ajax/user_actions.php', {
+      method:'POST',
+      body: new URLSearchParams({ action:'switch_mode', csrf_token: csrf })
+    });
+    const d = await r.json();
+    if (d.success) location.reload();
+    else {
+        btn.disabled = false;
+        btn.textContent = originalText;
+        alert(d.message || 'Failed to switch mode.');
+    }
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = originalText;
+    alert('Network error.');
+  }
 });
 
 document.getElementById('notifToggle')?.addEventListener('click', async function() {

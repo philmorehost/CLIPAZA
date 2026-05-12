@@ -1,13 +1,6 @@
 <?php
 /**
  * PHP version gate.
- * This block uses only PHP 5.4-compatible syntax so it can be parsed and
- * executed on any PHP version, displaying a friendly error instead of a
- * cryptic internal server error when the server runs PHP < 8.0.
- * NOTE: declare(strict_types=1) is intentionally omitted from this entry-
- * point file because it must be the first statement, which would prevent
- * placing the version check first. Strict type checking is enforced in
- * all included library files (includes/*.php).
  */
 if (version_compare(PHP_VERSION, '8.0.0', '<')) {
     header('Content-Type: text/html; charset=utf-8');
@@ -56,13 +49,15 @@ $siteTagline = 'Earn Money Clipping Videos';
 
 // SEO / branding settings
 $seoTitle       = '';
-$seoDescription = 'Turn viral moments into real income. Clipaza rewards creators and clippers for finding and sharing the best video clips.';
+$defaultSeoDesc = 'Clipaza lets YouTube creators run fan clipping contests with real cash prizes. Clip, share, compete to win — paid straight to your bank. Free to join.';
+$seoDescription = $defaultSeoDesc;
 $seoKeywords    = '';
 $ogImageUrl     = '';
 $customHeader   = '';
 $adsenseCode    = '';
 $siteFavicon    = '';
 $siteLogo       = '';
+$defaultTheme   = 'dark';
 
 if (file_exists($configFile)) {
     require_once $configFile;
@@ -70,16 +65,30 @@ if (file_exists($configFile)) {
     require_once $root . '/includes/functions.php';
     $siteName       = getSetting('site_name', 'Clipaza');
     $seoTitle       = getSetting('seo_title', '');
-    $seoDescription = getSetting('seo_description', $seoDescription);
+    $seoDescription = getSetting('seo_description', $defaultSeoDesc);
     $seoKeywords    = getSetting('seo_keywords', '');
     $ogImageUrl     = getSetting('og_image_url', '');
     $customHeader   = getSetting('custom_header_code', '');
     $adsenseCode    = getSetting('adsense_code', '');
     $siteFavicon    = getSetting('site_favicon', '');
     $siteLogo       = getSetting('site_logo', '');
+    $defaultTheme   = in_array(getSetting('default_theme', 'dark'), ['dark', 'light'], true)
+                          ? getSetting('default_theme', 'dark') : 'dark';
 }
 
-$pageTitle = $seoTitle !== '' ? $seoTitle : (htmlspecialchars($siteName) . ' — Earn Money Clipping Videos');
+// Start session so we can detect logged-in state in the navbar
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+$lpIsLoggedIn = !empty($_SESSION['user_id']);
+
+$defaultPageTitle = htmlspecialchars($siteName);
+if (function_exists('getSetting')) {
+    $defaultPageTitle .= ' — ' . getSetting('lp_hero_title', 'Where Creators Reward') . ' ' . getSetting('lp_hero_accent', 'Their Biggest Fans.');
+} else {
+    $defaultPageTitle .= ' — Where Creators Reward Their Biggest Fans.';
+}
+$pageTitle = $seoTitle !== '' ? $seoTitle : $defaultPageTitle;
 
 // Load active contests for trending section
 $trendingContests = [];
@@ -99,32 +108,49 @@ if (file_exists($configFile)) {
     } catch (Throwable) {}
 }
 
-$waitlistSuccess = false;
-$waitlistError   = '';
+// Live platform stats
+$statUsers  = 0;
+$statPrizes = 0.0;
+$statClips  = 0;
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['waitlist_email'])) {
-    $email = filter_var(trim($_POST['waitlist_email'] ?? ''), FILTER_VALIDATE_EMAIL);
-    if ($email && file_exists($configFile)) {
-        try {
-            $db   = db();
-            $stmt = $db->prepare('SELECT id FROM waitlist WHERE email = ? LIMIT 1');
-            $stmt->execute([$email]);
-            if ($stmt->fetch()) {
-                $waitlistError = "You're already on the waitlist!";
-            } else {
-                $db->prepare('INSERT INTO waitlist (email) VALUES (?)')->execute([$email]);
-                $waitlistSuccess = true;
-            }
-        } catch (Throwable $e) {
-            $waitlistError = 'Something went wrong. Please try again.';
-        }
-    } elseif (!$email) {
-        $waitlistError = 'Please enter a valid email address.';
-    }
+// Live leaderboard data
+$lbLive = [];
+
+if (file_exists($configFile)) {
+    try {
+        $db         = db();
+        $statUsers  = (int)$db->query("SELECT COUNT(*) FROM users WHERE role != 'admin'")->fetchColumn();
+        $statPrizes = (float)$db->query("SELECT COALESCE(SUM(prize_pool),0) FROM contests")->fetchColumn();
+        $statClips  = (int)$db->query("SELECT COUNT(*) FROM contest_entries WHERE status = 'approved'")->fetchColumn();
+
+        $lbStmt = $db->query(
+            "SELECT u.username, COUNT(ce.id) AS clip_count,
+                    SUM(ce.view_count) AS total_views,
+                    SUM(ce.like_count) AS total_likes,
+                    SUM(ce.comment_count) AS total_comments,
+                    COALESCE(SUM(pr.amount),0) AS total_earned
+             FROM contest_entries ce
+             INNER JOIN users u ON u.id = ce.user_id
+             LEFT JOIN payout_requests pr ON pr.user_id = ce.user_id AND pr.status = 'approved'
+             WHERE ce.status = 'approved' AND ce.disqualified = 0
+             GROUP BY ce.user_id
+             ORDER BY total_views DESC
+             LIMIT 5"
+        );
+        $lbLive = $lbStmt->fetchAll();
+    } catch (Throwable) {}
+}
+
+// Format stat figures
+function fmtStat(int|float $n, string $prefix = '', string $suffix = ''): string {
+    if ($n <= 0) return '—';
+    if ($n >= 1_000_000) return $prefix . number_format($n / 1_000_000, 1) . 'M+' . $suffix;
+    if ($n >= 1_000)     return $prefix . number_format($n / 1_000, 0)     . 'K+' . $suffix;
+    return $prefix . number_format((int)$n) . $suffix;
 }
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="<?= e($defaultTheme) ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -133,13 +159,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['waitlist_email'])) {
     <?php if ($seoKeywords !== ''): ?>
     <meta name="keywords" content="<?= htmlspecialchars($seoKeywords) ?>">
     <?php endif; ?>
-    <?php if ($ogImageUrl !== ''): ?>
-    <meta property="og:image" content="<?= htmlspecialchars($ogImageUrl) ?>">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta property="og:type" content="website">
     <meta property="og:title" content="<?= htmlspecialchars($pageTitle) ?>">
     <meta property="og:description" content="<?= htmlspecialchars($seoDescription) ?>">
-    <meta property="og:type" content="website">
+    <?php
+    $lpSiteUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'clipaza.com');
+    ?>
+    <meta property="og:url" content="<?= htmlspecialchars($lpSiteUrl) ?>">
+    <link rel="canonical" href="<?= htmlspecialchars($lpSiteUrl) ?>">
+    <?php if ($ogImageUrl !== ''): ?>
+    <meta property="og:image" content="<?= htmlspecialchars($ogImageUrl) ?>">
+    <meta name="twitter:image" content="<?= htmlspecialchars($ogImageUrl) ?>">
     <?php endif; ?>
-    <meta name="twitter:card" content="summary_large_image">
     <?php if ($siteFavicon !== ''): ?>
     <link rel="icon" href="<?= htmlspecialchars($siteFavicon) ?>">
     <?php endif; ?>
@@ -151,6 +183,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['waitlist_email'])) {
     <?php if ($customHeader !== ''): ?>
     <?= $customHeader ?>
     <?php endif; ?>
+    <script>
+    (function() {
+      var stored = localStorage.getItem('clipaza_theme');
+      var theme = (stored === 'light' || stored === 'dark') ? stored : '<?= htmlspecialchars($defaultTheme ?? "dark", ENT_QUOTES) ?>';
+      document.documentElement.dataset.theme = theme;
+    })();
+    </script>
 </head>
 <body>
 <?php if ($adsenseCode !== ''): ?>
@@ -165,19 +204,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['waitlist_email'])) {
                 <?php if ($siteLogo !== ''): ?>
                 <img src="<?= htmlspecialchars($siteLogo) ?>" alt="<?= htmlspecialchars($siteName) ?>" style="height:36px;vertical-align:middle;">
                 <?php else: ?>
-                Clipa<span>za</span>
+                <?= formatSiteName($siteName) ?>
                 <?php endif; ?>
             </a>
             <div class="navbar-links d-none d-md-flex align-items-center gap-4">
                 <a href="/contests" class="nav-text-link">Browse Contests</a>
                 <a href="#features" class="nav-text-link">Features</a>
                 <a href="#how-it-works" class="nav-text-link">How It Works</a>
+                <a href="/about" class="nav-text-link">About</a>
             </div>
             <div class="d-flex gap-2 align-items-center">
-                <?php if (file_exists($configFile) && !empty($_SESSION['user_id'])): ?>
-                    <a href="/dashboard" class="btn btn-sm btn-outline-accent" style="padding:8px 16px;font-size:0.85rem">Dashboard</a>
+                <button class="btn-theme-toggle" id="themeToggleBtn" title="Toggle light/dark mode" aria-label="Toggle theme">🌙</button>
+                <?php if ($lpIsLoggedIn): ?>
+                    <a href="/dashboard" class="btn btn-accent" style="padding:10px 22px;font-size:0.875rem;">Dashboard</a>
                 <?php else: ?>
-                    <a href="/auth/login" class="btn btn-sm" style="padding:8px 16px;font-size:0.85rem;background:transparent;color:#ccc;border:1px solid #333">Login</a>
+                    <a href="/auth/login" class="btn btn-sm" style="padding:8px 16px;font-size:0.85rem;background:transparent;color:var(--text-secondary);border:1px solid var(--border)">Login</a>
                     <a href="/auth/register" class="btn btn-accent" style="padding:10px 22px;font-size:0.875rem;">Sign Up Free</a>
                 <?php endif; ?>
             </div>
@@ -186,53 +227,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['waitlist_email'])) {
 </nav>
 
 <!-- Hero Section -->
-<section class="lp-hero" id="waitlist">
+<section class="lp-hero" id="hero">
     <div class="lp-hero-glow"></div>
     <div class="container">
         <div class="text-center animate-in">
-            <div class="coming-soon-badge mb-4">🚀 Coming Soon — Join the Waitlist</div>
+            <div class="live-badge mb-4">🟢 Live Now — Contests Open</div>
             <h1 class="lp-hero-title">
-                The Smartest Way to<br>
-                Grow on YouTube<br>
-                <span class="lp-hero-accent">While Getting Paid</span>
+                <?= htmlspecialchars(getSetting('lp_hero_title', 'Where Creators Reward')) ?><br>
+                <span class="lp-hero-accent"><?= htmlspecialchars(getSetting('lp_hero_accent', 'Their Biggest Fans.')) ?></span>
             </h1>
             <p class="lp-hero-sub">
-                Creators fund contests. Clippers find viral moments.<br>
-                Winners earn real money — paid directly to your bank.
+                <?= nl2br(htmlspecialchars(getSetting('lp_hero_sub', "Pick a contest from your favourite YouTube creator. Clip their best moment, post it on TikTok or Reels, and let the views decide who wins."))) ?>
             </p>
 
-            <?php if ($waitlistSuccess): ?>
-            <div class="alert-dark-success d-inline-block px-4 py-3 mb-4" style="border-radius:8px;">
-                🎉 You're on the waitlist! We'll notify you at launch.
+            <div class="d-flex gap-3 justify-content-center flex-wrap mb-5">
+                <?php if ($lpIsLoggedIn): ?>
+                    <a href="/dashboard" class="btn btn-accent pulse-accent" style="padding:14px 32px;font-size:1rem;border-radius:10px">Go to Dashboard →</a>
+                    <a href="/contests" class="btn btn-outline-accent" style="padding:14px 32px;font-size:1rem;border-radius:10px">Browse Contests</a>
+                <?php else: ?>
+                    <a href="/auth/register?mode=creator" class="btn btn-accent pulse-accent" style="padding:14px 32px;font-size:1rem;border-radius:10px"><?= htmlspecialchars(getSetting('lp_hero_btn_creator', 'Start a Contest →')) ?></a>
+                    <a href="/auth/register" class="btn btn-outline-accent" style="padding:14px 32px;font-size:1rem;border-radius:10px"><?= htmlspecialchars(getSetting('lp_hero_btn_fan', 'Join as a Fan →')) ?></a>
+                <?php endif; ?>
             </div>
-            <?php elseif ($waitlistError): ?>
-            <div class="alert-dark-warning d-inline-block px-4 py-3 mb-4" style="border-radius:8px;">
-                <?= htmlspecialchars($waitlistError) ?>
-            </div>
-            <?php endif; ?>
 
-            <form method="POST" class="lp-email-form">
-                <input type="email" name="waitlist_email" placeholder="Enter your email address" required
-                       value="<?= isset($_POST['waitlist_email']) && !$waitlistSuccess ? htmlspecialchars($_POST['waitlist_email']) : '' ?>">
-                <button type="submit" class="btn btn-accent pulse-accent">Join Waitlist</button>
-            </form>
-            <p class="lp-form-note">No spam. Unsubscribe anytime. 🔒</p>
-
-            <!-- Stats Row — marketing figures, update via code or pull from DB as needed -->
+            <!-- Stats Row -->
             <div class="lp-stats-row">
                 <div class="lp-stat">
-                    <div class="lp-stat-val">₦50M+</div>
+                    <div class="lp-stat-val"><?= $statPrizes > 0 ? fmtStat($statPrizes, '₦') : '₦50M+' ?></div>
                     <div class="lp-stat-label">in Prizes</div>
                 </div>
                 <div class="lp-stat-divider"></div>
                 <div class="lp-stat">
-                    <div class="lp-stat-val">10K+</div>
-                    <div class="lp-stat-label">Creators</div>
+                    <div class="lp-stat-val"><?= $statUsers > 0 ? fmtStat($statUsers) : '10K+' ?></div>
+                    <div class="lp-stat-label">Creators &amp; Fans</div>
                 </div>
                 <div class="lp-stat-divider"></div>
                 <div class="lp-stat">
-                    <div class="lp-stat-val">500K+</div>
-                    <div class="lp-stat-label">Clips</div>
+                    <div class="lp-stat-val"><?= $statClips > 0 ? fmtStat($statClips) : '500K+' ?></div>
+                    <div class="lp-stat-label">Clips Submitted</div>
                 </div>
             </div>
         </div>
@@ -245,7 +277,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['waitlist_email'])) {
         <div class="d-flex align-items-center justify-content-between mb-4">
             <div>
                 <div class="lp-section-eyebrow">Live Now</div>
-                <h2 class="lp-section-title" style="font-size:clamp(1.5rem,3vw,2rem);margin-bottom:0">Trending <span class="text-accent">Contests</span></h2>
+                <h2 class="lp-section-title" style="font-size:clamp(1.5rem,3vw,2rem);margin-bottom:0">Trending <span class="text-accent"><?= htmlspecialchars(getSetting('lp_trending_title_accent', 'Contests')) ?></span></h2>
             </div>
             <a href="/contests" class="btn btn-outline-accent" style="white-space:nowrap">View All →</a>
         </div>
@@ -253,12 +285,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['waitlist_email'])) {
         <?php if (!empty($trendingContests)): ?>
             <?php foreach ($trendingContests as $tc):
                 $tcPlatforms = array_filter(explode(',', $tc['platforms'] ?? ''));
-                $platformIcons = implode('', array_map(fn($p) => match(trim($p)) {
-                    'tiktok'=>'<span title="TikTok">🎵</span>',
-                    'instagram'=>'<span title="Instagram">📸</span>',
-                    'facebook'=>'<span title="Facebook">📘</span>',
-                    default=>''
-                }, $tcPlatforms));
+                $platformIcons = implode('', array_map(fn($p) => getPlatformIcon(trim($p), '1rem'), $tcPlatforms));
                 $timeLeft = '';
                 if (!empty($tc['end_date'])) {
                     $secs = strtotime($tc['end_date']) - time();
@@ -274,10 +301,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['waitlist_email'])) {
                         <?php if (!empty($tc['youtube_thumbnail'])): ?>
                             <img src="<?= htmlspecialchars($tc['youtube_thumbnail']) ?>" alt="" style="width:100%;height:110px;object-fit:cover">
                         <?php else: ?>
-                            <div style="width:100%;height:110px;background:#0d0d0d;display:flex;align-items:center;justify-content:center;font-size:2rem">🎬</div>
+                            <div style="width:100%;height:110px;background:var(--input-bg);display:flex;align-items:center;justify-content:center;font-size:2rem">🎬</div>
                         <?php endif; ?>
                         <div class="p-3">
-                            <div class="fw-700 mb-1" style="font-size:0.82rem;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><?= htmlspecialchars($tc['title']) ?></div>
+                            <div class="fw-700 mb-1" style="font-size:0.82rem;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><?= htmlspecialchars($tc['title']) ?></div>
                             <div class="d-flex align-items-center justify-content-between">
                                 <span style="color:var(--accent);font-weight:900;font-size:0.88rem">₦<?= number_format((float)$tc['prize_pool'], 0) ?></span>
                                 <span style="font-size:0.85rem"><?= $platformIcons ?></span>
@@ -291,57 +318,84 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['waitlist_email'])) {
             </div>
             <?php endforeach; ?>
         <?php else: ?>
-            <!-- Placeholder cards when no contests -->
-            <?php for ($i = 0; $i < 4; $i++): ?>
-            <div class="col-6 col-md-3">
-                <div class="trend-card" style="opacity:0.5">
-                    <div style="width:100%;height:110px;background:#0d0d0d;display:flex;align-items:center;justify-content:center;font-size:2rem">🎬</div>
-                    <div class="p-3">
-                        <div class="fw-700 mb-1" style="font-size:0.82rem;color:#888">Coming Soon</div>
-                        <div style="color:var(--accent);font-weight:900;font-size:0.88rem">₦0</div>
-                    </div>
-                </div>
-            </div>
-            <?php endfor; ?>
-            <div class="col-12 text-center mt-2">
-                <p class="text-muted" style="font-size:0.85rem">No active contests yet. <a href="/auth/register" class="text-accent text-decoration-none">Be the first creator →</a></p>
+            <div class="col-12 text-center py-5">
+                <div style="font-size:2.5rem;margin-bottom:16px">🎬</div>
+                <p class="text-muted mb-3" style="font-size:0.95rem">No active contests right now — check back soon!</p>
+                <a href="/auth/register" class="btn btn-accent" style="font-size:0.88rem;padding:10px 28px">Create the First Contest →</a>
             </div>
         <?php endif; ?>
         </div>
     </div>
 </section>
 
+<!-- Brands & Creators Section -->
+<section class="lp-section" id="brands">
+    <div class="container">
+        <div class="text-center mb-5">
+            <div class="lp-section-eyebrow">Engagement & Rewards</div>
+            <h2 class="lp-section-title"><?= htmlspecialchars(getSetting('lp_brands_title', 'Where Creators and Brands Rewards their biggest fans')) ?></h2>
+            <p class="lp-section-sub">
+                <?= nl2br(htmlspecialchars(getSetting('lp_brands_sub', "Pick a contest from their favorite youtube creators/favorite musician/favorite artist/favorite brands. Clip their best moments, post it on tiktok reals or shorts and let the views decides who wins."))) ?>
+            </p>
+        </div>
+
+        <div class="card-dark p-4 p-md-5 text-center" style="background: linear-gradient(135deg, rgba(204,255,0,0.05) 0%, rgba(0,0,0,0) 100%); border: 1px solid rgba(204,255,0,0.1); border-radius: 20px;">
+            <div class="row g-4 align-items-center">
+                <div class="col-lg-7 text-lg-start">
+                    <h3 class="fw-800 mb-3" style="font-size: 1.75rem;">Support the brands and creators you love.</h3>
+                    <p class="text-muted mb-4" style="font-size: 1rem; line-height: 1.6;">
+                        <?= nl2br(htmlspecialchars(getSetting('lp_brands_content', "Clipaza connects fans with their idols. Whether it's a breakout musician, a top-tier YouTube creator, or a global brand, you can now turn your fandom into rewards. Find an active contest, showcase your editing skills, and win real cash while helping your favorites grow."))) ?>
+                    </p>
+                    <div class="d-flex flex-wrap gap-3 justify-content-center justify-content-lg-start">
+                        <a href="/contests" class="btn btn-accent px-4 py-2" style="font-weight: 700; border-radius: 10px;">Explore Contests</a>
+                        <a href="/auth/register?mode=creator" class="btn btn-outline-accent px-4 py-2" style="font-weight: 700; border-radius: 10px;">Partner as a Brand</a>
+                    </div>
+                </div>
+                <div class="col-lg-5">
+                    <div class="d-flex flex-wrap justify-content-center gap-3">
+                        <div class="brand-badge p-3" style="background: var(--bg-secondary); border-radius: 15px; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; font-size: 2rem;">🎵</div>
+                        <div class="brand-badge p-3" style="background: var(--bg-secondary); border-radius: 15px; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; font-size: 2rem;">🎸</div>
+                        <div class="brand-badge p-3" style="background: var(--bg-secondary); border-radius: 15px; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; font-size: 2rem;">📺</div>
+                        <div class="brand-badge p-3" style="background: var(--bg-secondary); border-radius: 15px; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; font-size: 2rem;">🎮</div>
+                        <div class="brand-badge p-3" style="background: var(--bg-secondary); border-radius: 15px; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; font-size: 2rem;">👟</div>
+                        <div class="brand-badge p-3" style="background: var(--bg-secondary); border-radius: 15px; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; font-size: 2rem;">🎬</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
 <!-- How It Works -->
-<section class="lp-section" id="how-it-works">
+<section class="lp-section lp-section--alt" id="how-it-works">
     <div class="container">
         <div class="text-center mb-5">
             <div class="lp-section-eyebrow">Simple Process</div>
-            <h2 class="lp-section-title">How <span class="text-accent">Clipaza</span> Works</h2>
-            <p class="lp-section-sub">Three steps from signing up to getting paid</p>
+            <h2 class="lp-section-title">How It <span class="text-accent"><?= htmlspecialchars(getSetting('lp_hiw_title', 'Works')) ?></span></h2>
         </div>
         <div class="row g-4 justify-content-center">
             <div class="col-md-4">
                 <div class="lp-step-card">
                     <div class="lp-step-num">01</div>
-                    <div class="lp-step-icon">🏆</div>
-                    <h3 class="lp-step-title">Creators Fund Contests</h3>
-                    <p class="lp-step-desc">YouTube creators launch clipping contests with prize pools, defining what clips they want and how much they're willing to pay.</p>
+                    <div class="lp-step-icon">🎬</div>
+                    <h3 class="lp-step-title"><?= htmlspecialchars(getSetting('lp_step1_title', 'Creator launches a contest')) ?></h3>
+                    <p class="lp-step-desc"><?= htmlspecialchars(getSetting('lp_step1_desc', "They pick a video, set a prize, and open it to their fanbase. The contest goes live on " . $siteName . " and anyone can join.")) ?></p>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="lp-step-card lp-step-card--accent">
                     <div class="lp-step-num">02</div>
                     <div class="lp-step-icon">✂️</div>
-                    <h3 class="lp-step-title">Clippers Create &amp; Share</h3>
-                    <p class="lp-step-desc">Clippers find the best moments, edit them into viral short clips, and share them on social media to earn votes and views.</p>
+                    <h3 class="lp-step-title"><?= htmlspecialchars(getSetting('lp_step2_title', 'Fans clip and post')) ?></h3>
+                    <p class="lp-step-desc"><?= htmlspecialchars(getSetting('lp_step2_desc', "You find the moment that's going to stop people mid-scroll. Cut it, post it wherever you're strongest — TikTok or Reels — then drop the link.")) ?></p>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="lp-step-card">
                     <div class="lp-step-num">03</div>
-                    <div class="lp-step-icon">💸</div>
-                    <h3 class="lp-step-title">Winners Get Paid</h3>
-                    <p class="lp-step-desc">Top clippers win their share of the prize pool — paid directly to their bank account via secure bank transfer.</p>
+                    <div class="lp-step-icon">🏆</div>
+                    <h3 class="lp-step-title"><?= htmlspecialchars(getSetting('lp_step3_title', 'Views decide the winner')) ?></h3>
+                    <p class="lp-step-desc"><?= htmlspecialchars(getSetting('lp_step3_desc', "Every clip sits on a live leaderboard. Watch your rank move in real time. When the contest closes, whoever has the most views takes the money home.")) ?></p>
                 </div>
             </div>
         </div>
@@ -349,94 +403,84 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['waitlist_email'])) {
 </section>
 
 <!-- Features Section -->
-<section class="lp-section lp-section--alt" id="features">
+<section class="lp-section" id="features" style="<?= getSetting('lp_hide_features', '0') === '1' ? 'display:none' : '' ?>">
     <div class="container">
         <div class="text-center mb-5">
             <div class="lp-section-eyebrow">Platform Features</div>
-            <h2 class="lp-section-title">Why <span class="text-accent">Clipaza</span>?</h2>
-            <p class="lp-section-sub">Everything you need to monetise your clipping skills</p>
+            <h2 class="lp-section-title">Why <span class="text-accent"><?= htmlspecialchars(getSetting('lp_features_title', $siteName)) ?></span>?</h2>
+            <p class="lp-section-sub"><?= htmlspecialchars(getSetting('lp_features_sub', "Everything a creator or fan needs — nothing they don't")) ?></p>
         </div>
         <div class="row g-4">
+            <?php
+            $defaultFeatures = [
+                ['icon' => '🎬', 'title' => 'Any budget works', 'desc' => 'You set the prize. Contests work at any prize level — from a quick boost to a serious campaign. You decide how much and how long.'],
+                ['icon' => '📊', 'title' => 'Live dashboard', 'desc' => 'Every clip submitted sits on a live leaderboard. View counts update in real time so you — and your fans — always know where things stand.'],
+                ['icon' => '🚀', 'title' => 'Multiple platforms at once', 'desc' => 'Your video hits TikTok and Instagram Reels simultaneously — carried by people who genuinely like what you make.'],
+                ['icon' => '🛡', 'title' => 'Brand control', 'desc' => 'Flag any clip that doesn\'t fit your brand. You stay in control of what\'s associated with your channel throughout the contest.'],
+                ['icon' => '💸', 'title' => 'Cash to your bank', 'desc' => 'Winners get paid directly to their bank account. No gift cards, no vouchers, no waiting — just a bank transfer when the contest closes.'],
+                ['icon' => '✅', 'title' => 'Only real views win', 'desc' => 'No purchased traffic. No bot plays. No inflated numbers. If real people watched it, it counts. If they didn\'t, it doesn\'t.'],
+            ];
+            for ($i = 1; $i <= 6; $i++):
+                $fTitle = getSetting("lp_f{$i}_title", $defaultFeatures[$i-1]['title']);
+                $fDesc  = getSetting("lp_f{$i}_desc", $defaultFeatures[$i-1]['desc']);
+                $fIcon  = $defaultFeatures[$i-1]['icon'];
+            ?>
             <div class="col-md-4">
                 <div class="feature-card">
-                    <div class="feature-icon">🎬</div>
-                    <div class="feature-title">Clip &amp; Earn</div>
-                    <div class="feature-desc">Turn long-form videos into viral short clips. Every clip you create earns you real revenue from contest prize pools.</div>
+                    <div class="feature-icon"><?= $fIcon ?></div>
+                    <div class="feature-title"><?= htmlspecialchars($fTitle) ?></div>
+                    <div class="feature-desc"><?= htmlspecialchars($fDesc) ?></div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="feature-card">
-                    <div class="feature-icon">🏆</div>
-                    <div class="feature-title">Weekly Contests</div>
-                    <div class="feature-desc">Compete in weekly clipping contests with cash prize pools. The best clips win — judged by views, votes, and engagement.</div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="feature-card">
-                    <div class="feature-icon">💸</div>
-                    <div class="feature-title">Instant Payouts</div>
-                    <div class="feature-desc">Withdraw your earnings anytime directly to your local bank account. No delays, no middlemen.</div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="feature-card">
-                    <div class="feature-icon">📈</div>
-                    <div class="feature-title">Performance Analytics</div>
-                    <div class="feature-desc">Track your clips' views, engagement, and earnings in real time. Know exactly what content performs best.</div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="feature-card">
-                    <div class="feature-icon">🤝</div>
-                    <div class="feature-title">Referral Program</div>
-                    <div class="feature-desc">Invite friends and earn a percentage of their contest winnings forever. Build a passive income stream.</div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="feature-card">
-                    <div class="feature-icon">🌍</div>
-                    <div class="feature-title">Global Community</div>
-                    <div class="feature-desc">Join creators and clippers from 100+ countries. Our platform supports local payment methods worldwide.</div>
-                </div>
-            </div>
+            <?php endfor; ?>
         </div>
     </div>
 </section>
 
-<!-- For Creators / For Clippers Split -->
-<section class="lp-section" id="creators">
+<!-- For Creators / For Fans Split -->
+<section class="lp-section lp-section--alt" id="creators">
     <div class="container">
         <div class="text-center mb-5">
             <div class="lp-section-eyebrow">Two Sides, One Platform</div>
-            <h2 class="lp-section-title">Built for <span class="text-accent">Everyone</span></h2>
+            <h2 class="lp-section-title">Creator or Fan —<br><span class="text-accent">there's a spot for you.</span></h2>
         </div>
         <div class="row g-4">
-            <div class="col-md-6" id="clippers">
+            <div class="col-md-6">
                 <div class="lp-split-card">
                     <div class="lp-split-badge">For Creators</div>
-                    <h3 class="lp-split-title">Grow Your Channel<br><span class="text-accent">On Autopilot</span></h3>
+                    <h3 class="lp-split-title"><?= htmlspecialchars(getSetting('lp_creators_title', 'Your fans will promote you better than any ad ever will.')) ?></h3>
+                    <p style="color:var(--text-muted);font-size:0.9rem;line-height:1.8;margin-bottom:20px">
+                        <?= nl2br(htmlspecialchars(getSetting('lp_creators_sub', "They already know your content. They already have opinions about it. " . $siteName . " gives them a contest to enter and a prize to chase — and the side effect is your video spreading across three platforms at once, carried by people who genuinely like what you make."))) ?>
+                    </p>
+                    <p style="color:var(--text-muted);font-size:0.85rem;font-style:italic;margin-bottom:20px">
+                        <?= htmlspecialchars(getSetting('lp_creators_extra', 'You set the prize. You pick the video. You decide how long the contest runs. After that, your fans handle the rest.')) ?>
+                    </p>
                     <ul class="lp-split-list">
-                        <li>🎯 Fund contests starting at any budget</li>
-                        <li>📊 Get dozens of unique clips per video</li>
-                        <li>🚀 Viral short-form content without editing</li>
-                        <li>💡 Pay only for results you love</li>
-                        <li>🔒 Full control over clip approval</li>
+                        <li>🎯 <?= htmlspecialchars(getSetting('lp_creators_p1', 'Any budget works — you set the number')) ?></li>
+                        <li>📊 <?= htmlspecialchars(getSetting('lp_creators_p2', 'Live dashboard showing every clip submitted')) ?></li>
+                        <li>🚀 <?= htmlspecialchars(getSetting('lp_creators_p3', 'Your video hits TikTok and Reels simultaneously')) ?></li>
+                        <li>🛡 <?= htmlspecialchars(getSetting('lp_creators_p4', 'Flag any clip that doesn\'t fit your brand')) ?></li>
                     </ul>
-                    <a href="#waitlist" class="btn btn-accent mt-3">Start a Contest →</a>
+                    <a href="/auth/register?mode=creator" class="btn btn-accent mt-3">Start a Contest →</a>
                 </div>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-6" id="fans">
                 <div class="lp-split-card lp-split-card--accent">
-                    <div class="lp-split-badge lp-split-badge--dark">For Clippers</div>
-                    <h3 class="lp-split-title">Turn Your Skills<br><span style="color:#000;">Into Cash</span></h3>
+                    <div class="lp-split-badge lp-split-badge--dark">For Fans</div>
+                    <h3 class="lp-split-title"><?= htmlspecialchars(getSetting('lp_fans_title', 'You were going to watch it. Might as well win something.')) ?></h3>
+                    <p style="color:rgba(0,0,0,0.65);font-size:0.9rem;line-height:1.8;margin-bottom:20px">
+                        <?= nl2br(htmlspecialchars(getSetting('lp_fans_sub', "Find a contest for a creator you follow. Watch the video. Pull out the clip that nobody else will think to cut. Post it. Then check the leaderboard obsessively for the next two weeks like the rest of us."))) ?>
+                    </p>
+                    <p style="color:rgba(0,0,0,0.6);font-size:0.85rem;font-style:italic;margin-bottom:20px">
+                        <?= htmlspecialchars(getSetting('lp_fans_extra', 'No fancy equipment. No editing degree. Just a good eye and a phone that works.')) ?>
+                    </p>
                     <ul class="lp-split-list lp-split-list--dark">
-                        <li>✂️ Clip from top YouTube channels</li>
-                        <li>💰 Enter contests with real prize money</li>
-                        <li>🏅 Leaderboard rankings &amp; recognition</li>
-                        <li>⚡ Fast payouts to your local bank</li>
-                        <li>📱 Work from anywhere, any device</li>
+                        <li>📱 <?= htmlspecialchars(getSetting('lp_fans_p1', 'Runs on TikTok and Instagram Reels')) ?></li>
+                        <li>✂️ <?= htmlspecialchars(getSetting('lp_fans_p2', 'Submit as many clips as contests allow')) ?></li>
+                        <li>📊 <?= htmlspecialchars(getSetting('lp_fans_p3', 'Leaderboard updates in real time so you always know where you stand')) ?></li>
+                        <li>💸 <?= htmlspecialchars(getSetting('lp_fans_p4', 'Cash goes straight to your bank when you win')) ?></li>
                     </ul>
-                    <a href="#waitlist" class="btn" style="background:#000;color:#CCFF00;border:1.5px solid #000;border-radius:8px;padding:10px 24px;font-weight:700;margin-top:12px;display:inline-block;">Join as Clipper →</a>
+                    <a href="/auth/register" class="btn btn-accent" style="margin-top:12px;display:inline-block;">Join as a Fan →</a>
                 </div>
             </div>
         </div>
@@ -444,12 +488,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['waitlist_email'])) {
 </section>
 
 <!-- Leaderboard Preview -->
-<section class="lp-section lp-section--alt">
+<section class="lp-section">
     <div class="container">
         <div class="text-center mb-5">
             <div class="lp-section-eyebrow">Live Rankings</div>
-            <h2 class="lp-section-title">Top Clippers <span class="text-accent">This Week</span></h2>
-            <p class="lp-section-sub">Join the competition and see your name on the leaderboard</p>
+            <h2 class="lp-section-title">Only Real Views <span class="text-accent"><?= htmlspecialchars(getSetting('lp_lb_title_accent', 'Win Here.')) ?></span></h2>
+            <p class="lp-section-sub" style="max-width:700px;margin:0 auto">
+                <?= nl2br(htmlspecialchars(getSetting('lp_lb_text', "Every submitted link gets tracked across TikTok and Reels — but only authentic views count. No purchased traffic. No bot plays. No inflated numbers. If real people watched it, it counts. If they didn't, it doesn't. No judges, no panels, no back-room decisions. Contest closes and the honest number at the top wins."))) ?>
+            </p>
         </div>
         <div class="lp-leaderboard">
             <div class="lp-lb-header">
@@ -457,30 +503,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['waitlist_email'])) {
                 <span>Clipper</span>
                 <span>Clips</span>
                 <span>Views</span>
+                <span>Likes</span>
+                <span>Comments</span>
                 <span>Prize</span>
             </div>
             <?php
-            // Sample leaderboard data for illustration — replace with real DB query when live
-            $lbData = [
-                ['rank'=>1,  'emoji'=>'🥇', 'name'=>'ClipKing_NG',    'clips'=>24, 'views'=>'2.3M', 'prize'=>'₦80,000',  'color'=>'#CCFF00'],
-                ['rank'=>2,  'emoji'=>'🥈', 'name'=>'ViralVault',     'clips'=>19, 'views'=>'1.7M', 'prize'=>'₦45,000',  'color'=>'#aaaaaa'],
-                ['rank'=>3,  'emoji'=>'🥉', 'name'=>'QuickCutPro',    'clips'=>15, 'views'=>'980K',  'prize'=>'₦25,000',  'color'=>'#cd7f32'],
-                ['rank'=>4,  'emoji'=>'',   'name'=>'NaijaClipper',   'clips'=>12, 'views'=>'610K',  'prize'=>'₦10,000',  'color'=>'#555'],
-                ['rank'=>5,  'emoji'=>'',   'name'=>'ShortFormStar',  'clips'=>11, 'views'=>'540K',  'prize'=>'₦8,000',   'color'=>'#555'],
-            ];
-            foreach ($lbData as $row):
+            $lbMedals = ['🥇','🥈','🥉','',''];
+            $lbColors = ['#CCFF00','#aaaaaa','#cd7f32','#555','#555'];
+            if (!empty($lbLive)):
+                foreach ($lbLive as $idx => $row):
+                    $medal = $lbMedals[$idx] ?? '';
+                    $color = $lbColors[$idx] ?? '#555';
+                    $views = (int)($row['total_views'] ?? 0);
+                    $viewsFmt = $views >= 1_000_000 ? number_format($views/1_000_000,1).'M'
+                              : ($views >= 1_000 ? number_format($views/1_000,0).'K' : (string)$views);
+                    $prize = (float)($row['total_earned'] ?? 0);
+                    $prizeFmt = $prize > 0 ? '₦'.number_format($prize, 0) : '—';
             ?>
             <div class="lp-lb-row">
-                <span class="lp-lb-rank" style="color:<?= $row['color'] ?>;"><?= $row['emoji'] !== '' ? $row['emoji'] : '#' . $row['rank'] ?></span>
-                <span class="lp-lb-name"><?= htmlspecialchars($row['name']) ?></span>
-                <span class="lp-lb-meta"><?= $row['clips'] ?> clips</span>
-                <span class="lp-lb-meta"><?= $row['views'] ?> views</span>
-                <span class="lp-lb-prize" style="color:var(--accent);"><?= $row['prize'] ?></span>
+                <span class="lp-lb-rank" style="color:<?= $color ?>;"><?= $medal !== '' ? $medal : '#'.($idx+1) ?></span>
+                <span class="lp-lb-name"><?= htmlspecialchars($row['username']) ?></span>
+                <span class="lp-lb-meta"><?= (int)$row['clip_count'] ?> clips</span>
+                <span class="lp-lb-meta"><?= $viewsFmt ?> views</span>
+                <span class="lp-lb-meta"><?= number_format((int)$row['total_likes']) ?> likes</span>
+                <span class="lp-lb-meta"><?= number_format((int)$row['total_comments']) ?> comments</span>
+                <span class="lp-lb-prize" style="color:var(--accent);"><?= $prizeFmt ?></span>
             </div>
             <?php endforeach; ?>
             <div class="lp-lb-footer">
-                <em style="color:#888;font-size:0.8rem;">* Sample data for illustration purposes</em>
+                <a href="/contests" class="text-accent text-decoration-none" style="font-size:0.82rem">See all contestants →</a>
             </div>
+            <?php else: ?>
+            <div class="lp-lb-footer" style="padding:32px 24px">
+                <div style="font-size:1.5rem;margin-bottom:12px">🏆</div>
+                <p style="color:var(--text-muted);font-size:0.88rem;margin:0 0 12px">No ranked clippers yet — be the first to earn your spot!</p>
+                <a href="/auth/register" class="btn btn-accent" style="font-size:0.85rem;padding:10px 24px">Join Now →</a>
+            </div>
+            <?php endif; ?>
         </div>
     </div>
 </section>
@@ -489,20 +548,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['waitlist_email'])) {
 <section class="lp-cta-section">
     <div class="lp-cta-glow"></div>
     <div class="container text-center" style="position:relative;z-index:1;">
-        <h2 class="lp-cta-title">Join the <span class="text-accent">Movement</span></h2>
-        <p class="lp-cta-sub">Thousands of creators and clippers are already on the waitlist.<br>Don't miss your spot at launch.</p>
+        <h2 class="lp-cta-title"><?= htmlspecialchars(getSetting('lp_cta_title', "Creator or fan — there's a spot for you.")) ?></h2>
+        <p class="lp-cta-sub"><?= htmlspecialchars(getSetting('lp_cta_sub', "Contests are live right now. Sign up free and see what's running.")) ?></p>
 
-        <?php if ($waitlistSuccess): ?>
-        <div class="alert-dark-success d-inline-block px-4 py-3 mb-4" style="border-radius:8px;">
-            🎉 You're on the waitlist!
+        <div class="d-flex gap-3 justify-content-center flex-wrap mb-4">
+            <?php if ($lpIsLoggedIn): ?>
+                <a href="/dashboard" class="btn btn-accent pulse-accent" style="padding:15px 40px;font-size:1.05rem;border-radius:10px">Go to Dashboard →</a>
+                <a href="/contests" class="btn btn-outline-accent" style="padding:15px 36px;font-size:1.05rem;border-radius:10px">Browse Contests</a>
+            <?php else: ?>
+                <a href="/auth/register?mode=creator" class="btn btn-accent pulse-accent" style="padding:15px 40px;font-size:1.05rem;border-radius:10px">Start a Contest →</a>
+                <a href="/auth/register" class="btn btn-outline-accent" style="padding:15px 36px;font-size:1.05rem;border-radius:10px">Join as a Fan →</a>
+            <?php endif; ?>
         </div>
+        <?php if (!$lpIsLoggedIn): ?>
+            <p class="lp-form-note">Already have an account? <a href="/auth/login" class="text-accent text-decoration-none">Log in here</a></p>
         <?php endif; ?>
-
-        <form method="POST" class="lp-email-form justify-content-center">
-            <input type="email" name="waitlist_email" placeholder="Your email address" required>
-            <button type="submit" class="btn btn-accent">Get Early Access</button>
-        </form>
-        <p class="lp-form-note">Free forever for clippers. No credit card required.</p>
     </div>
 </section>
 
@@ -514,19 +574,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['waitlist_email'])) {
                 <?php if ($siteLogo !== ''): ?>
                 <img src="<?= htmlspecialchars($siteLogo) ?>" alt="<?= htmlspecialchars($siteName) ?>" style="height:28px;">
                 <?php else: ?>
-                Clipa<span>za</span>
+                <?= formatSiteName($siteName) ?>
                 <?php endif; ?>
             </div>
-            <p style="font-size:0.8rem;color:#888;margin:0;">© <?= date('Y') ?> <?= htmlspecialchars($siteName) ?>. All rights reserved.</p>
+            <p style="font-size:0.8rem;color:var(--text-muted);margin:0;">© <?= date('Y') ?> <?= htmlspecialchars($siteName) ?>. All rights reserved.</p>
             <div class="d-flex gap-4 align-items-center flex-wrap justify-content-center">
-                <a href="#" class="lp-footer-link">Privacy</a>
-                <a href="#" class="lp-footer-link">Terms</a>
-                <a href="#" class="lp-footer-link">Contact</a>
-                <a href="#" class="lp-footer-link">About</a>
+                <a href="/privacy" class="lp-footer-link">Privacy</a>
+                <a href="/terms" class="lp-footer-link">Terms</a>
+                <a href="/contact" class="lp-footer-link">Contact</a>
+                <a href="/about" class="lp-footer-link">About</a>
                 <span class="lp-footer-socials">
-                    <a href="#" title="Twitter/X" aria-label="Twitter">𝕏</a>
-                    <a href="#" title="Instagram" aria-label="Instagram">📸</a>
-                    <a href="#" title="TikTok" aria-label="TikTok">🎵</a>
+                    <a href="#" title="Twitter/X" aria-label="Twitter" style="font-size: 1.1rem; color: var(--text-muted);">𝕏</a>
+                    <a href="#" title="Instagram" aria-label="Instagram"><?= getPlatformIcon('instagram', '1.1rem') ?></a>
+                    <a href="#" title="TikTok" aria-label="TikTok"><?= getPlatformIcon('tiktok', '1.1rem') ?></a>
                 </span>
             </div>
         </div>
@@ -535,5 +595,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['waitlist_email'])) {
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="assets/js/main.js"></script>
+<script>
+(function() {
+  var btn = document.getElementById('themeToggleBtn');
+  if (!btn) return;
+  function current() {
+    var t = document.documentElement.dataset.theme;
+    if (t) return t;
+    return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  }
+  function setIcon() { btn.textContent = current() === 'dark' ? '☀️' : '🌙'; }
+  setIcon();
+  btn.addEventListener('click', function() {
+    var next = current() === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = next;
+    localStorage.setItem('clipaza_theme', next);
+    setIcon();
+  });
+})();
+</script>
 </body>
 </html>

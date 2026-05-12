@@ -167,11 +167,16 @@ CREATE TABLE IF NOT EXISTS `contests` (
   `total_amount` decimal(12,2) NOT NULL DEFAULT 0.00,
   `status` enum('draft','active','ended','cancelled') NOT NULL DEFAULT 'draft',
   `escrow_status` enum('unfunded','funded','released','refunded') NOT NULL DEFAULT 'unfunded',
+  `winner_takes_all` tinyint(1) NOT NULL DEFAULT 0,
   `paystack_reference` varchar(255) DEFAULT NULL,
-  `funded_at` datetime DEFAULT NULL,
+  `payhub_reference` varchar(255) DEFAULT NULL,
   `start_date` datetime DEFAULT NULL,
   `end_date` datetime DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `is_featured` tinyint(1) NOT NULL DEFAULT 0,
+  `featured_until` datetime DEFAULT NULL,
+  `featured_plan_id` int(11) UNSIGNED DEFAULT NULL,
+  `featured_payment_ref` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `idx_contests_status` (`status`),
   KEY `idx_contests_dates` (`start_date`, `end_date`),
@@ -196,6 +201,14 @@ CREATE TABLE IF NOT EXISTS `contest_entries` (
   `verified_like` tinyint(1) NOT NULL DEFAULT 0,
   `verified_comment` tinyint(1) NOT NULL DEFAULT 0,
   `rank_position` int(10) UNSIGNED DEFAULT NULL,
+  `proof_subscribe_path` varchar(500) DEFAULT NULL,
+  `proof_comment_path` varchar(500) DEFAULT NULL,
+  `proof_like_path` varchar(500) DEFAULT NULL,
+  `bot_score` tinyint(3) UNSIGNED NOT NULL DEFAULT 0,
+  `bot_flags` varchar(1000) DEFAULT NULL,
+  `submission_ip` varchar(45) DEFAULT NULL,
+  `submission_ua` varchar(500) DEFAULT NULL,
+  `proof_video_path` varchar(500) DEFAULT NULL,
   `submitted_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
@@ -257,6 +270,9 @@ CREATE TABLE IF NOT EXISTS `user_profiles` (
   `bank_code` varchar(20) DEFAULT NULL,
   `account_number` varchar(20) DEFAULT NULL,
   `account_name` varchar(200) DEFAULT NULL,
+  `brand_description` text DEFAULT NULL,
+  `disclaimer_accepted` tinyint(1) NOT NULL DEFAULT 0,
+  `disclaimer_accepted_at` datetime DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
@@ -382,5 +398,150 @@ INSERT INTO `site_settings` (`setting_key`, `setting_value`) VALUES
 ('google_client_secret', ''),
 ('cron_key', 'default_cron_key_123')
 ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value);
+
+-- Notifications
+CREATE TABLE IF NOT EXISTS `notifications` (
+  `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) UNSIGNED NOT NULL,
+  `type` varchar(50) NOT NULL DEFAULT 'info',
+  `title` varchar(255) NOT NULL,
+  `message` text NOT NULL,
+  `link` varchar(500) DEFAULT NULL,
+  `is_read` tinyint(1) NOT NULL DEFAULT 0,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_notif_user` (`user_id`),
+  KEY `idx_notif_read` (`is_read`),
+  KEY `idx_notif_created` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Payout requests (wallet withdrawals)
+CREATE TABLE IF NOT EXISTS `payout_requests` (
+  `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) UNSIGNED NOT NULL,
+  `amount` decimal(12,2) NOT NULL,
+  `status` enum('pending','approved','rejected','cancelled','on_hold') NOT NULL DEFAULT 'pending',
+  `bank_name` varchar(200) DEFAULT NULL,
+  `bank_code` varchar(20) DEFAULT NULL,
+  `account_number` varchar(20) DEFAULT NULL,
+  `account_name` varchar(200) DEFAULT NULL,
+  `rejection_reason` text DEFAULT NULL,
+  `cancel_reason` text DEFAULT NULL,
+  `appeal_message` text DEFAULT NULL,
+  `admin_note` text DEFAULT NULL,
+  `paystack_reference` varchar(255) DEFAULT NULL,
+  `paystack_transfer_code` varchar(255) DEFAULT NULL,
+  `processed_by` int(11) UNSIGNED DEFAULT NULL,
+  `processed_at` datetime DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_pr_user` (`user_id`),
+  KEY `idx_pr_status` (`status`),
+  KEY `idx_pr_created` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Additional site settings for new features
+INSERT INTO `site_settings` (`setting_key`, `setting_value`) VALUES
+('paystack_fee_percent', '0'),
+('paystack_fee_flat', '0'),
+('min_withdrawal_amount', '1000'),
+('max_withdrawal_amount', '500000'),
+('withdrawal_fee_percent', '0'),
+('withdrawal_fee_flat', '0')
+ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value);
+
+-- Ad packages (admin-created advertising plans)
+CREATE TABLE IF NOT EXISTS `ad_packages` (
+  `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
+  `price` decimal(12,2) NOT NULL,
+  `duration_days` int(11) UNSIGNED NOT NULL DEFAULT 30,
+  `features` text DEFAULT NULL COMMENT 'JSON array of feature strings',
+  `placement_zones` varchar(500) DEFAULT NULL COMMENT 'JSON array: homepage, contests, sidebar etc',
+  `max_ads` int(11) UNSIGNED NOT NULL DEFAULT 1,
+  `is_active` tinyint(1) NOT NULL DEFAULT 1,
+  `sort_order` int(11) UNSIGNED NOT NULL DEFAULT 0,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_ap_active` (`is_active`),
+  KEY `idx_ap_sort` (`sort_order`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Movie ads (creator submissions)
+CREATE TABLE IF NOT EXISTS `movie_ads` (
+  `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) UNSIGNED NOT NULL,
+  `package_id` int(11) UNSIGNED NOT NULL,
+  `movie_title` varchar(255) NOT NULL,
+  `tagline` varchar(500) DEFAULT NULL,
+  `description` text DEFAULT NULL,
+  `genre` varchar(100) DEFAULT NULL,
+  `release_date` date DEFAULT NULL,
+  `trailer_url` varchar(2000) DEFAULT NULL COMMENT 'YouTube/video URL for preview',
+  `poster_path` varchar(500) DEFAULT NULL COMMENT 'Uploaded movie poster/e-flyer',
+  `flyer_path` varchar(500) DEFAULT NULL COMMENT 'Uploaded e-flyer image',
+  `contact_email` varchar(255) DEFAULT NULL,
+  `contact_phone` varchar(30) DEFAULT NULL,
+  `website_url` varchar(2000) DEFAULT NULL,
+  `payment_method` enum('online','manual') NOT NULL DEFAULT 'online',
+  `payment_status` enum('unpaid','pending_verification','paid') NOT NULL DEFAULT 'unpaid',
+  `payment_reference` varchar(255) DEFAULT NULL,
+  `manual_deposit_proof` varchar(500) DEFAULT NULL COMMENT 'Uploaded proof of bank transfer',
+  `manual_deposit_amount` decimal(12,2) DEFAULT NULL,
+  `manual_deposit_note` text DEFAULT NULL,
+  `status` enum('draft','pending_review','approved','rejected','expired','cancelled') NOT NULL DEFAULT 'draft',
+  `review_note` text DEFAULT NULL,
+  `reviewed_by` int(11) UNSIGNED DEFAULT NULL,
+  `reviewed_at` datetime DEFAULT NULL,
+  `starts_at` datetime DEFAULT NULL,
+  `expires_at` datetime DEFAULT NULL,
+  `impression_count` int(11) UNSIGNED NOT NULL DEFAULT 0,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_ma_user` (`user_id`),
+  KEY `idx_ma_package` (`package_id`),
+  KEY `idx_ma_status` (`status`),
+  KEY `idx_ma_expires` (`expires_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Ad bank account settings
+INSERT INTO `site_settings` (`setting_key`, `setting_value`) VALUES
+('ad_bank_name', ''),
+('ad_bank_account', ''),
+('ad_bank_number', ''),
+('payhub_base_url', 'https://payhub.datagifting.com.ng'),
+('payhub_api_key', ''),
+('payhub_merchant_id', ''),
+('preferred_payout_gateway', 'paystack')
+ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value);
+
+-- PayHub virtual accounts
+CREATE TABLE IF NOT EXISTS `payhub_virtual_accounts` (
+  `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) UNSIGNED NOT NULL,
+  `account_number` varchar(20) NOT NULL,
+  `account_name` varchar(255) NOT NULL,
+  `bank_name` varchar(255) NOT NULL,
+  `payhub_reference` varchar(255) DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `idx_pva_user` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `featured_contest_plans` (
+  `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL,
+  `description` varchar(500) DEFAULT NULL,
+  `price` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `duration_days` int(11) NOT NULL DEFAULT 7,
+  `is_active` tinyint(1) NOT NULL DEFAULT 1,
+  `sort_order` int(11) NOT NULL DEFAULT 0,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 SET foreign_key_checks = 1;

@@ -76,6 +76,52 @@ function sanitizeInput(string $input): string {
     return trim(strip_tags($input));
 }
 
+/**
+ * Formats site name with a lemon-colored span starting from the second capital letter.
+ * Useful for "ClipZaza" -> "Clip<span...>Zaza</span>"
+ */
+/**
+ * Renders a platform icon image.
+ */
+function getPlatformIcon(string $platform, string $size = '1.2rem'): string {
+    $src = match(strtolower($platform)) {
+        'tiktok'    => '/assets/img/tiktok.png',
+        'instagram' => '/assets/img/instagram.png',
+        'facebook'  => '/assets/img/facebook.png',
+        default     => ''
+    };
+    if (!$src) return '';
+    return sprintf(
+        '<img src="%s" alt="%s" class="platform-img-icon" style="width:%s; height:%s; vertical-align:middle; object-fit:contain; margin-top:-2px" />',
+        $src,
+        ucfirst($platform),
+        $size,
+        $size
+    );
+}
+
+function formatSiteName(string $siteName): string {
+    $len = mb_strlen($siteName);
+    $capCount = 0;
+    $breakIndex = -1;
+
+    for ($i = 0; $i < $len; $i++) {
+        $char = mb_substr($siteName, $i, 1);
+        if ($char >= 'A' && $char <= 'Z') {
+            $capCount++;
+            if ($capCount === 2) {
+                $breakIndex = $i;
+                break;
+            }
+        }
+    }
+
+    if ($breakIndex !== -1) {
+        return e(mb_substr($siteName, 0, $breakIndex)) . '<span style="color:var(--accent)">' . e(mb_substr($siteName, $breakIndex)) . '</span>';
+    }
+    return e($siteName);
+}
+
 function isValidEmail(string $email): bool {
     return (bool)filter_var($email, FILTER_VALIDATE_EMAIL);
 }
@@ -140,4 +186,110 @@ function paginate(int $total, int $perPage, int $current): array {
         'hasPrev'  => $current > 1,
         'hasNext'  => $current < $pages,
     ];
+}
+
+function sendNotification(int $userId, string $type, string $title, string $message, string $link = ''): void {
+    try {
+        $db = db();
+        $db->prepare(
+            'INSERT INTO notifications (user_id, type, title, message, link) VALUES (?, ?, ?, ?, ?)'
+        )->execute([$userId, $type, $title, $message, $link ?: null]);
+    } catch (Throwable) {}
+}
+
+function getUnreadNotificationCount(int $userId): int {
+    try {
+        $db   = db();
+        $stmt = $db->prepare('SELECT COUNT(*) FROM notifications WHERE user_id = ? AND is_read = 0');
+        $stmt->execute([$userId]);
+        return (int)$stmt->fetchColumn();
+    } catch (Throwable) {
+        return 0;
+    }
+}
+
+function paystackPost(string $endpoint, array $data): array {
+    $secretKey = getSetting('paystack_secret_key', '');
+    if (defined('PAYSTACK_SECRET_KEY') && PAYSTACK_SECRET_KEY) {
+        $secretKey = PAYSTACK_SECRET_KEY;
+    }
+    if (empty($secretKey)) {
+        return ['error' => 'Paystack not configured.'];
+    }
+    $ch = curl_init('https://api.paystack.co' . $endpoint);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT        => 30,
+        CURLOPT_POST           => true,
+        CURLOPT_POSTFIELDS     => json_encode($data),
+        CURLOPT_HTTPHEADER     => [
+            'Authorization: Bearer ' . $secretKey,
+            'Content-Type: application/json',
+            'Cache-Control: no-cache',
+        ],
+        CURLOPT_SSL_VERIFYPEER => true,
+    ]);
+    $response = curl_exec($ch);
+    $err = curl_error($ch);
+    curl_close($ch);
+    if ($err) return ['error' => $err];
+    return json_decode($response, true) ?: ['error' => 'Invalid response.'];
+}
+
+function paystackGet(string $endpoint): array {
+    $secretKey = getSetting('paystack_secret_key', '');
+    if (defined('PAYSTACK_SECRET_KEY') && PAYSTACK_SECRET_KEY) {
+        $secretKey = PAYSTACK_SECRET_KEY;
+    }
+    if (empty($secretKey)) {
+        return ['error' => 'Paystack not configured.'];
+    }
+    $ch = curl_init('https://api.paystack.co' . $endpoint);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT        => 15,
+        CURLOPT_HTTPHEADER     => ['Authorization: Bearer ' . $secretKey],
+        CURLOPT_SSL_VERIFYPEER => true,
+    ]);
+    $response = curl_exec($ch);
+    $err = curl_error($ch);
+    curl_close($ch);
+    if ($err) return ['error' => $err];
+    return json_decode($response, true) ?: ['error' => 'Invalid response.'];
+}
+
+function getPreferredPayoutGateway(): string {
+    return getSetting('preferred_payout_gateway', 'paystack');
+}
+
+/**
+ * Checks if KYC is mandatory based on the active payout system.
+ * Mandatory if any automated gateway is active.
+ */
+function isKycRequired(): bool {
+    return getPreferredPayoutGateway() !== 'manual';
+}
+
+function autoArchiveContests(): int {
+    try {
+        $db   = db();
+        $stmt = $db->prepare(
+            "UPDATE contests SET status = 'ended'
+             WHERE status = 'active' AND end_date IS NOT NULL AND end_date <= NOW()"
+        );
+        $stmt->execute();
+        return $stmt->rowCount();
+    } catch (Throwable) {
+        return 0;
+    }
+}
+
+function sendEmail(string $to, string $subject, string $html): bool
+{
+    try {
+        require_once __DIR__ . '/mailer.php';
+        return (new Mailer())->send($to, $subject, $html);
+    } catch (Throwable) {
+        return false;
+    }
 }

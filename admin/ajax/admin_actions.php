@@ -8,6 +8,7 @@ require_once $root . '/includes/db.php';
 require_once $root . '/includes/functions.php';
 require_once $root . '/includes/security.php';
 require_once $root . '/includes/auth.php';
+require_once $root . '/includes/payhub.php';
 
 requireAdmin();
 if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) {
@@ -29,6 +30,57 @@ switch ($action) {
     case 'update_views':
         handleUpdateViews();
         break;
+    case 'approve':
+    case 'reject':
+    case 'cancel':
+    case 'restore':
+        handlePayoutRequestAction($action);
+        break;
+    case 'mark_paid':
+        handleMarkPaid();
+        break;
+    case 'set_payout_pin':
+        handleSetPayoutPin();
+        break;
+    case 'verify_payout_pin':
+        handleVerifyPayoutPin();
+        break;
+    case 'login_as_user':
+        handleLoginAsUser();
+        break;
+    case 'edit_user':
+        handleEditUser();
+        break;
+    case 'approve_kyc':
+    case 'reject_kyc':
+        handleKycAction($action);
+        break;
+    case 'update_admin_profile':
+        handleUpdateAdminProfile();
+        break;
+    case 'create_ad_package':
+        handleCreateAdPackage();
+        break;
+    case 'update_ad_package':
+        handleUpdateAdPackage();
+        break;
+    case 'toggle_ad_package':
+        handleToggleAdPackage();
+        break;
+    case 'delete_ad_package':
+        handleDeleteAdPackage();
+        break;
+    case 'approve_movie_ad':
+        handleApproveMovieAd();
+        break;
+    case 'reject_movie_ad':
+        handleRejectMovieAd();
+        break;
+    case 'create_feature_plan':  handleCreateFeaturePlan();  break;
+    case 'update_feature_plan':  handleUpdateFeaturePlan();  break;
+    case 'delete_feature_plan':  handleDeleteFeaturePlan();  break;
+    case 'unfeature_contest':    handleUnfeatureContest();   break;
+    case 'admin_feature_contest': handleAdminFeatureContest(); break;
     default:
         jsonResponse(['success' => false, 'message' => 'Unknown action.'], 400);
 }
@@ -103,5 +155,785 @@ function handleUpdateViews(): never {
         jsonResponse(['success' => true, 'message' => 'Entry stats updated.']);
     } catch (Throwable) {
         jsonResponse(['success' => false, 'message' => 'Update failed.']);
+    }
+}
+
+function handlePayoutRequestAction(string $action): never {
+    $requestId = (int)($_POST['payout_request_id'] ?? 0);
+    $reason    = sanitizeInput($_POST['reason'] ?? '');
+    $adminNote = sanitizeInput($_POST['admin_note'] ?? '');
+    $adminId   = (int)($_SESSION['user_id'] ?? 0);
+
+    if (!$requestId) {
+        jsonResponse(['success' => false, 'message' => 'Invalid request ID.']);
+    }
+
+    try {
+        $db   = db();
+        $stmt = $db->prepare("SELECT * FROM payout_requests WHERE id = ? LIMIT 1");
+        $stmt->execute([$requestId]);
+        $req = $stmt->fetch();
+
+        if (!$req) {
+            jsonResponse(['success' => false, 'message' => 'Payout request not found.']);
+        }
+
+        $userId = (int)$req['user_id'];
+        $amount = (float)$req['amount'];
+
+        if ($action === 'approve') {
+            if (!in_array($req['status'], ['pending', 'on_hold'], true)) {
+                jsonResponse(['success' => false, 'message' => 'Only pending or on-hold requests can be approved.']);
+            }
+
+            // PIN check
+            $storedPin = getSecuritySetting('payout_approval_pin', '');
+            if (!empty($storedPin)) {
+                $submittedPin = $_POST['payout_pin'] ?? '';
+                if (empty($submittedPin) || !password_verify($submittedPin, $storedPin)) {
+                    jsonResponse(['success' => false, 'message' => 'Invalid payout approval PIN.']);
+                }
+            }
+
+            // Attempt transfer via preferred gateway
+            $transferResult = initiatePayoutTransfer($req);
+            $transferCode   = $transferResult['transfer_code'] ?? null;
+            $reference      = $transferResult['reference'] ?? ($transferResult['payhub_reference'] ?? null);
+
+            // Warn admin when gateway is not configured or transfer failed
+            $paystackNote = '';
+            if (($transferResult['status'] ?? '') === 'skipped') {
+                $paystackNote = ' (' . ($transferResult['error'] ?? 'Manual bank transfer required') . ')';
+            } elseif (in_array($transferResult['status'] ?? '', ['recipient_error', 'transfer_error'], true)) {
+                $paystackNote = ' (Transfer error: ' . ($transferResult['error'] ?? 'unknown') . ' — manual transfer required)';
+            }
+
+            $db->beginTransaction();
+            $db->prepare(
+                "UPDATE payout_requests SET status = 'approved', processed_by = ?, processed_at = NOW(),
+                 admin_note = ?, paystack_transfer_code = ?, paystack_reference = ?, updated_at = NOW()
+                 WHERE id = ?"
+            )->execute([$adminId, $adminNote ?: null, $transferCode, $reference, $requestId]);
+
+            // Update matching pending withdrawal transaction to completed
+            $db->prepare(
+                "UPDATE transactions SET status = 'completed' WHERE user_id = ? AND type = 'withdrawal' AND status = 'pending' AND description = 'Payout request' ORDER BY created_at DESC LIMIT 1"
+            )->execute([$userId]);
+
+            $db->commit();
+
+            sendNotification($userId, 'payout_approved', 'Payout Approved! 🎉',
+                '₦' . number_format($amount, 0) . ' has been approved and transfer initiated to your bank account.', '/wallet');
+            sendNotification($adminId, 'admin_note', 'Payout Approved',
+                'Payout of ₦' . number_format($amount, 0) . ' approved for user #' . $userId . $paystackNote . '.', '/admin/payouts.php');
+
+            jsonResponse(['success' => true, 'message' => 'Payout approved and transfer initiated.' . $paystackNote]);
+
+        } elseif ($action === 'reject') {
+            if (empty($reason)) {
+                jsonResponse(['success' => false, 'message' => 'Rejection reason is required.']);
+            }
+            if (!in_array($req['status'], ['pending', 'on_hold'], true)) {
+                jsonResponse(['success' => false, 'message' => 'Only pending or on-hold requests can be rejected.']);
+            }
+
+            $db->beginTransaction();
+            $db->prepare(
+                "UPDATE payout_requests SET status = 'rejected', rejection_reason = ?, admin_note = ?,
+                 processed_by = ?, processed_at = NOW(), updated_at = NOW() WHERE id = ?"
+            )->execute([$reason, $adminNote ?: null, $adminId, $requestId]);
+
+            // Reverse amount to wallet
+            $db->prepare("UPDATE user_profiles SET wallet_balance = wallet_balance + ? WHERE user_id = ?")->execute([$amount, $userId]);
+
+            // Update matching pending withdrawal transaction to failed
+            $db->prepare(
+                "UPDATE transactions SET status = 'failed' WHERE user_id = ? AND type = 'withdrawal' AND status = 'pending' AND description = 'Payout request' ORDER BY created_at DESC LIMIT 1"
+            )->execute([$userId]);
+
+            // Credit refund transaction
+            $db->prepare(
+                "INSERT INTO transactions (user_id, amount, type, status, description) VALUES (?, ?, 'refund', 'completed', 'Payout rejected — refunded to wallet')"
+            )->execute([$userId, $amount]);
+
+            $db->commit();
+
+            sendNotification($userId, 'payout_rejected', 'Payout Rejected',
+                '₦' . number_format($amount, 0) . ' has been returned to your wallet. Reason: ' . $reason, '/wallet');
+            sendNotification($adminId, 'admin_note', 'Payout Rejected',
+                'Payout of ₦' . number_format($amount, 0) . ' rejected for user #' . $userId . '.', '/admin/payouts.php');
+
+            jsonResponse(['success' => true, 'message' => 'Payout rejected and amount refunded to user wallet.']);
+
+        } elseif ($action === 'cancel') {
+            if (empty($reason)) {
+                jsonResponse(['success' => false, 'message' => 'Cancellation reason is required.']);
+            }
+            if ($req['status'] !== 'pending') {
+                jsonResponse(['success' => false, 'message' => 'Only pending requests can be cancelled.']);
+            }
+
+            $db->prepare(
+                "UPDATE payout_requests SET status = 'cancelled', cancel_reason = ?, admin_note = ?,
+                 processed_by = ?, processed_at = NOW(), updated_at = NOW() WHERE id = ?"
+            )->execute([$reason, $adminNote ?: null, $adminId, $requestId]);
+
+            sendNotification($userId, 'payout_cancelled', 'Payout On Hold',
+                'Your payout of ₦' . number_format($amount, 0) . ' has been placed on hold. Reason: ' . $reason . '. You may submit an appeal.', '/wallet');
+
+            jsonResponse(['success' => true, 'message' => 'Payout cancelled. User notified.']);
+
+        } elseif ($action === 'restore') {
+            if ($req['status'] !== 'on_hold') {
+                jsonResponse(['success' => false, 'message' => 'Only on-hold requests can be restored to pending.']);
+            }
+
+            $db->prepare(
+                "UPDATE payout_requests SET status = 'pending', admin_note = ?, updated_at = NOW() WHERE id = ?"
+            )->execute([$adminNote ?: null, $requestId]);
+
+            sendNotification($userId, 'payout_restored', 'Payout Under Review',
+                'Your payout request has been restored to pending status and is being reviewed.', '/wallet');
+
+            jsonResponse(['success' => true, 'message' => 'Request restored to pending.']);
+        }
+
+        jsonResponse(['success' => false, 'message' => 'Unknown action.']);
+    } catch (Throwable $e) {
+        try { $db->rollBack(); } catch (Throwable) {}
+        jsonResponse(['success' => false, 'message' => 'Action failed: ' . $e->getMessage()]);
+    }
+}
+
+function initiatePaystackTransfer(array $req): array {
+    $secretKey = getSetting('paystack_secret_key', '');
+    if (defined('PAYSTACK_SECRET_KEY') && PAYSTACK_SECRET_KEY) {
+        $secretKey = PAYSTACK_SECRET_KEY;
+    }
+    if (empty($secretKey)) {
+        return ['status' => 'skipped', 'error' => 'Paystack not configured'];
+    }
+
+    // 1. Create transfer recipient
+    $recipientResult = paystackPost('/transferrecipient', [
+        'type'           => 'nuban',
+        'name'           => $req['account_name'],
+        'account_number' => $req['account_number'],
+        'bank_code'      => $req['bank_code'],
+        'currency'       => 'NGN',
+    ]);
+
+    if (empty($recipientResult['data']['recipient_code'])) {
+        return ['status' => 'recipient_error', 'error' => $recipientResult['message'] ?? 'Could not create recipient'];
+    }
+
+    $recipientCode = $recipientResult['data']['recipient_code'];
+    $reference     = 'CLPZ_PAY_' . $req['id'] . '_' . time();
+
+    // 2. Initiate transfer
+    $transferResult = paystackPost('/transfer', [
+        'source'    => 'balance',
+        'amount'    => (int)round((float)$req['amount'] * 100),
+        'recipient' => $recipientCode,
+        'reason'    => 'Clipaza wallet withdrawal',
+        'reference' => $reference,
+    ]);
+
+    if (!empty($transferResult['data']['transfer_code'])) {
+        return [
+            'status'        => 'initiated',
+            'transfer_code' => $transferResult['data']['transfer_code'],
+            'reference'     => $reference,
+        ];
+    }
+
+    return ['status' => 'transfer_error', 'error' => $transferResult['message'] ?? 'Transfer failed', 'reference' => $reference];
+}
+
+function initiatePayoutTransfer(array $req): array {
+    $gateway = getPreferredPayoutGateway();
+    return match ($gateway) {
+        'payhub'  => initiatePayhubTransfer($req),
+        'manual'  => ['status' => 'skipped', 'error' => 'Manual payout configured'],
+        default   => initiatePaystackTransfer($req),
+    };
+}
+
+function initiatePayhubTransfer(array $req): array {
+    if (!payhubEnabled()) {
+        return ['status' => 'skipped', 'error' => 'PayHub not configured'];
+    }
+
+    $reference = 'CLPZ_PHB_PAY_' . $req['id'] . '_' . time();
+
+    $result = payhubInitPayout(
+        (float)$req['amount'],
+        (string)$req['bank_code'],
+        (string)$req['account_number'],
+        (string)$req['account_name'],
+        $reference,
+        'Clipaza withdrawal'
+    );
+
+    if (!empty($result['error'])) {
+        return ['status' => 'transfer_error', 'error' => $result['error']];
+    }
+
+    if (empty($result['status']) || !$result['status']) {
+        return ['status' => 'transfer_error', 'error' => $result['message'] ?? 'PayHub payout failed'];
+    }
+
+    return [
+        'status'            => 'initiated',
+        'reference'         => $reference,
+        'payhub_reference'  => $result['data']['reference'] ?? $reference,
+    ];
+}
+
+
+function handleLoginAsUser(): never {
+    $targetUserId = (int)($_POST['target_user_id'] ?? 0);
+    if (!$targetUserId) {
+        jsonResponse(['success' => false, 'message' => 'Invalid user ID.']);
+    }
+    try {
+        $db   = db();
+        $stmt = $db->prepare("SELECT * FROM users WHERE id = ? AND role != 'admin' LIMIT 1");
+        $stmt->execute([$targetUserId]);
+        $user = $stmt->fetch();
+        if (!$user) {
+            jsonResponse(['success' => false, 'message' => 'User not found or cannot impersonate admin.']);
+        }
+
+        // Store admin session for return
+        $_SESSION['admin_impersonating'] = true;
+        $_SESSION['original_admin_id']   = $_SESSION['user_id'];
+        $_SESSION['original_admin_name'] = $_SESSION['username'];
+
+        // Switch to user session
+        $_SESSION['user_id']    = $user['id'];
+        $_SESSION['username']   = $user['username'];
+        $_SESSION['user_role']  = $user['role'];
+        $_SESSION['user_email'] = $user['email'];
+
+        // Load user mode
+        try {
+            $ps = $db->prepare('SELECT active_mode FROM user_profiles WHERE user_id = ? LIMIT 1');
+            $ps->execute([$user['id']]);
+            $profile = $ps->fetch();
+            $_SESSION['user_mode'] = $profile ? $profile['active_mode'] : 'clipper';
+        } catch (Throwable) {
+            $_SESSION['user_mode'] = 'clipper';
+        }
+
+        jsonResponse(['success' => true, 'redirect' => '/dashboard']);
+    } catch (Throwable) {
+        jsonResponse(['success' => false, 'message' => 'Failed to switch user.']);
+    }
+}
+
+function handleEditUser(): never {
+    $userId      = (int)($_POST['edit_user_id'] ?? 0);
+    $email       = sanitizeInput($_POST['email'] ?? '');
+    $username    = sanitizeInput($_POST['username'] ?? '');
+    $role        = sanitizeInput($_POST['role'] ?? '');
+    $status      = sanitizeInput($_POST['status'] ?? '');
+    $displayName = sanitizeInput($_POST['display_name'] ?? '');
+    $walletAdjust = (float)($_POST['wallet_adjust'] ?? 0);
+    $newPassword = $_POST['new_password'] ?? '';
+
+    if (!$userId) {
+        jsonResponse(['success' => false, 'message' => 'Invalid user ID.']);
+    }
+    if (!isValidEmail($email)) {
+        jsonResponse(['success' => false, 'message' => 'Invalid email address.']);
+    }
+    if (!in_array($role, ['admin', 'user', 'moderator'], true)) {
+        jsonResponse(['success' => false, 'message' => 'Invalid role.']);
+    }
+    if (!in_array($status, ['active', 'inactive', 'banned', 'pending'], true)) {
+        jsonResponse(['success' => false, 'message' => 'Invalid status.']);
+    }
+
+    try {
+        $db = db();
+
+        // Check email uniqueness
+        $stmt = $db->prepare('SELECT id FROM users WHERE email = ? AND id != ? LIMIT 1');
+        $stmt->execute([$email, $userId]);
+        if ($stmt->fetch()) {
+            jsonResponse(['success' => false, 'message' => 'Email already in use by another account.']);
+        }
+
+        $updateFields = 'email = ?, role = ?, status = ?';
+        $params = [$email, $role, $status];
+        if (!empty($newPassword)) {
+            if (strlen($newPassword) < 8) {
+                jsonResponse(['success' => false, 'message' => 'Password must be at least 8 characters.']);
+            }
+            $updateFields .= ', password = ?';
+            $params[] = password_hash($newPassword, PASSWORD_BCRYPT, ['cost' => 12]);
+        }
+        $params[] = $userId;
+        $db->prepare("UPDATE users SET {$updateFields} WHERE id = ?")->execute($params);
+
+        // Update profile
+        $db->prepare(
+            "UPDATE user_profiles SET display_name = ? WHERE user_id = ?"
+        )->execute([$displayName ?: null, $userId]);
+
+        // Wallet adjustment
+        if ($walletAdjust != 0) {
+            if ($walletAdjust < 0) {
+                // Ensure balance doesn't go negative
+                $checkStmt = $db->prepare("SELECT wallet_balance FROM user_profiles WHERE user_id = ? LIMIT 1");
+                $checkStmt->execute([$userId]);
+                $currentBalance = (float)($checkStmt->fetchColumn() ?: 0);
+                if ($currentBalance + $walletAdjust < 0) {
+                    jsonResponse(['success' => false, 'message' => 'Deduction would make wallet balance negative. Current balance: ₦' . number_format($currentBalance, 2)]);
+                }
+            }
+            $db->prepare("UPDATE user_profiles SET wallet_balance = wallet_balance + ? WHERE user_id = ?")->execute([$walletAdjust, $userId]);
+            $txType = $walletAdjust > 0 ? 'credit' : 'debit';
+            $db->prepare(
+                "INSERT INTO transactions (user_id, amount, type, status, description) VALUES (?, ?, ?, 'completed', 'Admin wallet adjustment')"
+            )->execute([$userId, abs($walletAdjust), $txType]);
+            sendNotification($userId, 'wallet', 'Wallet Adjusted',
+                'Your wallet has been adjusted by ₦' . number_format(abs($walletAdjust), 0) . ' by an administrator.', '/wallet');
+        }
+
+        jsonResponse(['success' => true, 'message' => 'User updated successfully.']);
+    } catch (Throwable) {
+        jsonResponse(['success' => false, 'message' => 'Update failed.']);
+    }
+}
+
+function handleKycAction(string $action): never {
+    $userId = (int)($_POST['kyc_user_id'] ?? 0);
+    $reason = sanitizeInput($_POST['reason'] ?? '');
+
+    if (!$userId) {
+        jsonResponse(['success' => false, 'message' => 'Invalid user ID.']);
+    }
+
+    try {
+        $db = db();
+        if ($action === 'approve_kyc') {
+            $db->prepare("UPDATE user_profiles SET kyc_status = 'approved', kyc_rejection_reason = NULL WHERE user_id = ?")->execute([$userId]);
+            sendNotification($userId, 'kyc', 'KYC Approved ✅', 'Your identity verification has been approved. You can now request payouts.', '/wallet');
+            jsonResponse(['success' => true, 'message' => 'KYC approved.']);
+        } else {
+            if (empty($reason)) {
+                jsonResponse(['success' => false, 'message' => 'Rejection reason is required.']);
+            }
+            $db->prepare("UPDATE user_profiles SET kyc_status = 'rejected', kyc_rejection_reason = ? WHERE user_id = ?")->execute([$reason, $userId]);
+            sendNotification($userId, 'kyc', 'KYC Rejected', 'Your KYC was rejected. Reason: ' . $reason . '. Please re-submit with valid documents.', '/kyc');
+            jsonResponse(['success' => true, 'message' => 'KYC rejected.']);
+        }
+    } catch (Throwable) {
+        jsonResponse(['success' => false, 'message' => 'Action failed.']);
+    }
+}
+
+function handleUpdateAdminProfile(): never {
+    $adminId  = (int)($_SESSION['user_id'] ?? 0);
+    $field    = sanitizeInput($_POST['field'] ?? '');
+
+    try {
+        $db = db();
+
+        if ($field === 'info') {
+            $username = sanitizeInput($_POST['username'] ?? '');
+            $email    = sanitizeInput($_POST['email'] ?? '');
+
+            if ($username === '' || $email === '') {
+                jsonResponse(['success' => false, 'message' => 'Username and email are required.']);
+            }
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                jsonResponse(['success' => false, 'message' => 'Invalid email address.']);
+            }
+
+            // Check uniqueness (exclude current admin)
+            $chk = $db->prepare("SELECT id FROM users WHERE username = ? AND id != ? LIMIT 1");
+            $chk->execute([$username, $adminId]);
+            if ($chk->fetch()) {
+                jsonResponse(['success' => false, 'message' => 'Username is already taken.']);
+            }
+            $chk = $db->prepare("SELECT id FROM users WHERE email = ? AND id != ? LIMIT 1");
+            $chk->execute([$email, $adminId]);
+            if ($chk->fetch()) {
+                jsonResponse(['success' => false, 'message' => 'Email is already in use.']);
+            }
+
+            $db->prepare("UPDATE users SET username = ?, email = ?, updated_at = NOW() WHERE id = ? AND role = 'admin'")
+               ->execute([$username, $email, $adminId]);
+
+            // Refresh session username
+            $_SESSION['username'] = $username;
+
+            jsonResponse(['success' => true, 'message' => 'Profile updated successfully.']);
+
+        } elseif ($field === 'password') {
+            $currentPw  = $_POST['current_password'] ?? '';
+            $newPw      = $_POST['new_password'] ?? '';
+            $confirmPw  = $_POST['confirm_password'] ?? '';
+
+            if ($currentPw === '' || $newPw === '' || $confirmPw === '') {
+                jsonResponse(['success' => false, 'message' => 'All password fields are required.']);
+            }
+            if ($newPw !== $confirmPw) {
+                jsonResponse(['success' => false, 'message' => 'New passwords do not match.']);
+            }
+            if (strlen($newPw) < 8) {
+                jsonResponse(['success' => false, 'message' => 'New password must be at least 8 characters.']);
+            }
+
+            $stmt = $db->prepare("SELECT password FROM users WHERE id = ? AND role = 'admin' LIMIT 1");
+            $stmt->execute([$adminId]);
+            $row = $stmt->fetch();
+
+            if (!$row || !password_verify($currentPw, $row['password'])) {
+                jsonResponse(['success' => false, 'message' => 'Current password is incorrect.']);
+            }
+
+            $hash = password_hash($newPw, PASSWORD_DEFAULT);
+            $db->prepare("UPDATE users SET password = ?, updated_at = NOW() WHERE id = ?")->execute([$hash, $adminId]);
+
+            jsonResponse(['success' => true, 'message' => 'Password changed successfully.']);
+
+        } else {
+            jsonResponse(['success' => false, 'message' => 'Unknown profile field.']);
+        }
+    } catch (Throwable) {
+        jsonResponse(['success' => false, 'message' => 'Profile update failed.']);
+    }
+}
+
+function handleSetPayoutPin(): never {
+    $pin = $_POST['payout_pin'] ?? '';
+    if (!preg_match('/^\d{4,6}$/', $pin)) {
+        jsonResponse(['success' => false, 'message' => 'PIN must be 4–6 digits.']);
+    }
+    $hash = password_hash($pin, PASSWORD_BCRYPT, ['cost' => 12]);
+    if (saveSecuritySetting('payout_approval_pin', $hash)) {
+        jsonResponse(['success' => true, 'message' => 'Payout approval PIN updated.']);
+    }
+    jsonResponse(['success' => false, 'message' => 'Failed to save PIN.']);
+}
+
+function handleVerifyPayoutPin(): never {
+    $pin       = $_POST['payout_pin'] ?? '';
+    $storedPin = getSecuritySetting('payout_approval_pin', '');
+    if (empty($storedPin)) {
+        jsonResponse(['success' => true, 'pin_required' => false]);
+    }
+    if (empty($pin) || !password_verify($pin, $storedPin)) {
+        jsonResponse(['success' => false, 'message' => 'Invalid PIN.']);
+    }
+    jsonResponse(['success' => true, 'pin_required' => true]);
+}
+
+function handleMarkPaid(): never {
+    $requestId = (int)($_POST['payout_request_id'] ?? 0);
+    $adminNote = sanitizeInput($_POST['admin_note'] ?? '');
+    $adminId   = (int)($_SESSION['user_id'] ?? 0);
+
+    if (!$requestId) {
+        jsonResponse(['success' => false, 'message' => 'Invalid request ID.']);
+    }
+
+    // PIN check
+    $storedPin = getSecuritySetting('payout_approval_pin', '');
+    if (!empty($storedPin)) {
+        $submittedPin = $_POST['payout_pin'] ?? '';
+        if (empty($submittedPin) || !password_verify($submittedPin, $storedPin)) {
+            jsonResponse(['success' => false, 'message' => 'Invalid payout approval PIN.']);
+        }
+    }
+
+    try {
+        $db   = db();
+        $stmt = $db->prepare("SELECT * FROM payout_requests WHERE id = ? LIMIT 1");
+        $stmt->execute([$requestId]);
+        $req = $stmt->fetch();
+        if (!$req) {
+            jsonResponse(['success' => false, 'message' => 'Payout request not found.']);
+        }
+        if (!in_array($req['status'], ['pending', 'on_hold'], true)) {
+            jsonResponse(['success' => false, 'message' => 'Only pending or on-hold requests can be marked as paid.']);
+        }
+
+        $userId = (int)$req['user_id'];
+        $amount = (float)$req['amount'];
+
+        $db->prepare(
+            "UPDATE payout_requests
+             SET status = 'approved', admin_note = ?, processed_by = ?, processed_at = NOW(), updated_at = NOW()
+             WHERE id = ?"
+        )->execute([$adminNote ?: null, $adminId, $requestId]);
+
+        sendNotification($userId, 'payout_approved', 'Payment Processed 🎉',
+            '₦' . number_format($amount, 0) . ' has been manually processed to your bank account.', '/wallet');
+
+        jsonResponse(['success' => true, 'message' => 'Payout marked as paid (manual transfer). User notified.']);
+    } catch (Throwable $e) {
+        jsonResponse(['success' => false, 'message' => 'Action failed: ' . $e->getMessage()]);
+    }
+}
+
+function handleCreateAdPackage(): never {
+    $name          = sanitizeInput($_POST['name'] ?? '');
+    $description   = sanitizeInput($_POST['description'] ?? '');
+    $price         = (float)($_POST['price'] ?? 0);
+    $durationDays  = (int)($_POST['duration_days'] ?? 30);
+    $featuresRaw   = $_POST['features'] ?? '';
+    $zonesRaw      = $_POST['placement_zones'] ?? [];
+    $maxAds        = max(1, (int)($_POST['max_ads'] ?? 1));
+    $sortOrder     = (int)($_POST['sort_order'] ?? 0);
+    $isActive      = isset($_POST['is_active']) ? 1 : 0;
+
+    if ($name === '') {
+        jsonResponse(['success' => false, 'message' => 'Package name is required.']);
+    }
+    if ($price <= 0) {
+        jsonResponse(['success' => false, 'message' => 'Price must be greater than zero.']);
+    }
+    if ($durationDays < 1) {
+        jsonResponse(['success' => false, 'message' => 'Duration must be at least 1 day.']);
+    }
+
+    $features = array_values(array_filter(array_map('trim', explode("\n", $featuresRaw))));
+    $featuresJson = json_encode($features);
+
+    $validZones = ['homepage', 'contests_page', 'sidebar', 'contest_detail'];
+    $zones = array_values(array_filter((array)$zonesRaw, fn($z) => in_array($z, $validZones, true)));
+    $zonesJson = json_encode($zones);
+
+    try {
+        db()->prepare(
+            "INSERT INTO ad_packages (name, description, price, duration_days, features, placement_zones, max_ads, sort_order, is_active)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        )->execute([$name, $description ?: null, $price, $durationDays, $featuresJson, $zonesJson, $maxAds, $sortOrder, $isActive]);
+        jsonResponse(['success' => true, 'message' => 'Ad package created.']);
+    } catch (Throwable) {
+        jsonResponse(['success' => false, 'message' => 'Failed to create package.']);
+    }
+}
+
+function handleUpdateAdPackage(): never {
+    $id            = (int)($_POST['package_id'] ?? 0);
+    $name          = sanitizeInput($_POST['name'] ?? '');
+    $description   = sanitizeInput($_POST['description'] ?? '');
+    $price         = (float)($_POST['price'] ?? 0);
+    $durationDays  = (int)($_POST['duration_days'] ?? 30);
+    $featuresRaw   = $_POST['features'] ?? '';
+    $zonesRaw      = $_POST['placement_zones'] ?? [];
+    $maxAds        = max(1, (int)($_POST['max_ads'] ?? 1));
+    $sortOrder     = (int)($_POST['sort_order'] ?? 0);
+    $isActive      = isset($_POST['is_active']) ? 1 : 0;
+
+    if (!$id) {
+        jsonResponse(['success' => false, 'message' => 'Invalid package ID.']);
+    }
+    if ($name === '') {
+        jsonResponse(['success' => false, 'message' => 'Package name is required.']);
+    }
+    if ($price <= 0) {
+        jsonResponse(['success' => false, 'message' => 'Price must be greater than zero.']);
+    }
+    if ($durationDays < 1) {
+        jsonResponse(['success' => false, 'message' => 'Duration must be at least 1 day.']);
+    }
+
+    $features = array_values(array_filter(array_map('trim', explode("\n", $featuresRaw))));
+    $featuresJson = json_encode($features);
+
+    $validZones = ['homepage', 'contests_page', 'sidebar', 'contest_detail'];
+    $zones = array_values(array_filter((array)$zonesRaw, fn($z) => in_array($z, $validZones, true)));
+    $zonesJson = json_encode($zones);
+
+    try {
+        db()->prepare(
+            "UPDATE ad_packages SET name=?, description=?, price=?, duration_days=?, features=?, placement_zones=?, max_ads=?, sort_order=?, is_active=?
+             WHERE id=?"
+        )->execute([$name, $description ?: null, $price, $durationDays, $featuresJson, $zonesJson, $maxAds, $sortOrder, $isActive, $id]);
+        jsonResponse(['success' => true, 'message' => 'Ad package updated.']);
+    } catch (Throwable) {
+        jsonResponse(['success' => false, 'message' => 'Failed to update package.']);
+    }
+}
+
+function handleToggleAdPackage(): never {
+    $id = (int)($_POST['package_id'] ?? 0);
+    if (!$id) {
+        jsonResponse(['success' => false, 'message' => 'Invalid package ID.']);
+    }
+    try {
+        db()->prepare("UPDATE ad_packages SET is_active = 1 - is_active WHERE id = ?")->execute([$id]);
+        jsonResponse(['success' => true, 'message' => 'Package status toggled.']);
+    } catch (Throwable) {
+        jsonResponse(['success' => false, 'message' => 'Toggle failed.']);
+    }
+}
+
+function handleDeleteAdPackage(): never {
+    $id = (int)($_POST['package_id'] ?? 0);
+    if (!$id) {
+        jsonResponse(['success' => false, 'message' => 'Invalid package ID.']);
+    }
+    try {
+        $db = db();
+        $stmt = $db->prepare(
+            "SELECT COUNT(*) FROM movie_ads WHERE package_id = ? AND status IN ('pending_review','approved')"
+        );
+        $stmt->execute([$id]);
+        if ((int)$stmt->fetchColumn() > 0) {
+            jsonResponse(['success' => false, 'message' => 'Cannot delete: active movie ads are using this package.']);
+        }
+        $db->prepare("DELETE FROM ad_packages WHERE id = ?")->execute([$id]);
+        jsonResponse(['success' => true, 'message' => 'Package deleted.']);
+    } catch (Throwable) {
+        jsonResponse(['success' => false, 'message' => 'Delete failed.']);
+    }
+}
+
+function handleApproveMovieAd(): never {
+    $adId    = (int)($_POST['ad_id'] ?? 0);
+    $adminId = (int)($_SESSION['user_id'] ?? 0);
+    if (!$adId) {
+        jsonResponse(['success' => false, 'message' => 'Invalid ad ID.']);
+    }
+    try {
+        $db   = db();
+        $stmt = $db->prepare(
+            "SELECT ma.*, ap.duration_days FROM movie_ads ma
+             LEFT JOIN ad_packages ap ON ap.id = ma.package_id
+             WHERE ma.id = ? LIMIT 1"
+        );
+        $stmt->execute([$adId]);
+        $ad = $stmt->fetch();
+        if (!$ad) {
+            jsonResponse(['success' => false, 'message' => 'Ad not found.']);
+        }
+        $durationDays = max(1, (int)($ad['duration_days'] ?? 30));
+        $db->prepare(
+            "UPDATE movie_ads
+             SET status='approved', reviewed_by=?, reviewed_at=NOW(),
+                 starts_at=NOW(), expires_at=DATE_ADD(NOW(), INTERVAL ? DAY)
+             WHERE id=?"
+        )->execute([$adminId, $durationDays, $adId]);
+        sendNotification(
+            (int)$ad['user_id'],
+            'movie_ad',
+            '🎬 Movie Ad Approved!',
+            'Your movie ad "' . ($ad['movie_title'] ?? '') . '" has been approved and is now live.',
+            '/my-ads'
+        );
+        jsonResponse(['success' => true, 'message' => 'Movie ad approved and activated.']);
+    } catch (Throwable) {
+        jsonResponse(['success' => false, 'message' => 'Approval failed.']);
+    }
+}
+
+function handleRejectMovieAd(): never {
+    $adId    = (int)($_POST['ad_id'] ?? 0);
+    $reason  = sanitizeInput($_POST['reason'] ?? '');
+    $adminId = (int)($_SESSION['user_id'] ?? 0);
+    if (!$adId) {
+        jsonResponse(['success' => false, 'message' => 'Invalid ad ID.']);
+    }
+    if ($reason === '') {
+        jsonResponse(['success' => false, 'message' => 'Rejection reason is required.']);
+    }
+    try {
+        $db   = db();
+        $stmt = $db->prepare("SELECT user_id, movie_title FROM movie_ads WHERE id = ? LIMIT 1");
+        $stmt->execute([$adId]);
+        $ad = $stmt->fetch();
+        if (!$ad) {
+            jsonResponse(['success' => false, 'message' => 'Ad not found.']);
+        }
+        $db->prepare(
+            "UPDATE movie_ads SET status='rejected', review_note=?, reviewed_by=?, reviewed_at=NOW() WHERE id=?"
+        )->execute([$reason, $adminId, $adId]);
+        sendNotification(
+            (int)$ad['user_id'],
+            'movie_ad',
+            '❌ Movie Ad Rejected',
+            'Your movie ad "' . ($ad['movie_title'] ?? '') . '" was rejected. Reason: ' . $reason,
+            '/my-ads'
+        );
+        jsonResponse(['success' => true, 'message' => 'Movie ad rejected.']);
+    } catch (Throwable) {
+        jsonResponse(['success' => false, 'message' => 'Rejection failed.']);
+    }
+}
+
+function handleCreateFeaturePlan(): never {
+    $name   = sanitizeInput($_POST['name'] ?? '');
+    $desc   = sanitizeInput($_POST['description'] ?? '');
+    $price  = (float)($_POST['price'] ?? 0);
+    $days   = max(1, (int)($_POST['duration_days'] ?? 7));
+    $active = (int)(!empty($_POST['is_active']));
+    if (empty($name)) jsonResponse(['success' => false, 'message' => 'Plan name required.']);
+    if ($price < 0) jsonResponse(['success' => false, 'message' => 'Price cannot be negative.']);
+    try {
+        db()->prepare("INSERT INTO featured_contest_plans (name, description, price, duration_days, is_active, sort_order) VALUES (?,?,?,?,?,COALESCE((SELECT MAX(sort_order)+1 FROM featured_contest_plans p2),1))")
+           ->execute([$name, $desc, $price, $days, $active]);
+        jsonResponse(['success' => true, 'message' => 'Plan created.']);
+    } catch (Throwable) {
+        jsonResponse(['success' => false, 'message' => 'Failed to create plan.']);
+    }
+}
+
+function handleUpdateFeaturePlan(): never {
+    $id     = (int)($_POST['plan_id'] ?? 0);
+    $name   = sanitizeInput($_POST['name'] ?? '');
+    $desc   = sanitizeInput($_POST['description'] ?? '');
+    $price  = (float)($_POST['price'] ?? 0);
+    $days   = max(1, (int)($_POST['duration_days'] ?? 7));
+    $active = (int)(!empty($_POST['is_active']));
+    if (!$id || empty($name)) jsonResponse(['success' => false, 'message' => 'Invalid data.']);
+    try {
+        db()->prepare("UPDATE featured_contest_plans SET name=?, description=?, price=?, duration_days=?, is_active=? WHERE id=?")
+           ->execute([$name, $desc, $price, $days, $active, $id]);
+        jsonResponse(['success' => true, 'message' => 'Plan updated.']);
+    } catch (Throwable) {
+        jsonResponse(['success' => false, 'message' => 'Failed to update plan.']);
+    }
+}
+
+function handleDeleteFeaturePlan(): never {
+    $id = (int)($_POST['plan_id'] ?? 0);
+    if (!$id) jsonResponse(['success' => false, 'message' => 'Invalid plan ID.']);
+    try {
+        db()->prepare("DELETE FROM featured_contest_plans WHERE id = ?")->execute([$id]);
+        jsonResponse(['success' => true, 'message' => 'Plan deleted.']);
+    } catch (Throwable) {
+        jsonResponse(['success' => false, 'message' => 'Failed to delete plan.']);
+    }
+}
+
+function handleUnfeatureContest(): never {
+    $contestId = (int)($_POST['contest_id'] ?? 0);
+    if (!$contestId) jsonResponse(['success' => false, 'message' => 'Invalid contest ID.']);
+    try {
+        db()->prepare("UPDATE contests SET is_featured = 0, featured_until = NULL WHERE id = ?")->execute([$contestId]);
+        jsonResponse(['success' => true, 'message' => 'Contest unfeatured.']);
+    } catch (Throwable) {
+        jsonResponse(['success' => false, 'message' => 'Failed to unfeature contest.']);
+    }
+}
+
+function handleAdminFeatureContest(): never {
+    $contestId = (int)($_POST['contest_id'] ?? 0);
+    $days      = max(1, (int)($_POST['duration_days'] ?? 7));
+    if (!$contestId) jsonResponse(['success' => false, 'message' => 'Invalid contest ID.']);
+    try {
+        $until = date('Y-m-d H:i:s', strtotime("+{$days} days"));
+        db()->prepare("UPDATE contests SET is_featured = 1, featured_until = ? WHERE id = ?")->execute([$until, $contestId]);
+        jsonResponse(['success' => true, 'message' => 'Contest featured until ' . date('M j, Y', strtotime($until)) . '.']);
+    } catch (Throwable) {
+        jsonResponse(['success' => false, 'message' => 'Failed to feature contest.']);
     }
 }

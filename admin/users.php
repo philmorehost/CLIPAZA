@@ -24,12 +24,12 @@ $pag   = paginate(0, $perPage, 1);
 
 try {
     $db     = db();
-    $where  = '1=1';
+    $where  = "u.role != 'admin'";
     $params = [];
     if ($filter && in_array($filter, ['active','inactive','banned','pending'], true)) {
         $where .= ' AND u.status = ?'; $params[] = $filter;
     }
-    if ($roleF && in_array($roleF, ['admin','user','moderator'], true)) {
+    if ($roleF && in_array($roleF, ['user','moderator'], true)) {
         $where .= ' AND u.role = ?'; $params[] = $roleF;
     }
     if ($search) {
@@ -55,17 +55,29 @@ try {
     <meta name="csrf" content="<?= e($csrf) ?>">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="../assets/css/style.css" rel="stylesheet">
+  <script>
+    (function() {
+      var t = localStorage.getItem('clipaza_theme') || 'dark';
+      document.documentElement.dataset.theme = t;
+    })();
+  </script>
 </head>
 <body>
 <nav class="admin-sidebar">
-    <div class="sidebar-brand">Clipa<span>za</span></div>
+    <?php $sn = getSetting("site_name", "Clipaza"); $sl = getSetting("site_logo", ""); if ($sl): ?><div class="sidebar-brand"><img src="<?= e($sl) ?>" alt="<?= e($sn) ?>" style="height:28px"></div><?php else: ?><div class="sidebar-brand"><?= formatSiteName($sn) ?></div><?php endif; ?>
     <div class="sidebar-nav">
         <ul class="nav flex-column">
             <li class="nav-item"><a href="index.php" class="nav-link"><span class="nav-icon">⊞</span> Dashboard</a></li>
             <li class="nav-item"><a href="users.php" class="nav-link active"><span class="nav-icon">👥</span> Users</a></li>
             <li class="nav-item"><a href="contests.php" class="nav-link"><span class="nav-icon">🏆</span> Contests</a></li>
+            <li class="nav-item"><a href="featured-contests.php" class="nav-link"><span class="nav-icon">⭐</span> Featured</a></li>
+            <li class="nav-item"><a href="payouts.php" class="nav-link"><span class="nav-icon">💸</span> Payouts</a></li>
+            <li class="nav-item"><a href="kyc.php" class="nav-link"><span class="nav-icon">🪪</span> KYC</a></li>
+            <li class="nav-item"><a href="ad-packages.php" class="nav-link"><span class="nav-icon">📦</span> Ad Packages</a></li>
+            <li class="nav-item"><a href="movie-ads.php" class="nav-link"><span class="nav-icon">🎞</span> Movie Ads</a></li>
             <li class="nav-item"><a href="security.php" class="nav-link"><span class="nav-icon">🛡</span> Security</a></li>
             <li class="nav-item"><a href="settings.php" class="nav-link"><span class="nav-icon">⚙</span> Settings</a></li>
+            <li class="nav-item"><a href="profile.php" class="nav-link"><span class="nav-icon">👤</span> Profile</a></li>
         </ul>
         <hr class="divider-dark mx-3">
         <ul class="nav flex-column">
@@ -76,8 +88,9 @@ try {
 <main class="admin-main">
     <div class="admin-topbar">
         <div class="d-flex align-items-center gap-3">
-            <button id="sidebarToggle" class="btn d-lg-none" style="color:#888;background:rgba(255,255,255,0.05);border-radius:8px;padding:6px 10px;">☰</button>
-            <span style="color:#888;font-size:0.9rem">Welcome, <strong style="color:#fff"><?= e($_SESSION['username'] ?? '') ?></strong></span>
+            <button id="sidebarToggle" class="btn d-lg-none" style="color:var(--text-muted);background:var(--subtle-bg);border-radius:8px;padding:6px 10px;">☰</button>
+            <button id="adminThemeToggle" class="btn-theme-toggle" title="Toggle light/dark mode" aria-label="Toggle theme" style="margin-left:4px">☀️</button>
+            <span style="color:var(--text-muted);font-size:0.9rem">Welcome, <strong style="color:var(--text)"><?= e($_SESSION['username'] ?? '') ?></strong></span>
         </div>
     </div>
     <div class="p-4">
@@ -95,7 +108,7 @@ try {
             </select>
             <select name="role" class="form-control-dark" style="max-width:140px;font-size:0.85rem" onchange="this.form.submit()">
                 <option value="">All Roles</option>
-                <?php foreach (['admin','user','moderator'] as $r): ?>
+                <?php foreach (['user','moderator'] as $r): ?>
                     <option value="<?= $r ?>" <?= $roleF===$r?'selected':'' ?>><?= ucfirst($r) ?></option>
                 <?php endforeach; ?>
             </select>
@@ -111,18 +124,25 @@ try {
                     <?php foreach ($users as $u): ?>
                     <tr>
                         <td><div class="fw-600"><?= e($u['username']) ?></div><div class="text-muted" style="font-size:0.78rem"><?= e($u['email']) ?></div></td>
-                        <td><span class="badge" style="background:#1a1a1a;font-size:0.72rem"><?= e($u['role']) ?></span></td>
+                        <td><span class="badge" style="background:var(--card-bg);font-size:0.72rem"><?= e($u['role']) ?></span></td>
                         <td>
                             <?php $sc = $u['status']==='active' ? 'badge-success' : ($u['status']==='banned' ? 'badge-danger' : 'badge-muted'); ?>
                             <span class="<?= $sc ?>" style="font-size:0.75rem"><?= e(ucfirst($u['status'])) ?></span>
                         </td>
-                        <td style="font-size:0.82rem;color:#888"><?= e(ucfirst($u['active_mode'] ?? 'clipper')) ?></td>
-                        <td style="font-size:0.8rem;color:#888"><?= e(formatDate($u['created_at'],'M j, Y')) ?></td>
+                        <td style="font-size:0.82rem;color:var(--text-muted)"><?= e(ucfirst($u['active_mode'] ?? 'clipper')) ?></td>
+                        <td style="font-size:0.8rem;color:var(--text-muted)"><?= e(formatDate($u['created_at'],'M j, Y')) ?></td>
                         <td>
                             <div class="d-flex gap-1 flex-wrap">
                             <?php if ($u['status']!=='active'): ?><button class="btn btn-xs btn-outline-accent uab" data-id="<?= $u['id'] ?>" data-st="active" data-csrf="<?= e($csrf) ?>">Activate</button><?php endif; ?>
-                            <?php if ($u['status']!=='inactive'): ?><button class="btn btn-xs uab" style="background:#1a1a1a;color:#ccc;font-size:0.72rem;border:1px solid #2a2a2a" data-id="<?= $u['id'] ?>" data-st="inactive" data-csrf="<?= e($csrf) ?>">Suspend</button><?php endif; ?>
+                            <?php if ($u['status']!=='inactive'): ?><button class="btn btn-xs uab" style="background:var(--card-bg);color:var(--text-secondary);font-size:0.72rem;border:1px solid var(--border)" data-id="<?= $u['id'] ?>" data-st="inactive" data-csrf="<?= e($csrf) ?>">Suspend</button><?php endif; ?>
                             <?php if ($u['status']!=='banned'): ?><button class="btn btn-xs uab" style="background:rgba(220,38,38,0.1);color:#f87171;font-size:0.72rem;border:1px solid rgba(220,38,38,0.2)" data-id="<?= $u['id'] ?>" data-st="banned" data-csrf="<?= e($csrf) ?>">Ban</button><?php endif; ?>
+                            <a href="edit-user.php?id=<?= $u['id'] ?>" class="btn btn-xs" style="background:rgba(0,153,255,0.1);color:var(--info);font-size:0.72rem;border:1px solid rgba(0,153,255,0.2)">Edit</a>
+                            <?php if ($u['role'] !== 'admin'): ?>
+                            <button class="btn btn-xs login-as-btn" data-id="<?= $u['id'] ?>"
+                                    style="background:rgba(204,255,0,0.05);color:var(--accent);font-size:0.68rem;border:1px solid rgba(204,255,0,0.15)">
+                                👤 Login
+                            </button>
+                            <?php endif; ?>
                             </div>
                         </td>
                     </tr>
@@ -155,5 +175,30 @@ document.querySelectorAll('.uab').forEach(btn => {
         else { alert(d.message||'Error'); this.disabled=false; }
     });
 });
+
+document.querySelectorAll('.login-as-btn').forEach(btn => {
+    btn.addEventListener('click', async function() {
+        if (!confirm('Login as this user? You will be redirected to their dashboard.')) return;
+        this.disabled = true; this.textContent = '…';
+        const csrf = document.querySelector('meta[name="csrf"]').content;
+        try {
+            const r = await fetch('/admin/ajax/admin_actions.php', {
+                method:'POST',
+                body: new URLSearchParams({ action:'login_as_user', target_user_id: this.dataset.id, csrf_token: csrf })
+            });
+            const d = await r.json();
+            if (d.success) {
+                window.location.href = d.redirect || '/dashboard';
+            } else {
+                alert(d.message || 'Failed to switch.');
+                this.disabled = false; this.textContent = '👤 Login';
+            }
+        } catch {
+            alert('Network error.');
+            this.disabled = false; this.textContent = '👤 Login';
+        }
+    });
+});
 </script>
+<script src="assets/js/theme_sync.js"></script>
 </body></html>

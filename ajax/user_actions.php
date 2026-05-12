@@ -43,19 +43,23 @@ function handleSwitchMode(int $userId): never {
 
         $newMode = ($profile['active_mode'] ?? 'clipper') === 'clipper' ? 'creator' : 'clipper';
 
-        $db->prepare('UPDATE user_profiles SET active_mode = ? WHERE user_id = ?')
-           ->execute([$newMode, $userId]);
+        // Use INSERT ... ON DUPLICATE KEY UPDATE to ensure the profile record exists.
+        $db->prepare(
+            'INSERT INTO user_profiles (user_id, active_mode) VALUES (?, ?)
+             ON DUPLICATE KEY UPDATE active_mode = VALUES(active_mode)'
+        )->execute([$userId, $newMode]);
 
         $_SESSION['user_mode'] = $newMode;
         jsonResponse(['success' => true, 'new_mode' => $newMode]);
-    } catch (Throwable) {
-        jsonResponse(['success' => false, 'message' => 'Failed to switch mode.']);
+    } catch (Throwable $e) {
+        jsonResponse(['success' => false, 'message' => 'Failed to switch mode: ' . $e->getMessage()]);
     }
 }
 
 function handleUpdateProfile(int $userId): never {
     $displayName     = sanitizeInput($_POST['display_name'] ?? '');
     $bio             = sanitizeInput($_POST['bio'] ?? '');
+    $brandDesc       = sanitizeInput($_POST['brand_description'] ?? '');
     $youtubeHandle   = sanitizeInput($_POST['youtube_handle'] ?? '');
     $tiktokHandle    = sanitizeInput($_POST['tiktok_handle'] ?? '');
     $instagramHandle = sanitizeInput($_POST['instagram_handle'] ?? '');
@@ -67,6 +71,7 @@ function handleUpdateProfile(int $userId): never {
             "UPDATE user_profiles SET
                display_name = ?,
                bio = ?,
+               brand_description = ?,
                youtube_handle = ?,
                tiktok_handle = ?,
                instagram_handle = ?,
@@ -75,6 +80,7 @@ function handleUpdateProfile(int $userId): never {
         )->execute([
             $displayName ?: null,
             $bio ?: null,
+            $brandDesc ?: null,
             $youtubeHandle ?: null,
             $tiktokHandle ?: null,
             $instagramHandle ?: null,
