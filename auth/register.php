@@ -51,9 +51,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
+        $mode = sanitizeInput($_POST['registration_mode'] ?? 'clipper');
+        if (!in_array($mode, ['clipper', 'creator'])) $mode = 'clipper';
+
         if (empty($errors)) {
             try {
-                $db   = db();
+                $db = db();
+                $db->beginTransaction();
+
                 $hash = hashPassword($password);
                 $stmt = $db->prepare(
                     'INSERT INTO users (username, email, password, role, status) VALUES (?, ?, ?, \'user\', \'active\')'
@@ -62,15 +67,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $userId = (int)$db->lastInsertId();
 
                 $db->prepare(
-                    'INSERT INTO user_profiles (user_id, display_name, active_mode) VALUES (?, ?, \'clipper\')'
-                )->execute([$userId, $displayName]);
+                    'INSERT INTO user_profiles (user_id, display_name, active_mode) VALUES (?, ?, ?)'
+                )->execute([$userId, $displayName, $mode]);
+
+                $db->commit();
 
                 session_regenerate_id(true);
                 $_SESSION['user_id']    = $userId;
                 $_SESSION['username']   = $username;
                 $_SESSION['user_role']  = 'user';
                 $_SESSION['user_email'] = $email;
-                $_SESSION['user_mode']  = 'clipper';
+                $_SESSION['user_mode']  = $mode;
                 $_SESSION['logged_in']  = true;
 
                 // Send welcome email
@@ -88,7 +95,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 redirect('/dashboard');
             } catch (Throwable $e) {
-                $errors[] = 'Registration failed. Please try again.';
+                if (isset($db) && $db->inTransaction()) $db->rollBack();
+                $errors[] = 'Registration failed: ' . $e->getMessage();
             }
         }
     }
@@ -134,6 +142,26 @@ renderHead('Create Account');
 
       <form method="POST" novalidate>
         <input type="hidden" name="csrf_token" value="<?= e($csrf) ?>">
+
+        <div class="mb-4">
+          <label class="form-label-dark d-block mb-3">I want to join as a:</label>
+          <div class="row g-2">
+            <div class="col-6">
+              <input type="radio" class="btn-check" name="registration_mode" id="mode_clipper" value="clipper" checked autocomplete="off">
+              <label class="btn btn-outline-dark-radio w-100 py-3" for="mode_clipper">
+                <div class="fw-700" style="font-size:0.95rem">✂️ Clipper</div>
+                <div class="text-muted" style="font-size:0.7rem">I want to edit & submit clips</div>
+              </label>
+            </div>
+            <div class="col-6">
+              <input type="radio" class="btn-check" name="registration_mode" id="mode_creator" value="creator" autocomplete="off">
+              <label class="btn btn-outline-dark-radio w-100 py-3" for="mode_creator">
+                <div class="fw-700" style="font-size:0.95rem">🎬 Creator</div>
+                <div class="text-muted" style="font-size:0.7rem">I want to run contests</div>
+              </label>
+            </div>
+          </div>
+        </div>
 
         <div class="mb-3">
           <label class="form-label-dark">Full Name</label>

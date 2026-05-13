@@ -38,11 +38,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $totalPrize   = 0.0;
         foreach (['tiktok', 'instagram', 'facebook'] as $p) {
             if (!empty($_POST['enable_' . $p])) {
-                $amt          = (float)($_POST[$p . '_prize'] ?? 0);
                 $winnerTakesAll = !empty($_POST[$p . '_winner_takes_all']) ? 1 : 0;
-                $count        = $winnerTakesAll ? 1 : min(10, max(1, (int)($_POST[$p . '_winners'] ?? 3)));
+                $p1 = (float)($_POST[$p . '_prize_1st'] ?? 0);
+                $p2 = $winnerTakesAll ? 0.0 : (float)($_POST[$p . '_prize_2nd'] ?? 0);
+                $p3 = $winnerTakesAll ? 0.0 : (float)($_POST[$p . '_prize_3rd'] ?? 0);
+                $amt = $p1 + $p2 + $p3;
+
                 if ($amt > 0) {
-                    $platformData[$p] = ['amount' => $amt, 'winners' => $count, 'winner_takes_all' => $winnerTakesAll];
+                    $platformData[$p] = [
+                        'amount' => $amt,
+                        'p1' => $p1,
+                        'p2' => $p2,
+                        'p3' => $p3,
+                        'winners' => $winnerTakesAll ? 1 : 3,
+                        'winner_takes_all' => $winnerTakesAll
+                    ];
                     $totalPrize += $amt;
                 }
             }
@@ -95,8 +105,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 foreach ($platformData as $platform => $pData) {
                     $db->prepare(
-                        'INSERT INTO contest_platforms (contest_id, platform, prize_amount, winner_count) VALUES (?,?,?,?)'
-                    )->execute([$contestId, $platform, $pData['amount'], $pData['winners']]);
+                        'INSERT INTO contest_platforms (contest_id, platform, prize_amount, winner_count, prize_1st, prize_2nd, prize_3rd) VALUES (?,?,?,?,?,?,?)'
+                    )->execute([$contestId, $platform, $pData['amount'], $pData['winners'], $pData['p1'], $pData['p2'], $pData['p3']]);
                 }
 
                 redirect('/payment/fund-contest?contest_id=' . $contestId);
@@ -114,7 +124,11 @@ $maxDays  = function_exists('getSetting') ? (int)getSetting('max_contest_days', 
 $minDate  = date('Y-m-d\TH:i', strtotime('+1 day'));
 $maxDate  = date('Y-m-d\TH:i', strtotime("+{$maxDays} days"));
 
-renderHead('Create Contest');
+renderHead('Create Contest', '
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+');
 renderNav(true, ['username' => $username], 'creator');
 ?>
 
@@ -209,26 +223,33 @@ renderNav(true, ['username' => $username], 'creator');
                          style="border-color:var(--text-placeholder);width:18px;height:18px">
                   <label for="enable_<?= $pKey ?>" class="fw-600" style="cursor:pointer"><?= getPlatformIcon($pKey, '1.2rem') ?> <?= $label ?></label>
                 </div>
-                <div class="row g-2 platform-fields" id="fields_<?= $pKey ?>" style="display:none">
-                  <div class="col-md-6">
-                    <label class="form-label-dark" style="font-size:0.8rem">Prize Amount (₦)</label>
-                    <input type="number" name="<?= $pKey ?>_prize" class="form-control-dark prize-input" data-platform="<?= $pKey ?>"
-                           min="0" step="100" placeholder="0">
+                <div class="platform-fields" id="fields_<?= $pKey ?>" style="display:none">
+                  <div class="row g-2 mb-2">
+                    <div class="col-md-4">
+                      <label class="form-label-dark" style="font-size:0.75rem">1st Prize (₦)</label>
+                      <input type="number" name="<?= $pKey ?>_prize_1st" class="form-control-dark prize-rank-input" data-platform="<?= $pKey ?>" min="0" step="100" placeholder="0">
+                    </div>
+                    <div class="col-md-4 prize-rank-2-3" id="p2_<?= $pKey ?>">
+                      <label class="form-label-dark" style="font-size:0.75rem">2nd Prize (₦)</label>
+                      <input type="number" name="<?= $pKey ?>_prize_2nd" class="form-control-dark prize-rank-input" data-platform="<?= $pKey ?>" min="0" step="100" placeholder="0">
+                    </div>
+                    <div class="col-md-4 prize-rank-2-3" id="p3_<?= $pKey ?>">
+                      <label class="form-label-dark" style="font-size:0.75rem">3rd Prize (₦)</label>
+                      <input type="number" name="<?= $pKey ?>_prize_3rd" class="form-control-dark prize-rank-input" data-platform="<?= $pKey ?>" min="0" step="100" placeholder="0">
+                    </div>
                   </div>
-                  <div class="col-md-6">
-                    <label class="form-label-dark" style="font-size:0.8rem">Number of Winners</label>
-                    <input type="number" name="<?= $pKey ?>_winners" class="form-control-dark <?= $pKey ?>-winners-input"
-                           min="1" max="10" value="3">
-                  </div>
-                  <div class="col-12 mt-1">
+                  <div class="d-flex align-items-center justify-content-between mb-2">
                     <div class="form-check d-flex align-items-center gap-2">
                       <input type="checkbox" name="<?= $pKey ?>_winner_takes_all" id="wta_<?= $pKey ?>"
                              class="form-check-input winner-takes-all-toggle" data-platform="<?= $pKey ?>"
                              style="border-color:var(--text-placeholder);width:16px;height:16px">
                       <label for="wta_<?= $pKey ?>" class="text-muted" style="cursor:pointer;font-size:0.8rem">
-                        Winner Takes All (1 winner gets full platform prize)
+                        Winner Takes All (1 winner)
                       </label>
                     </div>
+                    <button type="button" class="btn btn-xs btn-outline-light auto-split-btn" data-platform="<?= $pKey ?>" style="font-size:0.65rem;border-color:rgba(255,255,255,0.1)">
+                      Suggest Split (50/30/20)
+                    </button>
                   </div>
                 </div>
               </div>
@@ -273,25 +294,39 @@ renderNav(true, ['username' => $username], 'creator');
 <script>
 const FEE_PCT = <?= $feePercent ?> / 100;
 
+// Flatpickr
+flatpickr('[name="end_date"]', {
+  enableTime: true,
+  dateFormat: "Y-m-d H:i",
+  minDate: "<?= e($minDate) ?>",
+  maxDate: "<?= e($maxDate) ?>",
+  theme: "dark",
+  altInput: true,
+  altFormat: "F j, Y at h:i K"
+});
+
 // Platform toggles
 document.querySelectorAll('.platform-toggle').forEach(cb => {
   cb.addEventListener('change', function() {
     const fields = document.getElementById('fields_' + this.dataset.platform);
-    fields.style.display = this.checked ? 'flex' : 'none';
+    fields.style.display = this.checked ? 'block' : 'none';
     recalcPrize();
   });
 });
 
 // Prize calc
-document.querySelectorAll('.prize-input').forEach(inp => {
+document.querySelectorAll('.prize-rank-input').forEach(inp => {
   inp.addEventListener('input', recalcPrize);
 });
 
 function recalcPrize() {
   let total = 0;
   document.querySelectorAll('.platform-toggle:checked').forEach(cb => {
-    const v = parseFloat(document.querySelector('[name="' + cb.dataset.platform + '_prize"]')?.value) || 0;
-    total += v;
+    const platform = cb.dataset.platform;
+    const p1 = parseFloat(document.querySelector('[name="' + platform + '_prize_1st"]').value) || 0;
+    const p2 = parseFloat(document.querySelector('[name="' + platform + '_prize_2nd"]').value) || 0;
+    const p3 = parseFloat(document.querySelector('[name="' + platform + '_prize_3rd"]').value) || 0;
+    total += (p1 + p2 + p3);
   });
   const fee = Math.round(total * FEE_PCT);
   const grand = total + fee;
@@ -304,11 +339,35 @@ function recalcPrize() {
 document.querySelectorAll('.winner-takes-all-toggle').forEach(cb => {
   cb.addEventListener('change', function() {
     const platform = this.dataset.platform;
-    const winnersInput = document.querySelector('.' + platform + '-winners-input');
-    if (winnersInput) {
-      winnersInput.value = this.checked ? 1 : 3;
-      winnersInput.disabled = this.checked;
+    const p23 = document.querySelectorAll('#fields_' + platform + ' .prize-rank-2-3');
+    p23.forEach(el => el.style.visibility = this.checked ? 'hidden' : 'visible');
+    if (this.checked) {
+      document.querySelector('[name="' + platform + '_prize_2nd"]').value = '';
+      document.querySelector('[name="' + platform + '_prize_3rd"]').value = '';
     }
+    recalcPrize();
+  });
+});
+
+// Auto split helper
+document.querySelectorAll('.auto-split-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const platform = this.dataset.platform;
+    const p1Inp = document.querySelector('[name="' + platform + '_prize_1st"]');
+    const p2Inp = document.querySelector('[name="' + platform + '_prize_2nd"]');
+    const p3Inp = document.querySelector('[name="' + platform + '_prize_3rd"]');
+    
+    let total = (parseFloat(p1Inp.value)||0) + (parseFloat(p2Inp.value)||0) + (parseFloat(p3Inp.value)||0);
+    if (total <= 0) {
+        // Default to min prize if nothing set
+        total = <?= $minPrize ?>;
+    }
+    
+    p1Inp.value = Math.floor(total * 0.5 / 100) * 100;
+    p2Inp.value = Math.floor(total * 0.3 / 100) * 100;
+    p3Inp.value = total - (parseFloat(p1Inp.value)||0) - (parseFloat(p2Inp.value)||0);
+    
+    recalcPrize();
   });
 });
 

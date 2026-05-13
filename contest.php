@@ -257,7 +257,13 @@ renderNav($isLoggedIn, ['username' => $username], $userMode);
                     <div style="font-size:1.5rem"><?= $pIcon ?></div>
                     <div class="fw-700" style="font-size:0.85rem"><?= ucfirst(e($p['platform'])) ?></div>
                     <div style="color:var(--accent);font-weight:700">₦<?= number_format((float)$p['prize_amount'], 0) ?></div>
-                    <div class="text-muted" style="font-size:0.75rem">~₦<?= $perWinner ?>/winner · <?= (int)$p['winner_count'] ?> winners</div>
+                    <div class="mt-2 text-start" style="font-size:0.75rem">
+                      <div class="d-flex justify-content-between"><span>1st:</span> <span class="fw-600">₦<?= number_format((float)$p['prize_1st'], 0) ?></span></div>
+                      <?php if (!$p['winner_takes_all']): ?>
+                        <div class="d-flex justify-content-between"><span>2nd:</span> <span class="fw-600">₦<?= number_format((float)$p['prize_2nd'], 0) ?></span></div>
+                        <div class="d-flex justify-content-between"><span>3rd:</span> <span class="fw-600">₦<?= number_format((float)$p['prize_3rd'], 0) ?></span></div>
+                      <?php endif; ?>
+                    </div>
                   </div>
                 </div>
               <?php endforeach; ?>
@@ -300,7 +306,11 @@ renderNav($isLoggedIn, ['username' => $username], $userMode);
                           $isMe     = $isLoggedIn && (int)$row['user_id'] === $userId;
                           $rankNum  = $rank + 1;
                           $rankIcon = match($rankNum) { 1=>'🥇', 2=>'🥈', 3=>'🥉', default=>"#{$rankNum}" };
-                          $prizeAmt = $rankNum <= (int)$p['winner_count'] ? '₦' . number_format($perW, 0) : '—';
+                          $prizeVal = 0;
+                          if ($rankNum === 1) $prizeVal = (float)$p['prize_1st'];
+                          elseif ($rankNum === 2) $prizeVal = (float)$p['prize_2nd'];
+                          elseif ($rankNum === 3) $prizeVal = (float)$p['prize_3rd'];
+                          $prizeAmt = $prizeVal > 0 ? '₦' . number_format($prizeVal, 0) : '—';
                         ?>
                         <div class="leaderboard-row <?= $isMe ? 'leaderboard-row--me' : '' ?>">
                           <span class="lb-rank"><?= $rankIcon ?></span>

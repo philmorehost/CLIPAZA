@@ -365,6 +365,12 @@ try {
     addColumnIfNotExists($db, 'user_profiles', 'disclaimer_accepted_at', 'DATETIME DEFAULT NULL');
     echo "disclaimer columns ensured.\n";
 
+    // 24. Add prize breakdown columns to contest_platforms
+    addColumnIfNotExists($db, 'contest_platforms', 'prize_1st', 'DECIMAL(12,2) NOT NULL DEFAULT 0.00');
+    addColumnIfNotExists($db, 'contest_platforms', 'prize_2nd', 'DECIMAL(12,2) NOT NULL DEFAULT 0.00');
+    addColumnIfNotExists($db, 'contest_platforms', 'prize_3rd', 'DECIMAL(12,2) NOT NULL DEFAULT 0.00');
+    echo "Prize breakdown columns ensured in contest_platforms.\n";
+
     echo "Database migrations completed successfully.\n";
 
 } catch (Throwable $e) {
